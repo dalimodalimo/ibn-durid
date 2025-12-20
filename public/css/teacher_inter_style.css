@@ -1,16 +1,17 @@
-/* --- المتغيرات والتأسيس --- */
+/* --- 1. المتغيرات والتأسيس --- */
 :root {
     --primary: #4361ee;
     --primary-light: #4895ef;
     --success: #2ec4b6;
     --danger: #e71d36;
-    --neon-red: #ff003c; /* لون النيون */
+    --neon-red: #ff003c;
     --warning: #ff9f1c;
     --bg: #f8f9fd;
     --card-bg: #ffffff;
     --text-dark: #2b2d42;
     --text-muted: #8d99ae;
     --radius: 20px;
+    --input-radius: 12px;
     --shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
@@ -18,93 +19,164 @@
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
+    outline: none;
 }
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background-color: var(--bg);
     color: var(--text-dark);
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
     line-height: 1.6;
     direction: rtl;
 }
 
-/* --- الحاويات --- */
+/* --- 2. الهيدر المثبت (Sticky Header) --- */
+.main-header {
+    position: sticky;
+    top: 0;
+    z-index: 1500;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.2);
+    /* إزالة border-radius العلوي ليلتصق تماماً بالسقف */
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.menu-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.user-info-mini h1 {
+    font-size: 0.95rem;
+    margin: 0;
+    color: white;
+    font-weight: 600;
+}
+
+.avatar-mini {
+    font-size: 1.8rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* --- 3. الحاوية الرئيسية --- */
 .container {
     max-width: 500px;
     margin: 0 auto;
     padding: 15px;
-    padding-bottom: 50px;
+    padding-bottom: 90px; /* مساحة للـ Bottom Nav */
 }
 
-/* --- الهيدر --- */
-.main-header {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    padding: 20px;
-    border-radius: var(--radius);
-    color: white;
+/* --- 4. القائمة الجانبية (Sidebar) --- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -280px; /* مخفي */
+    width: 280px;
+    height: 100%;
+    background: #fff;
+    z-index: 2500;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+    padding: 25px;
+}
+
+.sidebar.active { right: 0; }
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 2400;
+    display: none;
+}
+
+.sidebar-overlay.active { display: block; }
+
+.sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 10px 20px rgba(67, 97, 238, 0.2);
-    margin-bottom: 25px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 15px;
 }
 
-.user-profile { display: flex; align-items: center; gap: 12px; }
-.avatar {
-    width: 45px; height: 45px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem;
+.sidebar-header h3 { font-size: 1.1rem; color: var(--primary); margin: 0; }
+
+.close-sidebar {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: var(--text-muted);
+    cursor: pointer;
 }
 
-.user-info h1 { font-size: 1rem; margin: 0; }
-.user-info span { font-size: 0.75rem; opacity: 0.8; }
-
-.btn-logout-alt {
-    color: white; background: rgba(255,255,255,0.15);
-    padding: 8px 12px; border-radius: 12px; text-decoration: none;
+.sidebar-links { list-style: none; padding: 0; margin: 0; }
+.sidebar-links li { margin-bottom: 10px; }
+.sidebar-links a {
+    text-decoration: none;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: 0.2s;
 }
 
-/* --- نظام السلايدر وتأثير النيون (جدول اليوم) --- */
+.sidebar-links a:hover { background: #f0f4ff; color: var(--primary); }
+.sidebar-links a i { font-size: 1.1rem; width: 20px; text-align: center; }
+
+.separator { height: 1px; background: #eee; margin: 20px 0; }
+.logout-link { color: var(--danger) !important; }
+
+/* --- 5. سلايدر الحصص والنيون --- */
 .timetable-wrapper {
     overflow-x: auto;
     padding: 10px 5px 20px;
     display: flex;
-    scroll-snap-type: x mandatory; /* تثبيت البطاقة عند السحب */
+    scroll-snap-type: x mandatory;
     gap: 15px;
 }
-
-.timetable-wrapper::-webkit-scrollbar { display: none; } /* إخفاء شريط التمرير */
+.timetable-wrapper::-webkit-scrollbar { display: none; }
 
 .session-card {
-    min-width: 150px;
-    background: var(--card-bg);
+    min-width: 145px;
+    background: #fff;
     padding: 20px;
     border-radius: var(--radius);
     text-align: center;
     box-shadow: var(--shadow);
-    border: 2px solid #edf2f7;
+    border: 2px solid #f1f5f9;
     scroll-snap-align: center;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
+    transition: 0.3s;
 }
 
-/* حالة الحصة القادمة - تأثير النيون الأحمر */
 .session-card.next-session {
     background: #1a1a1a;
     border-color: var(--neon-red);
     color: #fff;
     transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(255, 0, 60, 0.4), 
-                inset 0 0 10px rgba(255, 0, 60, 0.2);
-    z-index: 2;
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.4);
 }
-
-.next-session .period { color: var(--neon-red) !important; text-shadow: 0 0 5px var(--neon-red); }
-.next-session .class-name { color: #e2e8f0; }
 
 .neon-badge {
     position: absolute; top: -10px; left: 50%;
@@ -116,38 +188,97 @@ body {
 }
 
 .session-card .period { display: block; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
-.session-card .class-name { font-size: 0.9rem; font-weight: 500; }
+.next-session .period { color: var(--neon-red) !important; text-shadow: 0 0 5px var(--neon-red); }
 
-/* --- الأقسام --- */
+/* --- 6. الأقسام وعناصر الإدخال --- */
 .section {
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 25px;
     margin-bottom: 20px;
     box-shadow: var(--shadow);
+    border: 1px solid rgba(226, 232, 240, 0.5);
 }
 
 .section-header {
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 15px; border-bottom: 1px solid #f8fafc;
-    padding-bottom: 10px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9;
 }
 
-.section-header i { color: var(--primary); }
-.section-header h2 { font-size: 1rem; margin: 0; }
+.section-header i { font-size: 1.2rem; color: var(--primary); }
 
-/* --- رصد الغياب (بطاقات الطلاب) --- */
-.student-list-mobile { display: grid; gap: 10px; }
+select, textarea, input[type="text"] {
+    width: 100%;
+    padding: 14px 18px;
+    background-color: #f1f5f9;
+    border: 2px solid transparent;
+    border-radius: var(--input-radius);
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234361ee' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 15px center;
+}
+
+textarea { min-height: 100px; resize: none; padding-left: 18px; background-image: none; }
+
+/* --- 7. التنبيهات والبطاقات --- */
+.alert-item {
+    background: #fff;
+    border-right: 5px solid var(--danger);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
 
 .student-card {
     display: flex; justify-content: space-between; align-items: center;
-    background: #fdfdfd; padding: 15px;
+    background: #fff; padding: 16px; margin-bottom: 10px;
     border-radius: 15px; border: 1px solid #f1f5f9;
 }
 
-.student-name { font-weight: 500; font-size: 0.95rem; }
+/* --- 8. شريط التنقل السفلي (Bottom Nav) --- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; width: 100%;
+    height: 70px;
+    background: #fff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+    z-index: 1000;
+    border-top: 1px solid #f1f5f9;
+}
 
-/* Toggle Switch المحسن */
+.nav-item {
+    text-decoration: none;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+}
+
+.nav-item i { font-size: 1.3rem; }
+.nav-item span { font-size: 0.7rem; font-weight: 600; }
+.nav-item.active { color: var(--primary); }
+
+/* --- 9. الأزرار والمفاتيح --- */
+.btn-submit-full {
+    width: 100%; background: var(--primary); color: white;
+    border: none; padding: 16px; border-radius: var(--input-radius);
+    font-weight: 700; margin-top: 10px; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+}
+
+.btn-save-full {
+    width: 100%; background: #334155; color: white;
+    border: none; padding: 14px; border-radius: var(--input-radius);
+}
+
 .switch { position: relative; width: 50px; height: 26px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider-toggle {
@@ -161,28 +292,4 @@ body {
 input:checked + .slider-toggle { background-color: var(--neon-red); }
 input:checked + .slider-toggle:before { transform: translateX(24px); }
 
-/* --- أزرار الإجراءات --- */
-.btn-submit-full {
-    width: 100%; background: var(--primary); color: white;
-    border: none; padding: 16px; border-radius: 15px;
-    font-size: 1rem; font-weight: bold; margin-top: 20px;
-    box-shadow: 0 8px 20px rgba(67, 97, 238, 0.2);
-}
-
-.btn-save-full {
-    width: 100%; background: #334155; color: white;
-    border: none; padding: 12px; border-radius: 12px; margin-top: 10px;
-}
-
-/* --- التنبيهات --- */
-.alert-item {
-    background: #fff5f5; border-right: 4px solid var(--danger);
-    padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.85rem;
-}
-
 .hidden { display: none; }
-
-@keyframes slideDown {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}

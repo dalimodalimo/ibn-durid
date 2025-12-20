@@ -2,77 +2,81 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>غياب المعلمين - مدرسة ابن دريد</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fdfdfd; padding: 20px; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #eee; }
-        .absent-list { list-style: none; padding: 0; border-right: 4px solid #d32f2f; padding-right: 15px; }
-        .btn-search { background: #1a237e; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 14px; transition: 0.3s; cursor: pointer; display: inline-block; border: none; }
-        .btn-print { background: #2e7d32; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 14px; transition: 0.3s; display: inline-block; margin-right: 5px; }
-        .btn-search:hover, .btn-print:hover { opacity: 0.9; transform: scale(1.02); }
-        button { cursor: pointer; border: none; padding: 8px 20px; border-radius: 6px; font-weight: bold; }
-        select, input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-left: 10px; outline: none; }
-        .suggestion-box { margin-top: 15px; padding: 15px; background: #f0f4f8; border-radius: 8px; display: none; border: 1px solid #d1d9e6; }
-        .loading-text { color: #1a237e; font-style: italic; font-size: 0.9rem; }
-        .badge { background: #d32f2f; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
-        .actions { display: flex; gap: 8px; align-items: center; }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/absences_style.css">
 </head>
 <body>
-    <a href="/admin/dashboard" style="text-decoration: none; color: #1a237e; font-weight: bold; display: inline-block; margin-bottom: 20px;">🏠 العودة للوحة التحكم</a>
-    
-    <header style="border-bottom: 2px solid #1a237e; margin-bottom: 30px; padding-bottom: 10px;">
-        <h1 style="margin: 0; color: #1a237e;">نظام غياب المعلمين والاحتياط الذكي</h1>
-        <p>تاريخ اليوم: <strong><%= today %></strong></p>
-    </header>
+    <div class="container">
+        <a href="/admin/dashboard" class="back-btn">
+            <i class="fas fa-arrow-right"></i> لوحة التحكم الرئيسية
+        </a>
+        
+        <header class="main-header">
+            <h1><i class="fas fa-user-clock"></i> إدارة الغياب والاحتياط الذكي</h1>
+            <p>سجل غياب اليوم: <strong><%= today %></strong></p>
+        </header>
 
-    <div class="card">
-        <h3>➕ تسجيل معلم غائب جديد</h3>
-        <form action="/admin/absences/ajouter" method="POST" style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <select name="enseignant_id" required style="flex: 1; min-width: 200px;">
-                <option value="">-- اختر المعلم الغائب --</option>
-                <% enseignants.forEach(e => { %> 
-                    <option value="<%= e.id %>"><%= e.nom %> (<%= e.matiere %>)</option> 
-                <% }) %>
-            </select>
-            <input type="text" name="raison" placeholder="سبب الغياب (مثال: ظرف طارئ)" style="flex: 2; min-width: 250px;">
-            <button type="submit" style="background:#d32f2f; color:white;">تسجيل الغياب</button>
-        </form>
-    </div>
+        <div class="card">
+            <h3><i class="fas fa-user-plus"></i> تسجيل معلم غائب</h3>
+            <form action="/admin/absences/ajouter" method="POST" class="form-inline">
+                <select name="enseignant_id" required style="flex: 1;">
+                    <option value="">-- اختر المعلم الغائب --</option>
+                    <% enseignants.forEach(e => { %> 
+                        <option value="<%= e.id %>"><%= e.nom %> (<%= e.matiere %>)</option> 
+                    <% }) %>
+                </select>
+                <input type="text" name="raison" placeholder="سبب الغياب (اختياري)" style="flex: 2;">
+                <button type="submit" class="btn-submit">تسجيل الغياب</button>
+            </form>
+        </div>
 
-    <div class="card">
-        <h3>📋 المعلمون الغائبون اليوم وقائمة الاحتياط</h3>
-        <ul class="absent-list">
-            <% if (ghaibeen.length === 0) { %>
-                <p style="color: #7f8c8d; padding: 20px; text-align: center;">✅ لا يوجد غيابات مسجلة حتى الآن.</p>
-            <% } else { %>
-                <% ghaibeen.forEach(g => { %>
-                    <li style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong style="font-size: 1.1rem;"><%= g.nom %></strong> 
-                                <span class="badge"><%= g.matiere %></span>
-                                <% if(g.raison) { %> <br><small style="color: #666;">📝 السبب: <%= g.raison %></small> <% } %>
+        <div class="card">
+            <h3><i class="fas fa-clipboard-list"></i> قائمة الغيابات والبدلاء المقترحين</h3>
+            <ul class="absent-list">
+                <% if (ghaibeen.length === 0) { %>
+                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        <i class="fas fa-check-circle fa-3x" style="margin-bottom: 15px; color: #10b981;"></i>
+                        <p>لا يوجد غيابات مسجلة لهذا اليوم. اليوم يسير بانتظام!</p>
+                    </div>
+                <% } else { %>
+                    <% ghaibeen.forEach(g => { %>
+                        <li class="absent-item">
+                            <div class="item-content">
+                                <div class="teacher-info">
+                                    <strong><%= g.nom %></strong> 
+                                    <span class="badge"><%= g.matiere %></span>
+                                    <% if(g.raison) { %> 
+                                        <div style="margin-top: 8px; font-size: 0.85rem; color: #64748b;">
+                                            <i class="fas fa-info-circle"></i> <%= g.raison %>
+                                        </div> 
+                                    <% } %>
+                                </div>
+                                <div class="actions">
+                                    <button onclick="getSuggestions('<%= g.enseignant_id %>', this)" class="btn-icon btn-search">
+                                        <i class="fas fa-magic"></i> ذكاء البدلاء
+                                    </button>
+                                    <a href="/admin/absences/print-reserve/<%= g.enseignant_id %>" class="btn-icon btn-print">
+                                        <i class="fas fa-print"></i> طباعة الكشف
+                                    </a>
+                                </div>
                             </div>
-                            <div class="actions">
-                                <button onclick="getSuggestions('<%= g.enseignant_id %>', this)" class="btn-search">
-                                    🔍 عرض المتاحين
-                                </button>
-                                <a href="/admin/absences/print-reserve/<%= g.enseignant_id %>" class="btn-print">
-                                    🖨️ طباعة كشف الاحتياط
-                                </a>
-                            </div>
-                        </div>
 
-                        <div id="box-<%= g.enseignant_id %>" class="suggestion-box">
-                            <h4 style="margin-top: 0; color: #2c3e50;">💡 المعلمون المتاحون حالياً:</h4>
-                            <div class="loading-text" id="load-<%= g.enseignant_id %>" style="display:none;">جاري البحث في الجداول الدراسية...</div>
-                            <div id="results-<%= g.enseignant_id %>"></div>
-                        </div>
-                    </li>
-                <% }) %>
-            <% } %>
-        </ul>
+                            <div id="box-<%= g.enseignant_id %>" class="suggestion-box">
+                                <h4 style="margin-top: 0; color: var(--accent-blue); font-size: 1rem;">
+                                    <i class="fas fa-lightbulb"></i> البدلاء المتاحون (ليس لديهم حصص):
+                                </h4>
+                                <div id="load-<%= g.enseignant_id %>" style="display:none; color: #64748b; font-size: 0.9rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> جاري تحليل الجدول المدرسي...
+                                </div>
+                                <div id="results-<%= g.enseignant_id %>"></div>
+                            </div>
+                        </li>
+                    <% }) %>
+                <% } %>
+            </ul>
+        </div>
     </div>
 
     <script>
@@ -80,6 +84,12 @@
             const box = document.getElementById(`box-${teacherId}`);
             const resultsDiv = document.getElementById(`results-${teacherId}`);
             const loader = document.getElementById(`load-${teacherId}`);
+
+            // تبديل الظهور
+            if (box.style.display === 'block') {
+                box.style.display = 'none';
+                return;
+            }
 
             box.style.display = 'block';
             resultsDiv.innerHTML = '';
@@ -92,19 +102,26 @@
                 loader.style.display = 'none';
 
                 if (data.suggestions && data.suggestions.length > 0) {
-                    let html = `<p style="font-size: 0.9rem;">هؤلاء المعلمون ليس لديهم حصص في الفترات: <b>${data.absent_periods.join(', ')}</b></p>`;
-                    html += `<ul style="margin: 0; padding-right: 20px;">`;
+                    let html = `<p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">
+                                    فترات الغياب: <span style="color: var(--danger-red); font-weight: bold;">${data.absent_periods.join('، ')}</span>
+                                </p>`;
+                    html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">`;
                     data.suggestions.forEach(s => {
-                        html += `<li style="margin-bottom: 5px;">✅ <b>${s.nom}</b> (${s.matiere})</li>`;
+                        html += `<div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
+                                    <i class="fas fa-user-check" style="color: var(--success-green);"></i> <b>${s.nom}</b><br>
+                                    <small style="color: #64748b;">${s.matiere}</small>
+                                 </div>`;
                     });
-                    html += `</ul>`;
+                    html += `</div>`;
                     resultsDiv.innerHTML = html;
                 } else {
-                    resultsDiv.innerHTML = `<p style="color: #d32f2f;">⚠️ لم يتم العثور على معلم متاح تماماً في جميع فترات الغياب.</p>`;
+                    resultsDiv.innerHTML = `<div style="color: var(--danger-red); font-size: 0.9rem; padding: 10px; background: #fef2f2; border-radius: 8px;">
+                                                <i class="fas fa-exclamation-triangle"></i> عذراً، لا يوجد معلمون متاحون في جميع هذه الفترات.
+                                            </div>`;
                 }
             } catch (error) {
                 loader.style.display = 'none';
-                resultsDiv.innerHTML = `<p style="color: #d32f2f;">❌ فشل الاتصال بالسيرفر.</p>`;
+                resultsDiv.innerHTML = `<p style="color: var(--danger-red);">❌ فشل الاتصال بالنظام.</p>`;
             }
         }
     </script>

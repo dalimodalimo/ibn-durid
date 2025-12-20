@@ -2,57 +2,91 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %></title>
-    <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .filter-nav { margin-bottom: 20px; display: flex; gap: 10px; }
-        .filter-nav a { text-decoration: none; padding: 8px 15px; background: #3498db; color: white; border-radius: 5px; font-size: 0.9rem; }
-        .filter-nav a:hover { background: #2980b9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
-        th { background: #2c3e50; color: white; }
-        tr:nth-child(even) { background: #f9f9f9; }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/reports_style.css">
 </head>
 <body>
     <div class="container">
-        <h1>📊 تقارير غياب الطلاب</h1>
+        <header class="report-header">
+            <h1><i class="fas fa-chart-line"></i> تقارير غياب الطلاب</h1>
+            <a href="/admin/dashboard" class="back-link-top">
+                <i class="fas fa-home"></i> العودة للوحة التحكم
+            </a>
+        </header>
         
         <div class="filter-nav">
-            <a href="/admin/rapport-absences-eleves">الكل</a>
-            <a href="/admin/rapport-absences-eleves?view=daily">اليوم</a>
-            <a href="/admin/rapport-absences-eleves?view=weekly">آخر أسبوع</a>
-            <a href="/admin/rapport-absences-eleves?view=monthly">هذا الشهر</a>
-            <a href="/admin/dashboard" style="background:#7f8c8d;">العودة للوحة التحكم</a>
+            <a href="/admin/rapport-absences-eleves" 
+               class="<%= (typeof view !== 'undefined' && view === '') ? 'active' : '' %>">
+                <i class="fas fa-list"></i> عرض الكل
+            </a>
+            
+            <a href="/admin/rapport-absences-eleves?view=daily" 
+               class="<%= (typeof view !== 'undefined' && view === 'daily') ? 'active' : '' %>">
+                <i class="fas fa-calendar-day"></i> اليوم
+            </a>
+            
+            <a href="/admin/rapport-absences-eleves?view=weekly" 
+               class="<%= (typeof view !== 'undefined' && view === 'weekly') ? 'active' : '' %>">
+                <i class="fas fa-calendar-week"></i> آخر أسبوع
+            </a>
+            
+            <a href="/admin/rapport-absences-eleves?view=monthly" 
+               class="<%= (typeof view !== 'undefined' && view === 'monthly') ? 'active' : '' %>">
+                <i class="fas fa-calendar-alt"></i> هذا الشهر
+            </a>
+
+            <button onclick="window.print()" class="btn-print-action">
+                <i class="fas fa-print"></i> طباعة التقرير
+            </button>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>التاريخ</th>
-                    <th>اسم الطالب</th>
-                    <th>الفصل</th>
-                    <th>الحصة</th>
-                    <th>المعلم الراصد</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (stats.length === 0) { %>
-                    <tr><td colspan="5" style="text-align:center;">لا توجد سجلات غياب حالياً.</td></tr>
-                <% } else { %>
-                    <% stats.forEach(row => { %>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th><i class="far fa-calendar-alt"></i> التاريخ</th>
+                        <th><i class="far fa-user"></i> اسم الطالب</th>
+                        <th><i class="fas fa-school"></i> الفصل / الشعبة</th>
+                        <th><i class="far fa-clock"></i> الحصة</th>
+                        <th><i class="fas fa-user-check"></i> المعلم الراصد</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (stats.length === 0) { %>
                         <tr>
-                            <td><%= row.date %></td>
-                            <td><%= row.student_name %></td>
-                            <td><%= row.classe %> / <%= row.section %></td>
-                            <td>الحصة <%= row.periode %></td>
-                            <td><%= row.teacher_name %></td>
+                            <td colspan="5" class="empty-state">
+                                <i class="fas fa-search fa-3x"></i>
+                                <p>لم يتم العثور على أي سجلات غياب ضمن هذه الفترة.</p>
+                            </td>
                         </tr>
-                    <% }) %>
-                <% } %>
-            </tbody>
-        </table>
+                    <% } else { %>
+                        <% stats.forEach(row => { %>
+                            <tr>
+                                <td style="white-space: nowrap;">
+                                    <%= new Date(row.date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                </td>
+                                <td class="student-name"><%= row.student_name %></td>
+                                <td>
+                                    <span class="badge-class"><%= row.classe %></span> 
+                                    <span class="badge-section">شعبة <%= row.section %></span>
+                                </td>
+                                <td><span class="badge-periode">الحصة <%= row.periode %></span></td>
+                                <td>
+                                    <i class="fas fa-chalkboard-teacher" style="font-size: 0.8rem; color: #999;"></i> 
+                                    <%= row.teacher_name %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="print-only-footer" style="display: none; margin-top: 30px; text-align: center; border-top: 1px solid #ccc; padding-top: 10px;">
+        تم استخراج هذا التقرير من نظام مدرسة ابن دريد الإلكتروني بتاريخ: <%= new Date().toLocaleDateString('ar-EG') %>
     </div>
 </body>
 </html>

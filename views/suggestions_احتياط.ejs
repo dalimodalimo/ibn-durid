@@ -2,68 +2,84 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title><%= titre %></title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 30px; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #333; padding: 12px; text-align: center; }
-        th { background: #f2f2f2; color: #333; }
-        .no-print { margin-bottom: 20px; text-align: left; }
-        .btn-print { padding: 10px 20px; background: #2e7d32; color: white; border: none; cursor: pointer; border-radius: 5px; }
-        @media print { .no-print { display: none; } }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كشف الاحتياط - <%= today_name %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/print_style.css">
 </head>
 <body>
 
-    <div class="no-print">
-        <button onclick="window.print()" class="btn-print">🖨️ طباعة الكشف</button>
-        <a href="/admin/absence-profs" style="margin-right:10px;">العودة</a>
+    <div class="no-print-bar">
+        <div>
+            <button onclick="window.print()" class="btn-print">
+                <i class="fas fa-print"></i> طباعة الكشف الورقي
+            </button>
+        </div>
+        <a href="/admin/absence-profs" style="text-decoration: none; color: #1a237e; font-weight: bold;">
+            <i class="fas fa-undo"></i> العودة لإدارة الغياب
+        </a>
     </div>
 
-    <div class="header">
-        <h1>كشف توزيع حصص الاحتياط</h1>
-        <p>اليوم: <strong><%= today_name %></strong> | التاريخ: <%= new Date().toLocaleDateString('ar-EG') %></p>
-    </div>
+    <header class="official-header">
+        <div class="side-info">
+            وزارة التعليم<br>
+            إدارة تعليم المنطقة<br>
+            مدرسة ابن دريد
+        </div>
+        <div class="school-info">
+            <h2>سجل توزيع حصص الانتظار (الاحتياط)</h2>
+            <p>ليوم: <strong><%= today_name %></strong> | الموافق: <%= new Date().toLocaleDateString('ar-EG') %></p>
+        </div>
+        <div class="side-info" style="text-align: left;">
+            الرقم: ...................<br>
+            التاريخ: ...................<br>
+            المرفقات: ...................
+        </div>
+    </header>
 
-    <table>
+    <table class="print-table">
         <thead>
             <tr>
-                <th>الحصة</th>
-                <th>الصف والشعبة</th>
-                <th>المعلم الاحتياط المقترح</th>
-                <th>توقيع المعلم</th>
+                <th style="width: 10%;">الحصة</th>
+                <th style="width: 20%;">الصف والشعبة</th>
+                <th style="width: 45%;">المعلم البديل المقترح</th>
+                <th style="width: 25%;">توقيع المعلم بالعلم</th>
             </tr>
         </thead>
         <tbody>
             <% if(suggestions.length > 0) { %>
                 <% suggestions.forEach(s => { %>
                     <tr>
-                        <td>الحصة <%= s.hessa %></td>
+                        <td><strong><%= s.hessa %></strong></td>
                         <td><%= s.classe %> / <%= s.section %></td>
                         <td>
-                            <select style="border:none; font-size:16px; width:100%; background:transparent;">
+                            <select class="teacher-select" style="width: 100%; padding: 5px; font-size: 1rem; border: 1px solid #ddd;">
                                 <option value="">-- اختر المعلم البديل --</option>
                                 <% s.available_profs.forEach(p => { %>
                                     <option><%= p.nom %> (<%= p.matiere %>)</option>
                                 <% }) %>
                             </select>
                         </td>
-                        <td style="width: 150px;"></td>
-                    </tr>
+                        <td></td> </tr>
                 <% }) %>
             <% } else { %>
                 <tr>
-                    <td colspan="4">لا توجد حصص مجدولة لهذا المعلم اليوم.</td>
+                    <td colspan="4" style="padding: 40px; color: #666;">لا توجد حصص مجدولة للمعلم الغائب اليوم.</td>
                 </tr>
             <% } %>
         </tbody>
     </table>
 
-    <div style="margin-top: 50px; display: flex; justify-content: space-around;">
-        <p>توقيع مشرف الجدول: ...........................</p>
-        <p>يعتمد مدير المدرسة: ...........................</p>
-    </div>
+    <footer style="margin-top: 80px; display: flex; justify-content: space-around; font-weight: bold;">
+        <div style="text-align: center;">
+            <p>مشرف الجدول المدرسي</p>
+            <p style="margin-top: 30px;">...................................</p>
+        </div>
+        <div style="text-align: center;">
+            <p>مدير المدرسة</p>
+            <p style="margin-top: 30px;">...................................</p>
+        </div>
+    </footer>
 
 </body>
 </html>

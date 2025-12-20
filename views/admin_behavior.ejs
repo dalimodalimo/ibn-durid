@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titre %> - مدرسة ابن دريد</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/teacher_style.css"> 
+    <style>
+        .badge {
+            background: #eef2ff;
+            color: var(--primary-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+        }
+        .event-text {
+            max-width: 300px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div class="user-info">
+                <h1><i class="fas fa-shield-halved"></i> سجل الانضباط والسلوك</h1>
+                <span><i class="fas fa-database"></i> إجمالي الملاحظات: <b><%= reports.length %></b></span>
+            </div>
+            <a href="/admin/dashboard" class="btn-logout-alt" style="border-color: var(--primary-color); color: var(--primary-color);">
+                <span>الرئيسية</span> <i class="fas fa-home"></i>
+            </a>
+        </header>
+
+        <div class="section" style="padding: 15px 25px;">
+            <div class="filter-section">
+                <div class="search-input">
+                    <input type="text" id="studentSearch" placeholder="🔍 ابحث باسم الطالب أو الفصل..." onkeyup="filterTable()">
+                </div>
+            </div>
+        </div>
+
+        <section class="section">
+            <div id="tableWrapper">
+                <table class="styled-table" id="behaviorTable">
+                    <thead>
+                        <tr>
+                            <th>الطالب</th>
+                            <th>الفصل/القسم</th>
+                            <th>الملاحظة السلوكية</th>
+                            <th>المعلم المسؤول</th>
+                            <th>التاريخ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (reports.length === 0) { %>
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding: 40px;">
+                                    <i class="fas fa-folder-open" style="font-size: 3rem; color: #cbd5e1; display: block; margin-bottom: 10px;"></i>
+                                    لا توجد ملاحظات مسجلة حالياً.
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% reports.forEach(r => { %>
+                                <tr>
+                                    <td><b style="color: var(--dark-navy);"><%= r.student_name %></b></td>
+                                    <td><span class="badge"><%= r.classe %> / <%= r.section %></span></td>
+                                    <td>
+                                        <div class="event-text">
+                                            <i class="fas fa-quote-right" style="font-size: 0.7rem; color: var(--primary-color); opacity: 0.5;"></i>
+                                            <%= r.event_desc %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span style="font-size: 0.9rem;">
+                                            <i class="fas fa-user-tie" style="color: #94a3b8;"></i> <%= r.teacher_name %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="color: #64748b; font-size: 0.85rem;">
+                                            <i class="far fa-clock"></i> <%= r.date %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // وظيفة البحث الفوري في الجدول
+        function filterTable() {
+            const input = document.getElementById('studentSearch');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('behaviorTable');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdName = tr[i].getElementsByTagName('td')[0];
+                const tdClass = tr[i].getElementsByTagName('td')[1];
+                if (tdName || tdClass) {
+                    const txtValue = (tdName.textContent || tdName.innerText) + (tdClass.textContent || tdClass.innerText);
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

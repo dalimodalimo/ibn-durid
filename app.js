@@ -257,10 +257,41 @@ initializeDatabase().then(() => {
         } catch (e) { res.status(500).send("خطأ"); }
     });
 
-    app.get('/admin/rapport-absences-eleves', async (req, res) => {
-        const stats = await db.all(`SELECT sa.date, el.nom as student_name, el.classe, el.section, sa.periode, en.nom as teacher_name FROM student_absences sa JOIN eleves el ON sa.eleve_id = el.id JOIN enseignants en ON sa.enseignant_id = en.id ORDER BY sa.date DESC`);
-        res.render('admin_student_reports', { stats, titre: "تقارير غياب الطلاب" });
-    });
+   app.get('/admin/rapport-absences-eleves', async (req, res) => {
+    try {
+        const view = req.query.view || ''; // جلب نوع العرض من الرابط
+        let query = `
+            SELECT sa.date, el.nom as student_name, el.classe, el.section, sa.periode, en.nom as teacher_name 
+            FROM student_absences sa 
+            JOIN eleves el ON sa.eleve_id = el.id 
+            JOIN enseignants en ON sa.enseignant_id = en.id`;
+        
+        let params = [];
+
+        // إضافة منطق الفلترة بناءً على الـ view
+        if (view === 'daily') {
+            query += " WHERE sa.date = date('now', 'localtime')";
+        } else if (view === 'weekly') {
+            query += " WHERE sa.date >= date('now', '-7 days')";
+        } else if (view === 'monthly') {
+            query += " WHERE sa.date >= date('now', 'start of month')";
+        }
+
+        query += " ORDER BY sa.date DESC";
+
+        const stats = await db.all(query, params);
+        
+        // إرسال المتغيرات للملف، تأكد من إرسال view هنا
+        res.render('admin_student_reports', { 
+            stats, 
+            view, 
+            titre: "تقارير غياب الطلاب" 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("خطأ في جلب تقارير الغياب");
+    }
+});
 
     // --- [ قسـم المعلـم - غير محمي بـ isAdmin ] ---
 
@@ -309,6 +340,36 @@ initializeDatabase().then(() => {
     app.get('/logout', (req, res) => {
         res.clearCookie('admin_auth'); // تسجيل الخروج للأدمن
         res.redirect('/teacher/login');
+    });
+
+    // مسار عرض تقارير السلوك للأدمن
+// مسار عرض تقارير السلوك للأدمن - النسخة المصححة المتوافقة مع جداولك
+    app.get('/admin/behavior-reports', async (req, res) => {
+        try {
+            // ملاحظة: تم تعديل الاستعلام ليتوافق مع أسماء الجداول في كودك (behavior_logs, eleves, enseignants)
+            const reports = await db.all(`
+                SELECT 
+                    s.nom AS student_name, 
+                    s.classe, 
+                    s.section, 
+                    b.event AS event_desc, 
+                    b.date, 
+                    e.nom AS teacher_name
+                FROM behavior_logs b
+                JOIN eleves s ON b.student_id = s.id
+                JOIN enseignants e ON b.teacher_id = e.id
+                ORDER BY b.date DESC
+            `);
+            
+            res.render('admin_behavior', { 
+                reports, 
+                titre: "تقارير السلوك",
+                ecole: "مدرسة ابن دريد" 
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("خطأ في جلب التقارير: تأكد من وجود جدول behavior_logs وبيانات صحيحة.");
+        }
     });
 
     app.listen(3000, () => console.log(`🚀 النظام يعمل: http://localhost:3000/admin/dashboard`));

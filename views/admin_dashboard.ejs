@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %> - مدرسة ابن دريد</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --sidebar-width: 260px;
@@ -13,6 +14,8 @@
             --danger: #e74c3c;
             --success: #27ae60;
             --warning: #f39c12;
+            --info: #3498db;
+            --purple: #9b59b6; /* لون جديد لتقارير السلوك */
             --white: #ffffff;
         }
 
@@ -35,18 +38,21 @@
             display: flex;
             flex-direction: column;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
         }
 
         .sidebar h2 { margin-bottom: 5px; color: #ecf0f1; font-size: 1.4rem; }
         .sidebar p { font-size: 0.85rem; opacity: 0.7; margin-bottom: 20px; }
         .sidebar hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0; }
         
-        .sidebar-nav { flex-grow: 1; }
+        .sidebar-nav { flex-grow: 1; overflow-y: auto; }
         
         .nav-link {
             color: #bdc3c7;
             text-decoration: none;
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding: 12px 15px;
             border-radius: 8px;
             margin-bottom: 8px;
@@ -60,14 +66,8 @@
         }
 
         .nav-link.active {
-            background: #3498db;
+            background: var(--info);
             color: white;
-        }
-
-        /* رابط الإعدادات الخاص في القائمة */
-        .nav-link.settings-link {
-            border: 1px dashed #3498db;
-            margin-top: 10px;
         }
 
         .logout-btn {
@@ -78,7 +78,7 @@
             border-radius: 8px;
             text-decoration: none;
             font-weight: bold;
-            margin-top: auto;
+            margin-top: 20px;
             transition: 0.3s;
         }
 
@@ -128,15 +128,26 @@
             transform: translateY(-8px); 
             box-shadow: 0 12px 20px rgba(0,0,0,0.1);
             background-color: #fafafa;
-            border-bottom: 4px solid #3498db;
         }
 
-        .card.settings-card:hover { border-bottom-color: var(--warning); }
+        /* ألوان تمييز الكروت عند التمرير */
+        .card.teachers:hover { border-bottom-color: var(--info); }
+        .card.students:hover { border-bottom-color: var(--success); }
+        .card.timetable:hover { border-bottom-color: var(--accent-blue); }
+        .card.absence:hover { border-bottom-color: var(--danger); }
+        .card.reports:hover { border-bottom-color: var(--warning); }
+        .card.behavior:hover { border-bottom-color: var(--purple); }
+        .card.settings:hover { border-bottom-color: #95a5a6; }
 
         .card .icon { font-size: 2.5rem; margin-bottom: 15px; }
         .card h3 { color: var(--primary-blue); margin: 10px 0 5px 0; font-size: 1.2rem; }
-        .card p { color: #7f8c8d; font-size: 0.9rem; margin: 0; }
+        .card p { color: #7f8c8d; font-size: 0.9rem; margin: 0; line-height: 1.4; }
 
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; padding: 10px; }
+            .sidebar h2, .sidebar p, .sidebar hr, .nav-link span { display: none; }
+            .main-content { margin-right: 70px; padding: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -147,16 +158,18 @@
     <hr>
     
     <div class="sidebar-nav">
-        <a href="/admin/dashboard" class="nav-link active">🏠 لوحة التحكم</a>
-        <a href="/admin/enseignants" class="nav-link">👨‍🏫 إدارة المعلمين</a>
-        <a href="/admin/eleves" class="nav-link">👨‍🎓 إدارة الطلاب</a>
-        <a href="/admin/timetable" class="nav-link">📅 الجدول المدرسي</a>
-        <a href="/admin/absence-profs" class="nav-link">📝 غياب المعلمين</a>
-        <a href="/admin/rapport-absences-eleves" class="nav-link">📊 تقارير الطلاب</a>
-        <a href="/admin/settings" class="nav-link settings-link">⚙️ إعدادات النظام</a>
+        <a href="/admin/dashboard" class="nav-link active"><i class="fas fa-home"></i> <span>لوحة التحكم</span></a>
+        <a href="/admin/enseignants" class="nav-link"><i class="fas fa-chalkboard-teacher"></i> <span>إدارة المعلمين</span></a>
+        <a href="/admin/eleves" class="nav-link"><i class="fas fa-user-graduate"></i> <span>إدارة الطلاب</span></a>
+        <a href="/admin/timetable" class="nav-link"><i class="fas fa-calendar-alt"></i> <span>الجدول المدرسي</span></a>
+        <a href="/admin/absence-profs" class="nav-link"><i class="fas fa-user-clock"></i> <span>غياب المعلمين</span></a>
+        <a href="/admin/rapport-absences-eleves" class="nav-link"><i class="fas fa-chart-line"></i> <span>تقارير الطلاب</span></a>
+        <a href="/admin/behavior-reports" class="nav-link"><i class="fas fa-clipboard-list"></i> <span>تقارير السلوك</span></a>
+        <hr>
+        <a href="/admin/settings" class="nav-link"><i class="fas fa-cog"></i> <span>إعدادات النظام</span></a>
     </div>
 
-    <a href="/logout" class="logout-btn">تسجيل الخروج 🚪</a>
+    <a href="/logout" class="logout-btn">خروج 🚪</a>
 </div>
 
 <div class="main-content">
@@ -166,37 +179,43 @@
     </header>
 
     <div class="grid">
-        <div class="card" onclick="location.href='/admin/enseignants'">
+        <div class="card teachers" onclick="location.href='/admin/enseignants'">
             <div class="icon">👨‍🏫</div>
             <h3>إدارة المعلمين</h3>
             <p>إضافة المعلمين، التخصصات، وتعديل البيانات</p>
         </div>
 
-        <div class="card" onclick="location.href='/admin/eleves'">
+        <div class="card students" onclick="location.href='/admin/eleves'">
             <div class="icon">👨‍🎓</div>
             <h3>إدارة الطلاب</h3>
             <p>تسجيل الطلاب الجدد وتوزيع الفصول</p>
         </div>
 
-        <div class="card" onclick="location.href='/admin/timetable'">
+        <div class="card timetable" onclick="location.href='/admin/timetable'">
             <div class="icon">📅</div>
             <h3>الجدول المدرسي</h3>
             <p>تنظيم الحصص الأسبوعية وتوزيع المهام</p>
         </div>
 
-        <div class="card" onclick="location.href='/admin/absence-profs'">
+        <div class="card absence" onclick="location.href='/admin/absence-profs'">
             <div class="icon">🔄</div>
             <h3>الاحتياط والغياب</h3>
             <p>رصد غياب المعلمين وتعيين الاحتياط</p>
         </div>
 
-        <div class="card" onclick="location.href='/admin/rapport-absences-eleves'">
+        <div class="card reports" onclick="location.href='/admin/rapport-absences-eleves'">
             <div class="icon">📊</div>
             <h3>تقارير الطلاب</h3>
             <p>كشوفات الغياب اليومية، الشهرية، والسنوية</p>
         </div>
 
-        <div class="card settings-card" onclick="location.href='/admin/settings'">
+        <div class="card behavior" onclick="location.href='/admin/behavior-reports'">
+            <div class="icon" style="color: var(--purple);">📑</div>
+            <h3>تقارير السلوك</h3>
+            <p>متابعة ملاحظات المعلمين حول سلوك الطلاب</p>
+        </div>
+
+        <div class="card settings" onclick="location.href='/admin/settings'">
             <div class="icon">⚙️</div>
             <h3>إعدادات النظام</h3>
             <p>ضبط الشعب، توقيت الحصص، والمواد الدراسية</p>

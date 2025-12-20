@@ -1,0 +1,159 @@
+/* public/css/enseignants_style.css */
+:root {
+    --primary-blue: #1a237e;
+    --accent-blue: #3f51b5;
+    --success-green: #2e7d32;
+    --danger-red: #d32f2f;
+    --light-bg: #f8fafc;
+    --white: #ffffff;
+    --border-color: #e2e8f0;
+    --text-dark: #1e293b;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background-color: var(--light-bg);
+    margin: 0;
+    padding: 20px;
+    direction: rtl;
+    color: var(--text-dark);
+}
+
+.container {
+    max-width: 1150px;
+    margin: 0 auto;
+}
+
+/* Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.back-link {
+    text-decoration: none;
+    color: var(--primary-blue);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.back-link:hover { transform: translateX(5px); }
+
+/* Sections */
+.section-card {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+h1 { color: var(--primary-blue); font-size: 1.8rem; margin: 0; }
+h2 { 
+    font-size: 1.2rem; 
+    color: var(--accent-blue); 
+    margin-bottom: 20px; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    border-bottom: 2px solid var(--light-bg);
+    padding-bottom: 10px;
+}
+
+/* Forms */
+.form-grid {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.input-group label { font-size: 0.85rem; font-weight: 600; color: #64748b; }
+
+input, select {
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: var(--accent-blue);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(63, 81, 181, 0.1);
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+    justify-content: center;
+}
+
+.btn-add { background: var(--success-green); color: white; }
+.btn-add:hover { background: #1b5e20; transform: translateY(-2px); }
+
+.btn-assign { background: var(--accent-blue); color: white; }
+.btn-assign:hover { background: var(--primary-blue); transform: translateY(-2px); }
+
+/* Table Style */
+.table-container { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border-color); }
+
+table { width: 100%; border-collapse: collapse; background: white; }
+
+th { background: #f1f5f9; color: #475569; padding: 15px; font-weight: 600; font-size: 0.9rem; text-align: center; }
+
+td { padding: 15px; border-bottom: 1px solid var(--border-color); text-align: center; vertical-align: middle; }
+
+tr:last-child td { border-bottom: none; }
+
+/* Tag Classe */
+.tag-classe {
+    background: #eef2ff;
+    color: var(--accent-blue);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #c7d2fe;
+}
+
+.btn-remove-aff { color: var(--danger-red); font-size: 1.2rem; line-height: 1; border: none; background: none; cursor: pointer; }
+
+.btn-delete {
+    color: var(--danger-red);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.btn-delete:hover { background: #fef2f2; }

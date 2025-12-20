@@ -1,0 +1,143 @@
+/* public/css/reports_style.css */
+:root {
+    --primary-dark: #2c3e50;
+    --accent-blue: #3498db;
+    --bg-light: #f4f7f6;
+    --text-main: #333;
+    --border-color: #e0e0e0;
+    --success: #27ae60;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-light);
+    margin: 0;
+    padding: 20px;
+    direction: rtl;
+    color: var(--text-main);
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+/* الرأس */
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--accent-blue);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.report-header h1 {
+    margin: 0;
+    color: var(--primary-dark);
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* التنقل والفلترة */
+.filter-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.filter-nav a {
+    text-decoration: none;
+    padding: 10px 20px;
+    background: white;
+    color: var(--primary-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.filter-nav a:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+}
+
+.filter-nav a.active {
+    background: var(--primary-dark);
+    color: white;
+}
+
+/* الجدول */
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th {
+    background-color: var(--primary-dark);
+    color: white;
+    padding: 15px;
+    text-align: right;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+td {
+    padding: 14px 15px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+tr:nth-child(even) { background-color: #fcfcfc; }
+tr:hover { background-color: #f1f7ff; }
+
+/* شارات (Badges) */
+.badge-periode {
+    background: #e1f5fe;
+    color: #0288d1;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.student-name {
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px;
+    color: #95a5a6;
+}
+
+/* أزرار الإجراءات */
+.btn-print {
+    background: var(--success) !important;
+    color: white !important;
+}
+
+@media print {
+    .filter-nav, .report-header .back-btn { display: none !important; }
+    .container { box-shadow: none; padding: 0; }
+    body { background: white; }
+}

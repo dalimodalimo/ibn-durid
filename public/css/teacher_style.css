@@ -1,152 +1,221 @@
-/* public/css/teacher_style.css */
+/* Professional Teacher Dashboard Style
+   Theme: Modern, Clean, and Mobile-First
+*/
+
 :root {
-    --primary: #2c3e50;
-    --accent: #3498db;
-    --success: #27ae60;
-    --danger: #e74c3c;
-    --warning: #f39c12;
-    --light-bg: #f4f7f6;
-    --white: #ffffff;
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+    --warning-color: #ff9f1c;
+    --dark-navy: #212529;
+    --light-bg: #f8f9fa;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --radius: 16px;
 }
 
 * {
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+    transition: all 0.3s ease;
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background-color: var(--light-bg);
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%);
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 10px; /* تقليل الحواف للهواتف */
-    line-height: 1.6;
-    color: #333;
+    padding: 15px;
+    direction: rtl;
+    color: var(--dark-navy);
 }
 
 .container {
-    max-width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
-/* الهيدر المتجاوب */
-.header {
-    background: linear-gradient(135deg, var(--primary), #34495e);
-    color: white;
-    padding: 20px;
-    border-radius: 15px;
+/* Header Design */
+.main-header {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 25px;
+}
+
+.user-info h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.user-info span {
+    color: #6c757d;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+/* Logout Button */
+.btn-logout-alt {
+    background: #fff;
+    color: var(--danger-color);
+    border: 2px solid var(--danger-color);
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-logout-alt:hover {
+    background: var(--danger-color);
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(247, 37, 133, 0.4);
+}
+
+/* Section Styling */
+.section {
+    background: var(--glass-bg);
+    border-radius: var(--radius);
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.section-header {
     margin-bottom: 20px;
     display: flex;
-    flex-direction: column; /* ترتيب رأسي للهواتف */
+    align-items: center;
+    gap: 12px;
+    color: var(--primary-color);
+}
+
+/* Sessions Cards */
+.timetable-list {
+    display: flex;
     gap: 15px;
-    text-align: center;
+    overflow-x: auto;
+    padding: 10px 5px;
 }
 
-@media (min-width: 768px) {
-    .header {
-        flex-direction: row;
-        text-align: right;
-        justify-content: space-between;
-    }
-}
-
-.btn-logout {
-    background: var(--danger);
-    color: white;
-    padding: 12px 20px;
-    text-decoration: none;
-    border-radius: 10px;
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-
-/* الأقسام (Cards) */
-.section {
-    background: var(--white);
+.session-card {
+    background: white;
+    min-width: 140px;
     padding: 15px;
     border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
-}
-
-h2 {
-    font-size: 1.2rem;
-    color: var(--primary);
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-/* الجدول الزمني (Grid) */
-.timetable-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* عمودين في الهواتف */
-    gap: 10px;
-}
-
-@media (min-width: 768px) {
-    .timetable-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    }
-}
-
-.time-slot {
-    background: #eef2f3;
-    padding: 15px;
-    border-radius: 12px;
     text-align: center;
-    border-right: 4px solid var(--accent);
+    border: 1px solid #edf2f7;
+    box-shadow: var(--shadow-sm);
 }
 
-/* الجداول والجوال */
-#tableWrapper {
+.session-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+}
+
+/* Styled Table */
+.styled-table {
     width: 100%;
-    overflow-x: auto; /* السماح بالتمرير الأفقي للجداول الطويلة */
-    -webkit-overflow-scrolling: touch;
+    border-collapse: separate;
+    border-spacing: 0 10px;
 }
 
-table {
-    width: 100%;
-    min-width: 400px; /* لضمان عدم ضغط الأعمدة جداً */
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 12px 8px;
-    font-size: 0.9rem;
-    border-bottom: 1px solid #eee;
-}
-
-/* الأزرار والنماذج */
-.form-group {
-    margin-bottom: 15px;
-}
-
-input, select, textarea {
-    width: 100%;
-    padding: 14px; /* مساحة أكبر للمس باليد */
-    border: 1.5px solid #ddd;
-    border-radius: 10px;
-    font-size: 1rem;
-}
-
-.btn-save, #submitBtn {
-    width: 100%;
+.styled-table th {
+    background: transparent;
+    color: #4a5568;
     padding: 15px;
-    background: var(--success);
+    font-weight: 600;
+}
+
+.styled-table tbody tr {
+    background: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.styled-table td {
+    padding: 15px;
+}
+
+.styled-table tr td:first-child { border-radius: 0 12px 12px 0; }
+.styled-table tr td:last-child { border-radius: 12px 0 0 12px; }
+
+/* Custom Switch for Absence */
+.switch {
+    background: #f1f5f9;
+    padding: 8px 15px;
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+input:checked + .slider {
+    background: var(--danger-color);
+}
+
+/* Inputs & Forms */
+select, input[type="text"] {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    font-size: 1rem;
+    outline: none;
+}
+
+select:focus, input:focus {
+    border-color: var(--primary-color);
+}
+
+.btn-submit-full {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
-    border-radius: 12px;
+    padding: 18px;
+    border-radius: 15px;
     font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2);
+    width: 100%;
+    margin-top: 20px;
 }
 
-/* السلوك (Behavior Form) */
-@media (max-width: 767px) {
-    form[action="/teacher/behavior/add"] {
-        display: flex;
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .main-header {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .styled-table thead {
+        display: none; /* Hide headers on very small screens */
+    }
+    
+    .styled-table td {
+        display: block;
+        text-align: right;
+        padding: 10px;
+    }
+
+    .user-info span {
+        justify-content: center;
     }
 }

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %> - مدرسة ابن دريد</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/teacher_style.css">  
 </head>
 <body>
@@ -11,74 +12,95 @@
 <div class="container">
     
     <% if (success) { %>
-        <div class="alert-success" style="background:var(--success); color:white; padding:15px; border-radius:10px; margin-bottom:20px; text-align:center;">
-            ✅ تم رصد الغياب بنجاح وإرساله للإدارة.
+        <div class="toast success-toast">
+            <i class="fas fa-check-circle"></i> تم رصد الغياب بنجاح وإرساله للإدارة.
         </div>
     <% } %>
 
-    <div class="header">
-        <div>
-            <h1>أهلاً، أستاذ/ <%= prof.nom %> 👋</h1>
-            <p>👨‍🏫 تخصص: <b><%= prof.matiere %></b> | 📅 اليوم: <b><%= today %></b></p>
-        </div>
-        <a href="/logout" class="btn-logout">تسجيل الخروج 🚪</a>
-    </div>
-
-    <div class="section section-blue">
-        <h2>📅 جدول حصص اليوم</h2>
-        <div class="timetable-grid">
-            <% if (sessions.length === 0) { %>
-                <p>لا يوجد حصص مسجلة لك اليوم.</p>
-            <% } else { %>
-                <% sessions.sort((a,b) => a.periode - b.periode).forEach(s => { %>
-                    <div class="time-slot">
-                        <b>الحصة <%= s.periode %></b>
-                        <span><%= s.classe %> / <%= s.section %></span>
-                    </div>
-                <% }) %>
-            <% } %>
-        </div>
-    </div>
-
-    <div class="section section-orange">
-        <h2>📢 تنبيهات الإدارة (الغياب والاحتياط)</h2>
-        <% if (replacements.length === 0) { %>
-            <p>الوضع مستقر، لا توجد غيابات للمعلمين اليوم.</p>
-        <% } else { %>
-            <div class="alerts-container">
-                <% replacements.forEach(t => { %>
-                    <div style="margin-bottom:12px; padding:15px; background:#fffcf0; border-radius:10px; border-right:5px solid var(--warning);">
-                        ⚠️ غياب: <b><%= t.nom %></b> (<%= t.matiere %>) - السبب: <%= t.raison %>
-                    </div>
-                <% }) %>
+    <header class="main-header">
+        <div class="user-profile">
+            <div class="avatar"><i class="fas fa-user-tie"></i></div>
+            <div class="user-info">
+                <h1>أهلاً، أستاذ/ <%= prof.nom %></h1>
+                <span><i class="fas fa-book-open"></i> <%= prof.matiere %> | <i class="fas fa-calendar-day"></i> <%= today %></span>
             </div>
-        <% } %>
+        </div>
+        <a href="/logout" class="btn-logout-alt">
+            <span>خروج</span> <i class="fas fa-sign-out-alt"></i>
+        </a>
+    </header>
+
+    <div class="dashboard-grid">
+        
+        <section class="section side-section">
+            <div class="section-header">
+                <i class="fas fa-clock"></i>
+                <h2>جدول اليوم</h2>
+            </div>
+            <div class="timetable-list">
+                <% if (sessions.length === 0) { %>
+                    <p class="empty-msg">لا حصص اليوم</p>
+                <% } else { %>
+                    <% sessions.sort((a,b) => a.periode - b.periode).forEach(s => { %>
+                        <div class="session-card">
+                            <span class="period">ح<%= s.periode %></span>
+                            <span class="class-name"><%= s.classe %>/<%= s.section %></span>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+        </section>
+
+        <section class="section alert-section">
+            <div class="section-header">
+                <i class="fas fa-bullhorn"></i>
+                <h2>تنبيهات الإدارة</h2>
+            </div>
+            <div class="alerts-wrapper">
+                <% if (replacements.length === 0) { %>
+                    <p class="no-alerts">✅ لا توجد غيابات مسجلة حالياً.</p>
+                <% } else { %>
+                    <% replacements.forEach(t => { %>
+                        <div class="alert-item">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>غياب <b><%= t.nom %></b> (<%= t.matiere %>)</span>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+        </section>
+
     </div>
 
-    <div class="section section-green">
-        <h2>📝 رصد غياب الطلاب</h2>
-        <form action="/teacher/absences/mark" method="POST">
+    <section class="section main-section">
+        <div class="section-header">
+            <i class="fas fa-user-check"></i>
+            <h2>رصد غياب الطلاب</h2>
+        </div>
+        
+        <form action="/teacher/absences/mark" method="POST" class="attendance-form">
             <input type="hidden" name="teacher_id" value="<%= prof.id %>">
             <input type="hidden" name="date" value="<%= today %>">
             
-            <div class="form-group">
-                <label>اختر الحصة لفتح الكشف:</label>
-                <select name="periode" id="sessionSelect" required onchange="filterStudents()">
-                    <option value="" disabled selected>-- اختر الحصة من جدولك --</option>
-                    <% sessions.forEach(s => { %>
-                        <option value="<%= s.periode %>" data-class="<%= s.classe %>-<%= s.section %>">
-                            الحصة <%= s.periode %>: <%= s.classe %> / <%= s.section %>
-                        </option>
-                    <% }) %>
-                </select>
+            <div class="selection-box">
+                <label>اختر الحصة للبدء:</label>
+                <div class="custom-select">
+                    <select name="periode" id="sessionSelect" required onchange="filterStudents()">
+                        <option value="" disabled selected>-- اختر من الجدول --</option>
+                        <% sessions.forEach(s => { %>
+                            <option value="<%= s.periode %>" data-class="<%= s.classe %>-<%= s.section %>">
+                                الحصة <%= s.periode %>: <%= s.classe %> / <%= s.section %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
 
-            <div id="tableWrapper" style="overflow-x: auto;">
-                <table id="attendanceTable" style="display:none;">
+            <div id="tableContainer" class="table-container hidden">
+                <table class="styled-table">
                     <thead>
                         <tr>
-                            <th>اسم الطالب</th>
-                            <th>القسم</th>
+                            <th>الطالب</th>
                             <th>الحالة</th>
                         </tr>
                     </thead>
@@ -86,45 +108,41 @@
                         <% students.forEach(s => { %>
                             <tr class="student-row" data-class-id="<%= s.classe %>-<%= s.section %>">
                                 <td><%= s.nom %></td>
-                                <td><%= s.classe %> / <%= s.section %></td>
                                 <td>
-                                    <label class="badge-absent">
-                                        <input type="checkbox" name="student_ids[]" value="<%= s.id %>"> تسجيل غياب
+                                    <label class="switch">
+                                        <input type="checkbox" name="student_ids[]" value="<%= s.id %>">
+                                        <span class="slider"></span>
+                                        <span class="label-text">غائب</span>
                                     </label>
                                 </td>
                             </tr>
                         <% }) %>
                     </tbody>
                 </table>
+                <button type="submit" class="btn-submit-full">
+                    <i class="fas fa-cloud-upload-alt"></i> حفظ وإرسال الكشف
+                </button>
             </div>
-
-            <button type="submit" id="submitBtn" style="display:none; margin-top:25px; width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:10px; cursor:pointer; font-size:1.1rem; font-weight:bold; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">حفظ وإرسال الكشف ✅</button>
         </form>
-    </div>
+    </section>
 
-    <div class="section">
-        <h2>⚖️ سجل الملاحظات السلوكية</h2>
-        <form action="/teacher/behavior/add" method="POST" style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 15px; align-items: flex-end;">
+    <section class="section behavior-section">
+        <div class="section-header">
+            <i class="fas fa-star-half-alt"></i>
+            <h2>سجل الملاحظات السلوكية</h2>
+        </div>
+        <form action="/teacher/behavior/add" method="POST" class="quick-form">
             <input type="hidden" name="teacher_id" value="<%= prof.id %>">
-            
-            <div class="form-group">
-                <label>الطالب:</label>
-                <select name="student_id" required>
-                    <option value="">-- اختر الطالب --</option>
-                    <% students.forEach(s => { %>
-                        <option value="<%= s.id %>"><%= s.nom %> (<%= s.classe %> / <%= s.section %>)</option>
-                    <% }) %>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>الملاحظة:</label>
-                <input type="text" name="event_desc" placeholder="مثال: تميز في حل الواجب، عدم إحضار الكتاب..." required>
-            </div>
-
-            <button type="submit" class="btn-save" style="background:var(--primary-dark); color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:bold; height: 45px;">حفظ 💾</button>
+            <select name="student_id" required>
+                <option value="">اختر الطالب...</option>
+                <% students.forEach(s => { %>
+                    <option value="<%= s.id %>"><%= s.nom %> (<%= s.classe %>/<%= s.section %>)</option>
+                <% }) %>
+            </select>
+            <input type="text" name="event_desc" placeholder="الملاحظة (مثال: تميز، مشاغبة...)" required>
+            <button type="submit" class="btn-save-circle"><i class="fas fa-plus"></i></button>
         </form>
-    </div>
+    </section>
 
 </div>
 
@@ -133,8 +151,7 @@
         const select = document.getElementById('sessionSelect');
         const target = select.options[select.selectedIndex].getAttribute('data-class');
         const rows = document.querySelectorAll('.student-row');
-        const table = document.getElementById('attendanceTable');
-        const btn = document.getElementById('submitBtn');
+        const container = document.getElementById('tableContainer');
 
         let count = 0;
         rows.forEach(row => {
@@ -146,10 +163,9 @@
             }
         });
 
-        table.style.display = count > 0 ? 'table' : 'none';
-        btn.style.display = count > 0 ? 'block' : 'none';
+        if(count > 0) container.classList.remove('hidden');
+        else container.classList.add('hidden');
     }
 </script>
-
 </body>
 </html>

@@ -2,38 +2,37 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دخول المعلمين - مدرسة ابن دريد</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #eef2f3; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        h1 { color: #2c3e50; margin-bottom: 20px; }
-        select, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 18px; transition: 0.3s; }
-        button:hover { background: #2980b9; }
-        .error { color: #e74c3c; margin-bottom: 10px; font-weight: bold; }
-    </style>
+    <link rel="stylesheet" href="/css/teacher_login.css">
 </head>
 <body>
 
 <div class="login-card">
     <h1>دخول المعلمين</h1>
-    <% if (error) { %> <p class="error"><%= error %></p> <% } %>
+    
+    <% if (error) { %> 
+        <div class="error"><%= error %></div> 
+    <% } %>
     
     <form action="/teacher/login" method="POST">
-        <label>اختر اسمك من القائمة:</label>
-        <select name="teacher_id" required>
-            <option value="" disabled selected>-- اختر اسم المعلم --</option>
+        <label for="teacher_id">اسم المعلم:</label>
+        <select name="teacher_id" id="teacher_id" required>
+            <option value="" disabled selected>-- اختر اسمك من القائمة --</option>
             <% enseignants.forEach(prof => { %>
                 <option value="<%= prof.id %>"><%= prof.nom %></option>
             <% }) %>
         </select>
 
-        <label>كلمة المرور:</label>
-        <input type="password" name="password" placeholder="أدخل كلمة المرور" required>
+        <label for="password">كلمة المرور:</label>
+        <input type="password" name="password" id="password" placeholder="أدخل كلمة المرور" required>
 
-        <button type="submit">فتح الجلسة</button>
+        <button type="submit">فتح الجلسة 🔓</button>
     </form>
-    <p style="margin-top: 20px;"><a href="/admin/dashboard" style="color: #7f8c8d; text-decoration: none; font-size: 14px;">دخول الأدمن</a></p>
+
+    <div class="footer-links">
+        <a href="/admin/dashboard">دخول الإدارة (أدمن)</a>
+    </div>
 </div>
 
 </body>

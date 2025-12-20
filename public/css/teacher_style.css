@@ -1,0 +1,152 @@
+/* public/css/teacher_style.css */
+:root {
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --light-bg: #f4f7f6;
+    --white: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--light-bg);
+    margin: 0;
+    padding: 10px; /* تقليل الحواف للهواتف */
+    line-height: 1.6;
+    color: #333;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* الهيدر المتجاوب */
+.header {
+    background: linear-gradient(135deg, var(--primary), #34495e);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column; /* ترتيب رأسي للهواتف */
+    gap: 15px;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .header {
+        flex-direction: row;
+        text-align: right;
+        justify-content: space-between;
+    }
+}
+
+.btn-logout {
+    background: var(--danger);
+    color: white;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* الأقسام (Cards) */
+.section {
+    background: var(--white);
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.2rem;
+    color: var(--primary);
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* الجدول الزمني (Grid) */
+.timetable-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* عمودين في الهواتف */
+    gap: 10px;
+}
+
+@media (min-width: 768px) {
+    .timetable-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+.time-slot {
+    background: #eef2f3;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border-right: 4px solid var(--accent);
+}
+
+/* الجداول والجوال */
+#tableWrapper {
+    width: 100%;
+    overflow-x: auto; /* السماح بالتمرير الأفقي للجداول الطويلة */
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    min-width: 400px; /* لضمان عدم ضغط الأعمدة جداً */
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 8px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #eee;
+}
+
+/* الأزرار والنماذج */
+.form-group {
+    margin-bottom: 15px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 14px; /* مساحة أكبر للمس باليد */
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.btn-save, #submitBtn {
+    width: 100%;
+    padding: 15px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2);
+}
+
+/* السلوك (Behavior Form) */
+@media (max-width: 767px) {
+    form[action="/teacher/behavior/add"] {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+}

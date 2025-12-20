@@ -4,7 +4,7 @@ const { open } = require('sqlite');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
-const app = express(); // تم نقل التعريف هنا لإصلاح خطأ ReferenceError
+const app = express();
 
 // إعدادات Middleware الأساسية
 app.use(cookieParser());
@@ -16,20 +16,26 @@ const ADMIN_PASSWORD = "admin123"; // كلمة مرور الأدمن
 
 let db;
 
-// 1. إعداد قاعدة البيانات والجداول
+// 1. دالة فتح قاعدة البيانات مع ضمان الحفظ الفيزيائي الفوري
 async function initializeDatabase() {
     db = await open({
-        filename: './ecole_ibn_durid.db',
+        // استخدام path.resolve لضمان عدم ضياع مسار الملف عند إعادة التشغيل
+        filename: path.resolve(__dirname, 'ecole_ibn_durid.db'),
         driver: sqlite3.Database
     });
 
+    // تفعيل وضع WAL لضمان كتابة البيانات فوراً ومنع تعليق القاعدة
+    await db.exec("PRAGMA journal_mode = WAL;");
+    await db.exec("PRAGMA synchronous = NORMAL;");
+    
+    // إنشاء الجداول (في حال عدم وجودها) لضمان هيكلية سليمة
     await db.exec(`
         CREATE TABLE IF NOT EXISTS enseignants (
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
             nom TEXT, matiere TEXT, phone_number TEXT, password TEXT DEFAULT '123456'
         );
-        CREATE TABLE IF NOT EXISTS eleves (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, classe TEXT, section TEXT
+        CREATE TABLE IF NOT EXISTS school_classes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, class_name TEXT UNIQUE, num_sections INTEGER
         );
         CREATE TABLE IF NOT EXISTS affectations (
             id INTEGER PRIMARY KEY AUTOINCREMENT, enseignant_id INTEGER, classe TEXT, section TEXT,
@@ -43,32 +49,26 @@ async function initializeDatabase() {
             id INTEGER PRIMARY KEY AUTOINCREMENT, enseignant_id INTEGER, date TEXT, raison TEXT,
             FOREIGN KEY(enseignant_id) REFERENCES enseignants(id)
         );
+        CREATE TABLE IF NOT EXISTS eleves (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, classe TEXT, section TEXT
+        );
         CREATE TABLE IF NOT EXISTS student_absences (
             id INTEGER PRIMARY KEY AUTOINCREMENT, eleve_id INTEGER, enseignant_id INTEGER, date TEXT, periode INTEGER
         );
         CREATE TABLE IF NOT EXISTS behavior_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, teacher_id INTEGER, event TEXT, date TEXT
         );
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY, value TEXT
-        );
-        CREATE TABLE IF NOT EXISTS school_periods (
-            id INTEGER PRIMARY KEY, start_time TEXT, end_time TEXT
-        );
         CREATE TABLE IF NOT EXISTS school_subjects (
             id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE
         );
-        CREATE TABLE IF NOT EXISTS school_classes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            class_name TEXT UNIQUE,
-            num_sections INTEGER
+        CREATE TABLE IF NOT EXISTS school_periods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, start_time TEXT, end_time TEXT
         );
     `);
-    
-    console.log("✅ النظام متصل بقاعدة البيانات وجاهز.");
+    console.log("✅ تم الاتصال بقاعدة البيانات وتفعيل الحفظ الآمن.");
 }
 
-// وظيفه الحماية: تمنع أي شخص لا يملك الكوكيز من دخول صفحات الأدمن
+// وظيفة الحماية
 function isAdmin(req, res, next) {
     if (req.cookies.admin_auth === 'authenticated') {
         next();
@@ -77,9 +77,40 @@ function isAdmin(req, res, next) {
     }
 }
 
+// بدء تشغيل النظام بعد تهيئة القاعدة
 initializeDatabase().then(() => {
 
-    // --- [ مسارات تسجيل الدخول للأدمن - يجب أن تكون قبل الحماية ] ---
+// --- [ مسارات إضافية للإعدادات لضمان عمل الواجهة بالكامل ] ---
+
+    // 1. حذف مادة دراسية
+    app.post('/admin/settings/subjects/delete', async (req, res) => {
+        try {
+            await db.run("DELETE FROM school_subjects WHERE id = ?", [req.body.id]);
+            res.redirect('/admin/settings');
+        } catch (e) {
+            res.status(500).send("خطأ: لا يمكن حذف المادة لارتباطها ببيانات أخرى");
+        }
+    });
+
+    // 2. تحديث الحصص الدراسية (الوقت)
+    app.post('/admin/settings/periods/update', async (req, res) => {
+        const { id, start_time, end_time } = req.body;
+        try {
+            // تحديث الحصص الثمانية دفعة واحدة
+            for (let i = 0; i < id.length; i++) {
+                await db.run(
+                    "INSERT OR REPLACE INTO school_periods (id, start_time, end_time) VALUES (?, ?, ?)",
+                    [id[i], start_time[i], end_time[i]]
+                );
+            }
+            res.redirect('/admin/settings');
+        } catch (e) {
+            res.status(500).send("خطأ أثناء تحديث أوقات الحصص");
+        }
+    });
+
+
+    // --- [ مسارات تسجيل الدخول للأدمن ] ---
 
     app.get('/admin/login', (req, res) => {
         res.render('admin_login', { error: null, titre: "دخول الإدارة" });
@@ -94,25 +125,21 @@ initializeDatabase().then(() => {
         }
     });
 
-    // تطبيق الحماية على جميع مسارات /admin القادمة
+    // تطبيق الحماية
     app.use('/admin', isAdmin);
 
-    // --- [ قسـم الأدمن المحمي - Admin Section ] ---
+    // --- [ قسـم الأدمن المحمي ] ---
 
     app.get('/admin/dashboard', (req, res) => {
         res.render('admin_dashboard', { ecole: "مدرسة ابن دريد", titre: "لوحة التحكم" });
     });
 
-    // إعدادات النظام
     app.get('/admin/settings', async (req, res) => {
         const classes = await db.all("SELECT * FROM school_classes");
         const periods = await db.all("SELECT * FROM school_periods ORDER BY id ASC");
         const subjects = await db.all("SELECT * FROM school_subjects");
         const teachers = await db.all("SELECT id, nom, password FROM enseignants");
-        res.render('admin_settings', { 
-            titre: "إعدادات النظام", 
-            classes, periods, subjects, teachers
-        });
+        res.render('admin_settings', { titre: "إعدادات النظام", classes, periods, subjects, teachers });
     });
 
     app.post('/admin/settings/classes/add', async (req, res) => {
@@ -136,7 +163,7 @@ initializeDatabase().then(() => {
         res.redirect('/admin/settings');
     });
 
-    // إدارة المعلمين
+    // إدارة المعلمين مع ضمان الحفظ الفوري
     app.get('/admin/enseignants', async (req, res) => {
         const enseignants = await db.all("SELECT * FROM enseignants");
         const affectations = await db.all(`SELECT a.id, e.nom, a.classe, a.section FROM affectations a JOIN enseignants e ON a.enseignant_id = e.id`);
@@ -146,8 +173,11 @@ initializeDatabase().then(() => {
     });
 
     app.post('/admin/enseignants/ajouter', async (req, res) => {
-        await db.run("INSERT INTO enseignants (nom, matiere, phone_number) VALUES (?, ?, ?)", [req.body.nom, req.body.matiere, req.body.phone]);
-        res.redirect('/admin/enseignants');
+        try {
+            await db.run("INSERT INTO enseignants (nom, matiere, phone_number) VALUES (?, ?, ?)", 
+                [req.body.nom, req.body.matiere, req.body.phone]);
+            res.redirect('/admin/enseignants');
+        } catch (e) { res.status(500).send("خطأ في حفظ المعلم"); }
     });
 
     app.post('/admin/enseignants/affecter', async (req, res) => {
@@ -160,6 +190,16 @@ initializeDatabase().then(() => {
     app.post('/admin/enseignants/desaffecter', async (req, res) => {
         await db.run("DELETE FROM affectations WHERE id = ?", [req.body.id]);
         res.redirect('/admin/enseignants');
+    });
+
+    app.get('/admin/enseignants/supprimer/:id', async (req, res) => {
+        try {
+            const id = req.params.id;
+            await db.run("DELETE FROM affectations WHERE enseignant_id = ?", [id]);
+            await db.run("DELETE FROM timetable WHERE enseignant_id = ?", [id]);
+            await db.run("DELETE FROM enseignants WHERE id = ?", [id]);
+            res.redirect('/admin/enseignants');
+        } catch (e) { res.status(500).send("خطأ في الحذف"); }
     });
 
     // إدارة الطلاب 
@@ -190,16 +230,13 @@ initializeDatabase().then(() => {
             const classes = await db.all("SELECT * FROM school_classes");
             const all_affectations = await db.all("SELECT * FROM affectations");
             const unique_classes = await db.all("SELECT DISTINCT classe, section FROM timetable ORDER BY classe, section");
-
             let query = `SELECT t.*, e.nom as prof_nom FROM timetable t JOIN enseignants e ON t.enseignant_id = e.id WHERE 1=1`;
             let params = [];
-            
             if (teacher_filter) { query += ` AND t.enseignant_id = ?`; params.push(teacher_filter); }
             if (class_filter) {
                 const [c, s] = class_filter.split('-'); 
                 query += ` AND t.classe = ? AND t.section = ?`; params.push(c, s);
             }
-
             const schedule = await db.all(query, params);
             res.render('gestion_timetable', { enseignants, schedule, classes, teacher_filter, class_filter, unique_classes, all_affectations, titre: "الجدول المدرسي" });
         } catch (error) { res.status(500).send("خطأ في تحميل البيانات"); }
@@ -227,7 +264,7 @@ initializeDatabase().then(() => {
         res.redirect('/admin/absence-profs');
     });
 
-    // البدلاء وكشف الاحتياط
+    // البدلاء والاحتياط
     app.get('/admin/absences/suggestions/:teacher_id', async (req, res) => {
         const teacher_id = req.params.teacher_id;
         const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -257,43 +294,20 @@ initializeDatabase().then(() => {
         } catch (e) { res.status(500).send("خطأ"); }
     });
 
-   app.get('/admin/rapport-absences-eleves', async (req, res) => {
-    try {
-        const view = req.query.view || ''; // جلب نوع العرض من الرابط
-        let query = `
-            SELECT sa.date, el.nom as student_name, el.classe, el.section, sa.periode, en.nom as teacher_name 
-            FROM student_absences sa 
-            JOIN eleves el ON sa.eleve_id = el.id 
-            JOIN enseignants en ON sa.enseignant_id = en.id`;
-        
-        let params = [];
+    app.get('/admin/rapport-absences-eleves', async (req, res) => {
+        try {
+            const view = req.query.view || ''; 
+            let query = `SELECT sa.date, el.nom as student_name, el.classe, el.section, sa.periode, en.nom as teacher_name FROM student_absences sa JOIN eleves el ON sa.eleve_id = el.id JOIN enseignants en ON sa.enseignant_id = en.id`;
+            if (view === 'daily') query += " WHERE sa.date = date('now', 'localtime')";
+            else if (view === 'weekly') query += " WHERE sa.date >= date('now', '-7 days')";
+            else if (view === 'monthly') query += " WHERE sa.date >= date('now', 'start of month')";
+            query += " ORDER BY sa.date DESC";
+            const stats = await db.all(query);
+            res.render('admin_student_reports', { stats, view, titre: "تقارير غياب الطلاب" });
+        } catch (error) { res.status(500).send("خطأ في جلب تقارير الغياب"); }
+    });
 
-        // إضافة منطق الفلترة بناءً على الـ view
-        if (view === 'daily') {
-            query += " WHERE sa.date = date('now', 'localtime')";
-        } else if (view === 'weekly') {
-            query += " WHERE sa.date >= date('now', '-7 days')";
-        } else if (view === 'monthly') {
-            query += " WHERE sa.date >= date('now', 'start of month')";
-        }
-
-        query += " ORDER BY sa.date DESC";
-
-        const stats = await db.all(query, params);
-        
-        // إرسال المتغيرات للملف، تأكد من إرسال view هنا
-        res.render('admin_student_reports', { 
-            stats, 
-            view, 
-            titre: "تقارير غياب الطلاب" 
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("خطأ في جلب تقارير الغياب");
-    }
-});
-
-    // --- [ قسـم المعلـم - غير محمي بـ isAdmin ] ---
+    // --- [ قسـم المعلـم ] ---
 
     app.get('/teacher/login', async (req, res) => {
         const enseignants = await db.all("SELECT id, nom FROM enseignants");
@@ -316,11 +330,9 @@ initializeDatabase().then(() => {
         const todayName = days[new Date().getDay()];
         const prof = await db.get("SELECT * FROM enseignants WHERE id = ?", [teacher_id]);
         if (!prof) return res.redirect('/teacher/login');
-
         const sessions = await db.all("SELECT DISTINCT classe, section, periode FROM timetable WHERE enseignant_id = ? AND jour = ?", [teacher_id, todayName]);
         const students = await db.all(`SELECT * FROM eleves WHERE (classe, section) IN (SELECT DISTINCT classe, section FROM timetable WHERE enseignant_id = ? AND jour = ?) ORDER BY nom ASC`, [teacher_id, todayName]);
         const replacements = await db.all(`SELECT e.nom, e.matiere, a.raison FROM absences a JOIN enseignants e ON a.enseignant_id = e.id WHERE a.date = ?`, [todayDate]);
-
         res.render('teacher_dashboard', { prof, students, sessions, replacements, today: todayDate, titre: "لوحة المعلم", success: req.query.success || false, behavior_success: req.query.behavior_success || false });
     });
 
@@ -337,63 +349,26 @@ initializeDatabase().then(() => {
         res.redirect(`/teacher/dashboard/${req.body.teacher_id}?behavior_success=true`);
     });
 
-    app.get('/logout', (req, res) => {
-        res.clearCookie('admin_auth'); // تسجيل الخروج للأدمن
-        res.redirect('/teacher/login');
-    });
+    // --- [ التقارير العامة للأدمن ] ---
 
-    // مسار عرض تقارير السلوك للأدمن
-// مسار عرض تقارير السلوك للأدمن - النسخة المصححة المتوافقة مع جداولك
     app.get('/admin/behavior-reports', async (req, res) => {
         try {
-            // ملاحظة: تم تعديل الاستعلام ليتوافق مع أسماء الجداول في كودك (behavior_logs, eleves, enseignants)
-            const reports = await db.all(`
-                SELECT 
-                    s.nom AS student_name, 
-                    s.classe, 
-                    s.section, 
-                    b.event AS event_desc, 
-                    b.date, 
-                    e.nom AS teacher_name
-                FROM behavior_logs b
-                JOIN eleves s ON b.student_id = s.id
-                JOIN enseignants e ON b.teacher_id = e.id
-                ORDER BY b.date DESC
-            `);
-            
-            res.render('admin_behavior', { 
-                reports, 
-                titre: "تقارير السلوك",
-                ecole: "مدرسة ابن دريد" 
-            });
-        } catch (err) {
-            console.error(err);
-            res.status(500).send("خطأ في جلب التقارير: تأكد من وجود جدول behavior_logs وبيانات صحيحة.");
-        }
+            const reports = await db.all(`SELECT s.nom AS student_name, s.classe, s.section, b.event AS event_desc, b.date, e.nom AS teacher_name FROM behavior_logs b JOIN eleves s ON b.student_id = s.id JOIN enseignants e ON b.teacher_id = e.id ORDER BY b.date DESC`);
+            res.render('admin_behavior', { reports, titre: "تقارير السلوك", ecole: "مدرسة ابن دريد" });
+        } catch (err) { res.status(500).send("خطأ في جلب التقارير"); }
     });
 
-    // مسار عرض تقرير الغياب العام
-// مسار عرض تقرير الغياب العام - تم تغيير router إلى app وإزالة الكلمات الزائدة
-app.get('/admin/reports/absences', async (req, res) => {
-    try {
-        // جلب جميع الغيابات من قاعدة البيانات مع ربطها بجدول المعلمين
-        // تم تصحيح اسم العمود من date_absence إلى date ليناسب جدولك
-        const allAbsences = await db.all(`
-            SELECT a.*, e.nom, e.matiere 
-            FROM absences a 
-            JOIN enseignants e ON a.enseignant_id = e.id 
-            ORDER BY a.date DESC
-        `);
+    app.get('/admin/reports/absences', async (req, res) => {
+        try {
+            const allAbsences = await db.all(`SELECT a.*, e.nom, e.matiere FROM absences a JOIN enseignants e ON a.enseignant_id = e.id ORDER BY a.date DESC`);
+            res.render('report_absences', { titre: 'سجل الغياب العام', absences: allAbsences });
+        } catch (error) { res.status(500).send("خطأ في جلب بيانات التقارير"); }
+    });
 
-        res.render('report_absences', {
-            titre: 'سجل الغياب العام',
-            absences: allAbsences
-        });
-    } catch (error) {
-        console.error("Error in reports:", error);
-        res.status(500).send("خطأ في جلب بيانات التقارير");
-    }
-});
+    app.get('/logout', (req, res) => {
+        res.clearCookie('admin_auth');
+        res.redirect('/teacher/login');
+    });
 
     app.listen(3000, () => console.log(`🚀 النظام يعمل: http://localhost:3000/admin/dashboard`));
 });

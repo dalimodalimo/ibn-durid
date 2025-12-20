@@ -5,125 +5,235 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %> - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/teacher_style.css"> 
     <style>
+        /* --- تحديثات نظام القائمة الجانبية الموحد --- */
+        :root {
+            --sidebar-width: 260px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #f8fafc;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            transition: all var(--transition-speed) ease;
+            right: 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            background: #1e293b;
+            color: white;
+        }
+
+        .sidebar.collapsed {
+            right: calc(var(--sidebar-width) * -1);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            transition: all var(--transition-speed) ease;
+            width: 100%;
+            padding: 20px;
+            padding-top: 80px;
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1100;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        /* تنسيقات خاصة بالجداول والسلوك */
         .badge {
             background: #eef2ff;
-            color: var(--primary-color);
+            color: #4f46e5;
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: bold;
         }
-        .filter-section {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .search-input {
-            flex: 1;
-            min-width: 250px;
-        }
         .event-text {
-            max-width: 300px;
+            max-width: 400px;
             white-space: normal;
             word-wrap: break-word;
-            line-height: 1.4;
+            line-height: 1.5;
+            color: #334155;
+        }
+        .search-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        #studentSearch {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+        #studentSearch:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        @media (max-width: 768px) {
+            .sidebar { right: calc(var(--sidebar-width) * -1); }
+            .sidebar.active { right: 0; }
+            .main-content { margin-right: 0; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="main-header">
-            <div class="user-info">
-                <h1><i class="fas fa-shield-halved"></i> سجل الانضباط والسلوك</h1>
-                <span><i class="fas fa-database"></i> إجمالي الملاحظات: <b><%= reports.length %></b></span>
-            </div>
-            <a href="/admin/dashboard" class="btn-logout-alt" style="border-color: var(--primary-color); color: var(--primary-color);">
-                <span>الرئيسية</span> <i class="fas fa-home"></i>
-            </a>
-        </header>
 
-        <div class="section" style="padding: 15px 25px;">
-            <div class="filter-section">
-                <div class="search-input">
-                    <input type="text" id="studentSearch" placeholder="🔍 ابحث باسم الطالب أو الفصل..." onkeyup="filterTable()">
-                </div>
-            </div>
-        </div>
+<button class="sidebar-toggle" id="toggleBtn">
+    <i class="fas fa-bars"></i>
+</button>
 
-        <section class="section">
-            <div id="tableWrapper">
-                <table class="styled-table" id="behaviorTable">
-                    <thead>
-                        <tr>
-                            <th>الطالب</th>
-                            <th>الفصل/القسم</th>
-                            <th>الملاحظة السلوكية</th>
-                            <th>المعلم المسؤول</th>
-                            <th>التاريخ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (reports.length === 0) { %>
-                            <tr>
-                                <td colspan="5" style="text-align:center; padding: 40px;">
-                                    <i class="fas fa-folder-open" style="font-size: 3rem; color: #cbd5e1; display: block; margin-bottom: 10px;"></i>
-                                    لا توجد ملاحظات مسجلة حالياً.
-                                </td>
-                            </tr>
-                        <% } else { %>
-                            <% reports.forEach(r => { %>
-                                <tr>
-                                    <td><b style="color: var(--dark-navy);"><%= r.student_name %></b></td>
-                                    <td><span class="badge"><%= r.classe %> / <%= r.section %></span></td>
-                                    <td>
-                                        <div class="event-text">
-                                            <i class="fas fa-quote-right" style="font-size: 0.7rem; color: var(--primary-color); opacity: 0.5;"></i>
-                                            <%= r.event_desc %>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span style="font-size: 0.9rem;">
-                                            <i class="fas fa-user-tie" style="color: #94a3b8;"></i> <%= r.teacher_name %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span style="color: #64748b; font-size: 0.85rem;">
-                                            <i class="far fa-clock"></i> <%= r.date %>
-                                        </span>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2><i class="fas fa-shield-halved"></i> شؤون الطلاب</h2>
     </div>
 
-    <script>
-        // وظيفة البحث الفوري في الجدول
-        function filterTable() {
-            const input = document.getElementById('studentSearch');
-            const filter = input.value.toLowerCase();
-            const table = document.getElementById('behaviorTable');
-            const tr = table.getElementsByTagName('tr');
+    <div class="sidebar-nav">
+        <div class="nav-label">الأساسيات</div>
+        <a href="/admin/dashboard"><i class="fas fa-home"></i> العودة للرئيسية</a>
+        
+        <div class="nav-label">السلوك والانضباط</div>
+        <a href="/admin/behavior" class="active"><i class="fas fa-clipboard-list"></i> سجل الملاحظات</a>
+        <a href="/admin/eleves"><i class="fas fa-users"></i> قائمة الطلاب</a>
 
-            for (let i = 1; i < tr.length; i++) {
-                const tdName = tr[i].getElementsByTagName('td')[0];
-                const tdClass = tr[i].getElementsByTagName('td')[1];
-                if (tdName || tdClass) {
-                    const txtValue = (tdName.textContent || tdName.innerText) + (tdClass.textContent || tdClass.innerText);
-                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
-            }
+        <div class="nav-label">النظام</div>
+        <a href="/admin/settings"><i class="fas fa-cog"></i> الإعدادات</a>
+    </div>
+</div>
+
+<div class="main-content" id="mainContent">
+    <header class="page-header">
+        <div class="user-info">
+            <h1>سجل الانضباط والسلوك</h1>
+            <p><i class="fas fa-database"></i> تم رصد <b><%= reports.length %></b> ملاحظة سلوكية</p>
+        </div>
+    </header>
+
+    <div class="search-card">
+        <input type="text" id="studentSearch" placeholder="🔍 ابحث باسم الطالب أو الفصل أو الملاحظة..." onkeyup="filterTable()">
+    </div>
+
+    <section class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="styled-table" id="behaviorTable" style="margin: 0;">
+                <thead>
+                    <tr>
+                        <th>الطالب</th>
+                        <th>الفصل/الشعبة</th>
+                        <th>الملاحظة السلوكية</th>
+                        <th>بواسطة</th>
+                        <th>التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (reports.length === 0) { %>
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding: 60px;">
+                                <i class="fas fa-folder-open" style="font-size: 3rem; color: #cbd5e1; display: block; margin-bottom: 15px;"></i>
+                                <p style="color: #64748b;">لا توجد سجلات انضباط حالياً.</p>
+                            </td>
+                        </tr>
+                    <% } else { %>
+                        <% reports.forEach(r => { %>
+                            <tr>
+                                <td><b style="color: #1e293b;"><%= r.student_name %></b></td>
+                                <td><span class="badge"><%= r.classe %> / <%= r.section %></span></td>
+                                <td>
+                                    <div class="event-text">
+                                        <i class="fas fa-info-circle" style="color: #4f46e5; margin-left: 5px; opacity: 0.7;"></i>
+                                        <%= r.event_desc %>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-size: 0.9rem; color: #475569;">
+                                        <%= r.teacher_name %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="color: #64748b; font-size: 0.85rem; white-space: nowrap;">
+                                        <%= r.date %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+    // نظام التحكم في القائمة الجانبية
+    const toggleBtn = document.getElementById('toggleBtn');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+
+    toggleBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('active');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
         }
-    </script>
+        
+        const icon = toggleBtn.querySelector('i');
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-times');
+    });
+
+    // وظيفة البحث الذكي (تبحث في الاسم، الفصل، والملاحظة)
+    function filterTable() {
+        const filter = document.getElementById('studentSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#behaviorTable tbody tr');
+
+        rows.forEach(row => {
+            if (row.cells.length > 1) { // تخطي سطر "لا توجد سجلات"
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            }
+        });
+    }
+
+    // إغلاق القائمة في الجوال عند النقر خارجها
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+</script>
+
 </body>
 </html>

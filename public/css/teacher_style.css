@@ -1,221 +1,162 @@
-/* Professional Teacher Dashboard Style
-   Theme: Modern, Clean, and Mobile-First
-*/
-
+/* --- المتغيرات العامة للنظام --- */
 :root {
-    --primary-color: #4361ee;
-    --secondary-color: #3f37c9;
-    --success-color: #4cc9f0;
-    --danger-color: #f72585;
-    --warning-color: #ff9f1c;
-    --dark-navy: #212529;
-    --light-bg: #f8f9fa;
-    --glass-bg: rgba(255, 255, 255, 0.95);
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1);
-    --radius: 16px;
+    --primary-color: #4f46e5;    /* Indigo */
+    --secondary-color: #1e293b;  /* Slate Dark */
+    --accent-color: #2563eb;     /* Blue */
+    --bg-light: #f8fafc;         /* Light Gray/Blue */
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --white: #ffffff;
+    --border-color: #e2e8f0;
+    --transition: 0.3s ease;
 }
 
-* {
-    box-sizing: border-box;
-    transition: all 0.3s ease;
-}
-
+/* --- الهيكل العام --- */
 body {
-    background-color: var(--light-bg);
-    background-image: 
-        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%);
-    background-attachment: fixed;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* --- القائمة الجانبية (Sidebar) --- */
+.sidebar {
+    background: var(--secondary-color);
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-header {
+    padding: 25px 20px;
+    background: rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+.sidebar-header h2 {
+    font-size: 1.2rem;
+    color: var(--white);
     margin: 0;
-    padding: 15px;
-    direction: rtl;
-    color: var(--dark-navy);
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
+.sidebar-nav {
+    padding: 20px 0;
 }
 
-/* Header Design */
-.main-header {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    padding: 25px;
-    border-radius: var(--radius);
+.nav-label {
+    padding: 10px 25px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.sidebar-nav a {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: var(--shadow-md);
-    margin-bottom: 25px;
-}
-
-.user-info h1 {
-    margin: 0;
-    font-size: 1.6rem;
-    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.user-info span {
-    color: #6c757d;
-    font-size: 0.9rem;
-    display: flex;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-/* Logout Button */
-.btn-logout-alt {
-    background: #fff;
-    color: var(--danger-color);
-    border: 2px solid var(--danger-color);
-    padding: 10px 20px;
-    border-radius: 12px;
+    padding: 12px 25px;
+    color: #cbd5e1;
     text-decoration: none;
+    transition: var(--transition);
+    gap: 12px;
+}
+
+.sidebar-nav a:hover, .sidebar-nav a.active {
+    background: rgba(255,255,255,0.05);
+    color: var(--white);
+    border-right: 4px solid var(--primary-color);
+}
+
+/* --- المحتوى الرئيسي --- */
+.page-header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--white);
+    padding-bottom: 15px;
+}
+
+.page-header h1 {
+    font-size: 1.8rem;
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+/* --- الجدول المنسق (Styled Table) --- */
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+}
+
+.styled-table thead tr {
+    background-color: #f1f5f9;
+    color: var(--text-main);
+    text-align: right;
     font-weight: bold;
-    display: flex;
+}
+
+.styled-table th, 
+.styled-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.styled-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* --- البطاقات (Cards) --- */
+.card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+/* --- الأزرار --- */
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
     align-items: center;
     gap: 8px;
 }
 
-.btn-logout-alt:hover {
-    background: var(--danger-color);
-    color: #fff;
-    box-shadow: 0 5px 15px rgba(247, 37, 133, 0.4);
+.btn-primary {
+    background: var(--primary-color);
+    color: var(--white);
 }
 
-/* Section Styling */
-.section {
-    background: var(--glass-bg);
-    border-radius: var(--radius);
-    padding: 25px;
-    margin-bottom: 25px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid rgba(255,255,255,0.2);
+.btn-primary:hover {
+    background: var(--accent-color);
 }
 
-.section-header {
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--primary-color);
-}
-
-/* Sessions Cards */
-.timetable-list {
-    display: flex;
-    gap: 15px;
-    overflow-x: auto;
-    padding: 10px 5px;
-}
-
-.session-card {
-    background: white;
-    min-width: 140px;
-    padding: 15px;
-    border-radius: 15px;
-    text-align: center;
-    border: 1px solid #edf2f7;
-    box-shadow: var(--shadow-sm);
-}
-
-.session-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary-color);
-}
-
-/* Styled Table */
-.styled-table {
+/* --- شريط البحث --- */
+.search-card input {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
-}
-
-.styled-table th {
-    background: transparent;
-    color: #4a5568;
-    padding: 15px;
-    font-weight: 600;
-}
-
-.styled-table tbody tr {
-    background: white;
-    box-shadow: var(--shadow-sm);
-}
-
-.styled-table td {
-    padding: 15px;
-}
-
-.styled-table tr td:first-child { border-radius: 0 12px 12px 0; }
-.styled-table tr td:last-child { border-radius: 12px 0 0 12px; }
-
-/* Custom Switch for Absence */
-.switch {
-    background: #f1f5f9;
-    padding: 8px 15px;
-    border-radius: 30px;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-input:checked + .slider {
-    background: var(--danger-color);
-}
-
-/* Inputs & Forms */
-select, input[type="text"] {
-    width: 100%;
-    padding: 12px 15px;
-    border-radius: 12px;
-    border: 2px solid #e2e8f0;
+    padding: 12px 20px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
     font-size: 1rem;
+    transition: var(--transition);
+}
+
+.search-card input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
     outline: none;
 }
 
-select:focus, input:focus {
-    border-color: var(--primary-color);
-}
-
-.btn-submit-full {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
-    border: none;
-    padding: 18px;
-    border-radius: 15px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 20px;
-}
-
-/* Mobile Responsiveness */
+/* --- التجاوب مع الأجهزة (Responsive) --- */
 @media (max-width: 768px) {
-    .main-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .styled-table thead {
-        display: none; /* Hide headers on very small screens */
-    }
-    
-    .styled-table td {
+    .styled-table {
         display: block;
-        text-align: right;
-        padding: 10px;
+        overflow-x: auto;
     }
-
-    .user-info span {
-        justify-content: center;
+    
+    .page-header h1 {
+        font-size: 1.4rem;
     }
 }

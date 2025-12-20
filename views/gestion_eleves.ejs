@@ -7,10 +7,105 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/eleves_style.css">
+    <style>
+        /* --- تحديثات القائمة الجانبية والهيكلية --- */
+        :root {
+            --sidebar-width: 260px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #f4f7fe;
+            margin: 0;
+        }
+
+        /* القائمة الجانبية */
+        .sidebar {
+            width: var(--sidebar-width);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            right: 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            background: #1e293b; /* لون داكن احترافي */
+        }
+
+        /* حالة التصغير */
+        .sidebar.collapsed {
+            right: calc(var(--sidebar-width) * -1);
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            padding: 20px;
+            padding-top: 70px; /* مساحة للزر */
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        /* زر التحكم (Toggle Button) */
+        .sidebar-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1100;
+            background: #2563eb;
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transition: 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            background: #1d4ed8;
+            transform: scale(1.05);
+        }
+
+        /* تحسينات الوسوم والجداول */
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                right: calc(var(--sidebar-width) * -1);
+            }
+            .sidebar.active {
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="sidebar">
+<button class="sidebar-toggle" id="toggleSidebarBtn" title="تبديل القائمة">
+    <i class="fas fa-bars"></i>
+</button>
+
+<div class="sidebar" id="mainSidebar">
     <div class="sidebar-header">
         <h2><i class="fas fa-user-graduate"></i> شؤون الطلاب</h2>
     </div>
@@ -29,7 +124,7 @@
     </div>
 </div>
 
-<div class="main-content">
+<div class="main-content" id="mainBody">
     <header class="page-header">
         <h1><i class="fas fa-users"></i> إدارة سجلات الطلاب</h1>
     </header>
@@ -135,6 +230,33 @@
 </div>
 
 <script>
+    // 1. نظام إخفاء وإظهار القائمة
+    const toggleBtn = document.getElementById('toggleSidebarBtn');
+    const sidebar = document.getElementById('mainSidebar');
+    const mainBody = document.getElementById('mainBody');
+
+    toggleBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('active');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            mainBody.classList.toggle('expanded');
+        }
+        
+        // تغيير أيقونة الزر للجمالية
+        const icon = toggleBtn.querySelector('i');
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-times');
+    });
+
+    // إغلاق القائمة عند النقر في الخارج (وضع الجوال)
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+
+    // 2. نظام فلترة البحث والصفوف (كودك الأصلي)
     function filterTable() {
         const searchText = document.getElementById('searchInput').value.toLowerCase();
         const classFilter = document.getElementById('classFilter').value;

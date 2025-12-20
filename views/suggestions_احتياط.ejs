@@ -6,80 +6,190 @@
     <title>كشف الاحتياط - <%= today_name %></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/print_style.css">
+    <style>
+        /* --- تنسيقات الواجهة والتحكم --- */
+        :root { --sidebar-width: 260px; }
+        
+        body { margin: 0; display: flex; transition: all 0.3s ease; background: #f0f2f5; }
+        
+        /* القائمة الجانبية */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #1a237e;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            right: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .sidebar.collapsed { right: calc(var(--sidebar-width) * -1); }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            padding: 40px;
+            transition: all 0.3s ease;
+            background: white;
+            min-height: 100vh;
+        }
+        .main-content.expanded { margin-right: 0; }
+
+        /* زر التحكم */
+        .toggle-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1100;
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        /* تنسيقات الطباعة (تخفي العناصر غير الضرورية) */
+        @media print {
+            .sidebar, .toggle-btn, .no-print-bar { display: none !important; }
+            .main-content { margin-right: 0 !important; padding: 0 !important; }
+            body { background: white; }
+        }
+
+        .no-print-bar {
+            background: #e8eaf6;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .btn-print {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* تنسيق الجدول الرسمي */
+        .official-header { display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .print-table th, .print-table td { border: 1px solid #000; padding: 12px; text-align: center; }
+        .print-table th { background: #f5f5f5; }
+    </style>
 </head>
 <body>
 
-    <div class="no-print-bar">
-        <div>
-            <button onclick="window.print()" class="btn-print">
-                <i class="fas fa-print"></i> طباعة الكشف الورقي
-            </button>
+    <button class="toggle-btn" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sidebar" id="sidebar">
+        <div style="padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <h3>نظام مدرسة ابن دريد</h3>
         </div>
-        <a href="/admin/absence-profs" style="text-decoration: none; color: #1a237e; font-weight: bold;">
-            <i class="fas fa-undo"></i> العودة لإدارة الغياب
-        </a>
+        <div style="padding: 20px;">
+            <a href="/admin/dashboard" style="color: white; text-decoration: none; display: block; margin-bottom: 15px;">
+                <i class="fas fa-home"></i> لوحة التحكم
+            </a>
+            <a href="/admin/absence-profs" style="color: white; text-decoration: none; display: block;">
+                <i class="fas fa-user-clock"></i> إدارة الغياب
+            </a>
+        </div>
     </div>
 
-    <header class="official-header">
-        <div class="side-info">
-            وزارة التعليم<br>
-            إدارة تعليم المنطقة<br>
-            مدرسة ابن دريد
+    <div class="main-content" id="mainContent">
+        <div class="no-print-bar">
+            <div>
+                <button onclick="window.print()" class="btn-print">
+                    <i class="fas fa-print"></i> طباعة الكشف الورقي
+                </button>
+            </div>
+            <a href="/admin/absence-profs" style="text-decoration: none; color: #1a237e; font-weight: bold;">
+                <i class="fas fa-undo"></i> العودة لإدارة الغياب
+            </a>
         </div>
-        <div class="school-info">
-            <h2>سجل توزيع حصص الانتظار (الاحتياط)</h2>
-            <p>ليوم: <strong><%= today_name %></strong> | الموافق: <%= new Date().toLocaleDateString('ar-EG') %></p>
-        </div>
-        <div class="side-info" style="text-align: left;">
-            الرقم: ...................<br>
-            التاريخ: ...................<br>
-            المرفقات: ...................
-        </div>
-    </header>
 
-    <table class="print-table">
-        <thead>
-            <tr>
-                <th style="width: 10%;">الحصة</th>
-                <th style="width: 20%;">الصف والشعبة</th>
-                <th style="width: 45%;">المعلم البديل المقترح</th>
-                <th style="width: 25%;">توقيع المعلم بالعلم</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if(suggestions.length > 0) { %>
-                <% suggestions.forEach(s => { %>
-                    <tr>
-                        <td><strong><%= s.hessa %></strong></td>
-                        <td><%= s.classe %> / <%= s.section %></td>
-                        <td>
-                            <select class="teacher-select" style="width: 100%; padding: 5px; font-size: 1rem; border: 1px solid #ddd;">
-                                <option value="">-- اختر المعلم البديل --</option>
-                                <% s.available_profs.forEach(p => { %>
-                                    <option><%= p.nom %> (<%= p.matiere %>)</option>
-                                <% }) %>
-                            </select>
-                        </td>
-                        <td></td> </tr>
-                <% }) %>
-            <% } else { %>
+        <header class="official-header">
+            <div class="side-info">
+                وزارة التعليم<br>
+                إدارة تعليم المنطقة<br>
+                مدرسة ابن دريد
+            </div>
+            <div class="school-info" style="text-align: center;">
+                <h2>سجل توزيع حصص الانتظار (الاحتياط)</h2>
+                <p>ليوم: <strong><%= today_name %></strong> | الموافق: <%= new Date().toLocaleDateString('ar-EG') %></p>
+            </div>
+            <div class="side-info" style="text-align: left;">
+                الرقم: ...................<br>
+                التاريخ: ...................<br>
+                المرفقات: ...................
+            </div>
+        </header>
+
+        <table class="print-table">
+            <thead>
                 <tr>
-                    <td colspan="4" style="padding: 40px; color: #666;">لا توجد حصص مجدولة للمعلم الغائب اليوم.</td>
+                    <th style="width: 10%;">الحصة</th>
+                    <th style="width: 20%;">الصف والشعبة</th>
+                    <th style="width: 45%;">المعلم البديل المقترح</th>
+                    <th style="width: 25%;">توقيع المعلم بالعلم</th>
                 </tr>
-            <% } %>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <% if(suggestions && suggestions.length > 0) { %>
+                    <% suggestions.forEach(s => { %>
+                        <tr>
+                            <td><strong><%= s.hessa %></strong></td>
+                            <td><%= s.classe %> / <%= s.section %></td>
+                            <td>
+                                <select class="teacher-select" style="width: 100%; border: none; font-family: inherit; font-size: 1rem; text-align: center; background: transparent;">
+                                    <option value="">-- اختر المعلم --</option>
+                                    <% s.available_profs.forEach(p => { %>
+                                        <option><%= p.nom %> (<%= p.matiere %>)</option>
+                                    <% }) %>
+                                </select>
+                            </td>
+                            <td></td> 
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4" style="padding: 40px; color: #666;">لا توجد حصص مجدولة لهذا اليوم.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
 
-    <footer style="margin-top: 80px; display: flex; justify-content: space-around; font-weight: bold;">
-        <div style="text-align: center;">
-            <p>مشرف الجدول المدرسي</p>
-            <p style="margin-top: 30px;">...................................</p>
-        </div>
-        <div style="text-align: center;">
-            <p>مدير المدرسة</p>
-            <p style="margin-top: 30px;">...................................</p>
-        </div>
-    </footer>
+        <footer style="margin-top: 80px; display: flex; justify-content: space-around; font-weight: bold;">
+            <div style="text-align: center;">
+                <p>مشرف الجدول المدرسي</p>
+                <p style="margin-top: 40px;">...................................</p>
+            </div>
+            <div style="text-align: center;">
+                <p>مدير المدرسة</p>
+                <p style="margin-top: 40px;">...................................</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const btn = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const main = document.getElementById('mainContent');
+
+        btn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            main.classList.toggle('expanded');
+        });
+    </script>
 
 </body>
 </html>

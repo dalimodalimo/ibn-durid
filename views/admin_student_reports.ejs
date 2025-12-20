@@ -5,44 +5,155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/reports_style.css">
+    <style>
+        /* --- تنسيقات الهيكلية ونظام القائمة الجانبية --- */
+        :root {
+            --sidebar-width: 260px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #f8fafc;
+            margin: 0;
+        }
+
+        /* القائمة الجانبية */
+        .sidebar {
+            width: var(--sidebar-width);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            right: 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            background: #1e293b;
+            color: white;
+        }
+
+        .sidebar.collapsed {
+            right: calc(var(--sidebar-width) * -1);
+        }
+
+        /* المحتوى الرئيسي */
+        .main-wrapper {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            padding: 20px;
+            padding-top: 80px;
+        }
+
+        .main-wrapper.expanded {
+            margin-right: 0;
+        }
+
+        /* زر التحكم (Toggle Button) */
+        .sidebar-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1100;
+            background: #0f172a;
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* تنسيقات الطباعة */
+        @media print {
+            .sidebar, .sidebar-toggle, .filter-nav, .back-link-top {
+                display: none !important;
+            }
+            .main-wrapper {
+                margin-right: 0 !important;
+                padding: 0 !important;
+            }
+            .print-only-footer {
+                display: block !important;
+            }
+            body { background: white; }
+            .table-responsive { overflow: visible !important; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { right: calc(var(--sidebar-width) * -1); }
+            .sidebar.active { right: 0; }
+            .main-wrapper { margin-right: 0; }
+        }
+    </style>
 </head>
 <body>
+
+<button class="sidebar-toggle" id="toggleBtn" title="تبديل القائمة">
+    <i class="fas fa-bars"></i>
+</button>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2><i class="fas fa-chart-bar"></i> التقارير</h2>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-label">الأساسيات</div>
+        <a href="/admin/dashboard"><i class="fas fa-home"></i> العودة للرئيسية</a>
+        
+        <div class="nav-label">أنواع التقارير</div>
+        <a href="/admin/rapport-absences-eleves" class="active"><i class="fas fa-user-slash"></i> غياب الطلاب</a>
+        <a href="/admin/reports/absences"><i class="fas fa-chalkboard-teacher"></i> غياب المعلمين</a>
+        
+        <div class="nav-label">النظام</div>
+        <a href="/admin/settings"><i class="fas fa-cog"></i> الإعدادات</a>
+    </div>
+</div>
+
+<div class="main-wrapper" id="mainContent">
     <div class="container">
         <header class="report-header">
             <h1><i class="fas fa-chart-line"></i> تقارير غياب الطلاب</h1>
-            <a href="/admin/dashboard" class="back-link-top">
-                <i class="fas fa-home"></i> العودة للوحة التحكم
-            </a>
+            <p class="subtitle">استعراض وتحليل سجلات الغياب المسجلة</p>
         </header>
         
-        <div class="filter-nav">
-            <a href="/admin/rapport-absences-eleves" 
-               class="<%= (typeof view !== 'undefined' && view === '') ? 'active' : '' %>">
-                <i class="fas fa-list"></i> عرض الكل
-            </a>
-            
-            <a href="/admin/rapport-absences-eleves?view=daily" 
-               class="<%= (typeof view !== 'undefined' && view === 'daily') ? 'active' : '' %>">
-                <i class="fas fa-calendar-day"></i> اليوم
-            </a>
-            
-            <a href="/admin/rapport-absences-eleves?view=weekly" 
-               class="<%= (typeof view !== 'undefined' && view === 'weekly') ? 'active' : '' %>">
-                <i class="fas fa-calendar-week"></i> آخر أسبوع
-            </a>
-            
-            <a href="/admin/rapport-absences-eleves?view=monthly" 
-               class="<%= (typeof view !== 'undefined' && view === 'monthly') ? 'active' : '' %>">
-                <i class="fas fa-calendar-alt"></i> هذا الشهر
-            </a>
+        <div class="filter-nav card">
+            <div class="filter-group">
+                <a href="/admin/rapport-absences-eleves" 
+                   class="filter-btn <%= (typeof view !== 'undefined' && view === '') ? 'active' : '' %>">
+                    <i class="fas fa-list"></i> الكل
+                </a>
+                
+                <a href="/admin/rapport-absences-eleves?view=daily" 
+                   class="filter-btn <%= (typeof view !== 'undefined' && view === 'daily') ? 'active' : '' %>">
+                    <i class="fas fa-calendar-day"></i> اليوم
+                </a>
+                
+                <a href="/admin/rapport-absences-eleves?view=weekly" 
+                   class="filter-btn <%= (typeof view !== 'undefined' && view === 'weekly') ? 'active' : '' %>">
+                    <i class="fas fa-calendar-week"></i> الأسبوع
+                </a>
+                
+                <a href="/admin/rapport-absences-eleves?view=monthly" 
+                   class="filter-btn <%= (typeof view !== 'undefined' && view === 'monthly') ? 'active' : '' %>">
+                    <i class="fas fa-calendar-alt"></i> الشهر
+                </a>
+            </div>
 
             <button onclick="window.print()" class="btn-print-action">
                 <i class="fas fa-print"></i> طباعة التقرير
             </button>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive card">
             <table>
                 <thead>
                     <tr>
@@ -58,23 +169,22 @@
                         <tr>
                             <td colspan="5" class="empty-state">
                                 <i class="fas fa-search fa-3x"></i>
-                                <p>لم يتم العثور على أي سجلات غياب ضمن هذه الفترة.</p>
+                                <p>لم يتم العثور على سجلات غياب.</p>
                             </td>
                         </tr>
                     <% } else { %>
                         <% stats.forEach(row => { %>
                             <tr>
-                                <td style="white-space: nowrap;">
-                                    <%= new Date(row.date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                <td style="white-space: nowrap; font-weight: 500;">
+                                    <%= new Date(row.date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) %>
                                 </td>
                                 <td class="student-name"><%= row.student_name %></td>
                                 <td>
                                     <span class="badge-class"><%= row.classe %></span> 
-                                    <span class="badge-section">شعبة <%= row.section %></span>
+                                    <span class="badge-section">ش <%= row.section %></span>
                                 </td>
                                 <td><span class="badge-periode">الحصة <%= row.periode %></span></td>
-                                <td>
-                                    <i class="fas fa-chalkboard-teacher" style="font-size: 0.8rem; color: #999;"></i> 
+                                <td class="teacher-cell">
                                     <%= row.teacher_name %>
                                 </td>
                             </tr>
@@ -85,8 +195,39 @@
         </div>
     </div>
 
-    <div class="print-only-footer" style="display: none; margin-top: 30px; text-align: center; border-top: 1px solid #ccc; padding-top: 10px;">
-        تم استخراج هذا التقرير من نظام مدرسة ابن دريد الإلكتروني بتاريخ: <%= new Date().toLocaleDateString('ar-EG') %>
+    <div class="print-only-footer">
+        <p>تم استخراج هذا التقرير آلياً من نظام مدرسة ابن دريد</p>
+        <p>بتاريخ: <%= new Date().toLocaleDateString('ar-EG') %> - الساعة: <%= new Date().toLocaleTimeString('ar-EG') %></p>
     </div>
+</div>
+
+<script>
+    // نظام التحكم في القائمة الجانبية
+    const toggleBtn = document.getElementById('toggleBtn');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+
+    toggleBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('active');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+        
+        // تغيير الأيقونة
+        const icon = toggleBtn.querySelector('i');
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-times');
+    });
+
+    // إغلاق القائمة عند النقر في الخارج (للجوال)
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+</script>
+
 </body>
 </html>

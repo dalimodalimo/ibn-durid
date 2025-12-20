@@ -7,10 +7,105 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/timetable_style.css">
+    <style>
+        /* --- تحديثات الهيكلية والقائمة الجانبية --- */
+        :root {
+            --sidebar-width: 260px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #f8fafc;
+            margin: 0;
+        }
+
+        /* القائمة الجانبية */
+        .sidebar {
+            width: var(--sidebar-width);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            right: 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            background: #1e293b;
+            color: white;
+        }
+
+        /* حالة التصغير للقائمة */
+        .sidebar.collapsed {
+            right: calc(var(--sidebar-width) * -1);
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            padding: 20px;
+            padding-top: 70px; /* مساحة لزر التحكم */
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        /* زر التحكم (Toggle Button) */
+        .sidebar-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1100;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transition: 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+
+        /* تحسين استجابة الجدول */
+        .table-responsive {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                right: calc(var(--sidebar-width) * -1);
+            }
+            .sidebar.active {
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="sidebar">
+<button class="sidebar-toggle" id="toggleSidebar" title="إخفاء/إظهار القائمة">
+    <i class="fas fa-bars"></i>
+</button>
+
+<div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <h2><i class="fas fa-calendar-alt"></i> الجدول المدرسي</h2>
     </div>
@@ -29,7 +124,7 @@
     </div>
 </div>
 
-<div class="main-content">
+<div class="main-content" id="main-content">
     <header class="page-header">
         <h1>إدارة الجدول الأسبوعي</h1>
     </header>
@@ -134,6 +229,7 @@
                                             <span class="subject-name"><%= cell.matiere %></span>
                                             <span class="prof-name"><%= cell.prof_nom %></span>
                                             <span class="class-tag"><%= cell.classe %>/<%= cell.section %></span>
+                                            <a href="/admin/timetable/supprimer/<%= cell.id %>" class="btn-delete-slot" onclick="return confirm('حذف هذه الحصة؟')">&times;</a>
                                         </div>
                                     <% } %>
                                 </td>
@@ -147,6 +243,33 @@
 </div>
 
 <script>
+    // 1. نظام التحكم في القائمة الجانبية
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    toggleBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('active');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+        
+        // تغيير شكل الأيقونة
+        const icon = toggleBtn.querySelector('i');
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-times');
+    });
+
+    // إغلاق القائمة عند النقر خارجها في الجوال
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+
+    // 2. منطق اختيار الصفوف بناءً على المعلم (كودك الأصلي)
     const allAffectations = <%- JSON.stringify(all_affectations) %>;
     function filterClasses() {
         const teacherId = document.getElementById('teacher_select').value;

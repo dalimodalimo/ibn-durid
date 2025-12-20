@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titre %></title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #2e7d32;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            color: #2e7d32;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #2e7d32;
+            color: white;
+        }
+
+        select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            text-align: center;
+            width: 200px;
+        }
+
+        .no-print {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-print { background-color: #1976d2; }
+        .btn-back { background-color: #757575; }
+
+        @media print {
+            .no-print { display: none; }
+            body { background-color: white; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; width: 100%; }
+            select { border: none; appearance: none; -webkit-appearance: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <button onclick="window.print()" class="btn btn-print">🖨️ طباعة الكشف</button>
+        <a href="/admin/absence-profs" class="btn btn-back">⬅️ العودة للإدارة</a>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>كشف توزيع حصص الاحتياط (البدلاء)</h1>
+            <p>مدرسة ابن دريد للتعليم الأساسي</p>
+        </div>
+
+        <div class="info-bar">
+            <span>اليوم: <%= today_name %></span>
+            <span>التاريخ: <%= new Date().toLocaleDateString('ar-EG') %></span>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>الحصة</th>
+                    <th>الصف / الشعبة</th>
+                    <th>المعلم الاحتياط المقترح</th>
+                    <th>توقيع المعلم البديل</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (suggestions.length > 0) { %>
+                    <% suggestions.forEach(s => { %>
+                        <tr>
+                            <td>الحصة <%= s.hessa %></td>
+                            <td><%= s.classe %> / <%= s.section %></td>
+                            <td>
+                                <select>
+                                    <option value="">-- اختر من المتاحين --</option>
+                                    <% s.available_profs.forEach(p => { %>
+                                        <option><%= p.nom %> (<%= p.matiere %>)</option>
+                                    <% }) %>
+                                </select>
+                            </td>
+                            <td style="height: 40px;"></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4">لا توجد حصص مجدولة للمعلم الغائب في هذا اليوم.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <p>إعداد مشرف الجدول</p>
+                <p>..........................</p>
+            </div>
+            <div class="signature-box">
+                <p>يعتمد مدير المدرسة</p>
+                <p>..........................</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titre %> - مدرسة ابن دريد</title>
+    <style>
+        :root {
+            --primary-dark: #2c3e50;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --warning: #ff9800;
+            --info: #3498db;
+            --bg-light: #f0f2f5;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-light); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: auto; }
+
+        /* التنسيق العام للأقسام */
+        .section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        h2 { color: var(--primary-dark); border-bottom: 2px solid #eee; padding-bottom: 12px; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        
+        .header { background: var(--primary-dark); color: white; padding: 20px 30px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-logout { background: var(--danger); color: white; padding: 8px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+
+        /* تنسيق جدول الحصص اليومي */
+        .timetable-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .time-slot { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; text-align: center; border-top: 4px solid var(--info); }
+        .time-slot.active { background: #e8f4fd; border-color: var(--info); }
+        .time-slot b { display: block; color: var(--primary-dark); margin-bottom: 5px; }
+
+        /* تنسيق السلوك */
+        .behavior-form { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px; }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        .btn-save { background: var(--primary-dark); color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; height: 42px; font-weight: bold; }
+
+        /* الجداول */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #eee; }
+        th { background: #f4f7f6; }
+        .student-row { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <% if (success) { %><div style="background:#d4edda; color:#155724; padding:15px; border-radius:8px; margin-bottom:20px;">✅ تم تسجيل الغياب بنجاح.</div><% } %>
+
+    <div class="header">
+        <div>
+            <h1>أهلاً، أستاذ/ <%= prof.nom %></h1>
+            <p>تخصص: <%= prof.matiere %> | اليوم: <%= today %></p>
+        </div>
+        <a href="/logout" class="btn-logout">خروج 🚪</a>
+    </div>
+
+    <div class="section">
+        <h2>📅 جدول حصص اليوم</h2>
+        <div class="timetable-grid">
+            <% if (sessions.length === 0) { %>
+                <p>لا يوجد حصص مسجلة لك اليوم في الجدول.</p>
+            <% } else { %>
+                <% // ترتيب الحصص حسب الرقم
+                   sessions.sort((a,b) => a.periode - b.periode).forEach(s => { %>
+                    <div class="time-slot">
+                        <b>الحصة <%= s.periode %></b>
+                        <span><%= s.classe %> / <%= s.section %></span>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+    </div>
+
+    <div class="section" style="border-right: 6px solid var(--warning); background: #fff9f0;">
+        <h2>📢 تنبيهات الإدارة</h2>
+        <% if (replacements.length === 0) { %>
+            <p>لا توجد غيابات للمعلمين اليوم.</p>
+        <% } else { %>
+            <% replacements.forEach(t => { %>
+                <div style="margin-bottom:10px; padding:10px; background:white; border-radius:5px; border:1px solid #ffe0b2;">
+                    ⚠️ غياب: <b><%= t.nom %></b> (<%= t.matiere %>) - السبب: <%= t.raison %>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <div class="section">
+        <h2>📝 رصد غياب الطلاب</h2>
+        <form action="/teacher/absences/mark" method="POST">
+            <input type="hidden" name="teacher_id" value="<%= prof.id %>">
+            <input type="hidden" name="date" value="<%= today %>">
+            
+            <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:20px; display:flex; gap:20px;">
+                <div class="form-group">
+                    <label>اختر الفصل والحصة:</label>
+                    <select name="periode" id="sessionSelect" required onchange="filterStudents()">
+                        <option value="" disabled selected>-- اختر من الجدول --</option>
+                        <% sessions.forEach(s => { %>
+                            <option value="<%= s.periode %>" data-class="<%= s.classe %>-<%= s.section %>">
+                                الحصة <%= s.periode %>: <%= s.classe %> / <%= s.section %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+
+            <table id="attendanceTable" style="display:none;">
+                <thead>
+                    <tr><th>اسم الطالب</th><th>القسم</th><th>تحديد الغياب</th></tr>
+                </thead>
+                <tbody>
+                    <% students.forEach(s => { %>
+                        <tr class="student-row" data-class-id="<%= s.classe %>-<%= s.section %>">
+                            <td><%= s.nom %></td>
+                            <td><%= s.classe %> / <%= s.section %></td>
+                            <td><input type="checkbox" name="student_ids[]" value="<%= s.id %>"> غائب</td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            <button type="submit" id="submitBtn" style="display:none; margin-top:20px; width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">حفظ كشف الغياب</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>⚖️ سجل السلوك والملاحظات</h2>
+        <form action="/teacher/behavior/add" method="POST" class="behavior-form">
+            <input type="hidden" name="teacher_id" value="<%= prof.id %>">
+            
+            <div class="form-group">
+                <label>اسم الطالب:</label>
+                <select name="student_id" required>
+                    <option value="">-- اختر الطالب --</option>
+                    <% students.forEach(s => { %>
+                        <option value="<%= s.id %>"><%= s.nom %> (<%= s.classe %> / <%= s.section %>)</option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+                <label>وصف الحدث أو السلوك:</label>
+                <input type="text" name="event_desc" placeholder="مثال: مشاغبة في الحصة، تميز في الإجابة..." required>
+            </div>
+
+            <button type="submit" class="btn-save">تسجيل الحدث ✅</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    function filterStudents() {
+        const select = document.getElementById('sessionSelect');
+        const target = select.options[select.selectedIndex].getAttribute('data-class');
+        const rows = document.querySelectorAll('.student-row');
+        const table = document.getElementById('attendanceTable');
+        const btn = document.getElementById('submitBtn');
+
+        let count = 0;
+        rows.forEach(row => {
+            if (row.getAttribute('data-class-id') === target) {
+                row.style.display = 'table-row';
+                count++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        table.style.display = count > 0 ? 'table' : 'none';
+        btn.style.display = count > 0 ? 'block' : 'none';
+    }
+</script>
+
+</body>
+</html>

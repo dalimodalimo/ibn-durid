@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مدرسة ابن دريد - واجهة المعلم</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .btn { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>مدرسة ابن دريد للتعليم الأساسي (٥-٨)</h2> <h3>واجهة المعلم (Interface Enseignant)</h3> <p><strong>المعلم:</strong> <%= enseignant %></p> <p><strong>المادة:</strong> <%= matiere %></p> <p><strong>الصف:</strong> <%= classe %>/<%= section %></p> <p><strong>اليوم:</strong> <%= date %></p> <form action="/sauvegarder-absence" method="POST">
+        <table>
+            <thead>
+                <tr>
+                    <th>اسم الطالب (Nom de l'élève)</th> <th>حاضر (Présent)</th> </tr>
+            </thead>
+            <tbody>
+                <% eleves.forEach(eleve => { %>
+                <tr>
+                    <td><%= eleve.nom %></td>
+                    <td><input type="checkbox" name="eleve_<%= eleve.id %>" value="present" checked></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <br>
+        <button type="submit" class="btn">حفظ (Sauvegarder)</button> </form>
+</body>
+</html>

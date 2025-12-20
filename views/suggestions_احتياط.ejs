@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title><%= titre %></title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 30px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #333; padding: 12px; text-align: center; }
+        th { background: #f2f2f2; color: #333; }
+        .no-print { margin-bottom: 20px; text-align: left; }
+        .btn-print { padding: 10px 20px; background: #2e7d32; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <button onclick="window.print()" class="btn-print">🖨️ طباعة الكشف</button>
+        <a href="/admin/absence-profs" style="margin-right:10px;">العودة</a>
+    </div>
+
+    <div class="header">
+        <h1>كشف توزيع حصص الاحتياط</h1>
+        <p>اليوم: <strong><%= today_name %></strong> | التاريخ: <%= new Date().toLocaleDateString('ar-EG') %></p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>الحصة</th>
+                <th>الصف والشعبة</th>
+                <th>المعلم الاحتياط المقترح</th>
+                <th>توقيع المعلم</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if(suggestions.length > 0) { %>
+                <% suggestions.forEach(s => { %>
+                    <tr>
+                        <td>الحصة <%= s.hessa %></td>
+                        <td><%= s.classe %> / <%= s.section %></td>
+                        <td>
+                            <select style="border:none; font-size:16px; width:100%; background:transparent;">
+                                <option value="">-- اختر المعلم البديل --</option>
+                                <% s.available_profs.forEach(p => { %>
+                                    <option><%= p.nom %> (<%= p.matiere %>)</option>
+                                <% }) %>
+                            </select>
+                        </td>
+                        <td style="width: 150px;"></td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="4">لا توجد حصص مجدولة لهذا المعلم اليوم.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 50px; display: flex; justify-content: space-around;">
+        <p>توقيع مشرف الجدول: ...........................</p>
+        <p>يعتمد مدير المدرسة: ...........................</p>
+    </div>
+
+</body>
+</html>

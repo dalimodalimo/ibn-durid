@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titre %></title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        h1, h2 { color: #1a237e; border-bottom: 2px solid #1a237e; padding-bottom: 10px; }
+        
+        /* Formulaires */
+        .form-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 150px; height: 42px; }
+        
+        /* Boutons */
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; height: 42px; }
+        .btn-add { background-color: #2e7d32; color: white; }
+        .btn-assign { background-color: #1565c0; color: white; }
+        .btn-delete { color: #d32f2f; text-decoration: none; font-size: 0.9em; }
+        .btn:hover { opacity: 0.8; }
+
+        /* Tableau */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #1a237e; color: white; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .tag-classe { background: #e8eaf6; color: #3f51b5; padding: 4px 10px; border-radius: 15px; font-size: 0.85em; margin: 2px; display: inline-block; border: 1px solid #c5cae9; }
+        .btn-remove-aff { color: #e74c3c; text-decoration: none; margin-left: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/admin/dashboard" style="text-decoration: none; color: #1a237e; font-weight: bold;">🏠 العودة للوحة التحكم</a>
+    <h1>إدارة المعلمين (Gestion des Enseignants)</h1>
+
+    <div class="section">
+        <h2>القسم ١: إضافة معلم جديد</h2>
+        <form action="/admin/enseignants/ajouter" method="POST" class="form-group">
+            <input type="text" name="nom" placeholder="اسم المعلم" required>
+            
+            <select name="matiere" required>
+                <option value="">-- اختر المادة الدراسية --</option>
+                <% subjects.forEach(sub => { %>
+                    <option value="<%= sub.name %>"><%= sub.name %></option>
+                <% }) %>
+            </select>
+            
+            <input type="text" name="phone" placeholder="رقم الهاتف">
+            <button type="submit" class="btn btn-add">إضافة معلم</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>القسم ٢: تعيين الفصول للمعلمين</h2>
+        
+        <form action="/admin/enseignants/affecter" method="POST" class="form-group" style="background: #f1f8e9; padding: 15px; border-radius: 8px;">
+            <select name="enseignant_id" required>
+                <option value="">اختر المعلم...</option>
+                <% enseignants.forEach(prof => { %>
+                    <option value="<%= prof.id %>"><%= prof.nom %></option>
+                <% }) %>
+            </select>
+
+            <select name="class_info" required>
+                <option value="">-- اختر الصف والشعبة --</option>
+                <% classes.forEach(c => { %>
+                    <% for(let i=1; i <= c.num_sections; i++) { %>
+                        <option value="<%= c.class_name %>|<%= i %>">
+                            <%= c.class_name %> - شعبة <%= i %>
+                        </option>
+                    <% } %>
+                <% }) %>
+            </select>
+
+            <button type="submit" class="btn btn-assign">تأكيد التعيين</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>اسم المعلم</th>
+                    <th>المادة الدراسية</th>
+                    <th>رقم الهاتف</th>
+                    <th>الفصول المعينة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% enseignants.forEach(prof => { %>
+                <tr>
+                    <td><strong><%= prof.nom %></strong></td>
+                    <td><%= prof.matiere %></td>
+                    <td><%= prof.phone_number %></td>
+                    <td>
+                        <% 
+                           let profAff = affectations.filter(a => a.nom === prof.nom);
+                           if(profAff.length > 0) { 
+                             profAff.forEach(aff => { %>
+                                <div class="tag-classe">
+                                    <%= aff.classe %> / <%= aff.section %>
+                                    <form action="/admin/enseignants/desaffecter" method="POST" style="display:inline;">
+                                        <input type="hidden" name="id" value="<%= aff.id %>">
+                                        <button type="submit" class="btn-remove-aff" style="background:none; border:none; cursor:pointer;" onclick="return confirm('إلغاء تعيين هذا الفصل؟')">×</button>
+                                    </form>
+                                </div>
+                             <% }) 
+                           } else { %>
+                             <span style="color:#999; font-size: 0.8em;">لم يتم تعيين فصول</span>
+                           <% } 
+                        %>
+                    </td>
+                    <td>
+                        <a href="/admin/enseignants/supprimer/<%= prof.id %>" class="btn-delete" onclick="return confirm('هل أنت متأكد من حذف هذا المعلم؟')">حذف المعلم 🗑️</a>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

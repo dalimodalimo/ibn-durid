@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title><%= titre %></title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .filter-nav { margin-bottom: 20px; display: flex; gap: 10px; }
+        .filter-nav a { text-decoration: none; padding: 8px 15px; background: #3498db; color: white; border-radius: 5px; font-size: 0.9rem; }
+        .filter-nav a:hover { background: #2980b9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+        th { background: #2c3e50; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 تقارير غياب الطلاب</h1>
+        
+        <div class="filter-nav">
+            <a href="/admin/rapport-absences-eleves">الكل</a>
+            <a href="/admin/rapport-absences-eleves?view=daily">اليوم</a>
+            <a href="/admin/rapport-absences-eleves?view=weekly">آخر أسبوع</a>
+            <a href="/admin/rapport-absences-eleves?view=monthly">هذا الشهر</a>
+            <a href="/admin/dashboard" style="background:#7f8c8d;">العودة للوحة التحكم</a>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>اسم الطالب</th>
+                    <th>الفصل</th>
+                    <th>الحصة</th>
+                    <th>المعلم الراصد</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (stats.length === 0) { %>
+                    <tr><td colspan="5" style="text-align:center;">لا توجد سجلات غياب حالياً.</td></tr>
+                <% } else { %>
+                    <% stats.forEach(row => { %>
+                        <tr>
+                            <td><%= row.date %></td>
+                            <td><%= row.student_name %></td>
+                            <td><%= row.classe %> / <%= row.section %></td>
+                            <td>الحصة <%= row.periode %></td>
+                            <td><%= row.teacher_name %></td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

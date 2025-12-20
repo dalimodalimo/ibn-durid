@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الجدول المدرسي - مدرسة ابن دريد</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; padding: 20px; }
+        .section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; }
+        th, td { border: 1px solid #aaa; padding: 10px; text-align: center; font-size: 14px; }
+        th { background: #1a237e; color: white; }
+        .filter-container { display: flex; gap: 20px; margin-bottom: 15px; background: #e3f2fd; padding: 15px; border-radius: 8px; align-items: center; }
+        .btn-add { background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-add:hover { background: #1b5e20; }
+        select, input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+        .cell-info { font-size: 0.85rem; color: #555; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <a href="/admin/dashboard" style="text-decoration:none; color: #1a237e; font-weight: bold;">🏠 العودة للوحة التحكم</a>
+    <h1>إدارة الجدول المدرسي</h1>
+
+    <div class="filter-container">
+        <form action="/admin/timetable" method="GET" style="display:flex; align-items:center; gap:10px;">
+            <label>عرض حسب المعلم: </label>
+            <select name="teacher_filter" onchange="this.form.submit()">
+                <option value="">-- كل المعلمين --</option>
+                <% enseignants.forEach(p => { %>
+                    <option value="<%= p.id %>" <%= teacher_filter == p.id ? 'selected' : '' %>><%= p.nom %></option>
+                <% }) %>
+            </select>
+            
+            <label style="margin-right:20px;">عرض حسب الصف: </label>
+            <select name="class_filter" onchange="this.form.submit()">
+                <option value="">-- كل الصفوف --</option>
+                <% unique_classes.forEach(c => { %>
+                    <% let val = c.classe + "-" + c.section; %>
+                    <option value="<%= val %>" <%= class_filter == val ? 'selected' : '' %>>الصف <%= c.classe %> / <%= c.section %></option>
+                <% }) %>
+            </select>
+            <a href="/admin/timetable" style="margin-right:15px; font-size: 0.8rem; color: #d32f2f;">إلغاء الفلاتر</a>
+        </form>
+    </div>
+
+    <div class="section">
+        <h3>➕ إضافة حصة جديدة</h3>
+        <form action="/admin/timetable/ajouter" method="POST" style="display:flex; gap:10px; flex-wrap:wrap; align-items: flex-end;">
+            <div>
+                <label style="display:block; margin-bottom:5px;">المعلم</label>
+                <select name="enseignant_id" id="teacher_select" required onchange="filterClasses()">
+                    <option value="">اختر المعلم...</option>
+                    <% enseignants.forEach(p => { %> <option value="<%= p.id %>"><%= p.nom %></option> <% }) %>
+                </select>
+            </div>
+
+            <div>
+                <label style="display:block; margin-bottom:5px;">الصف المسند</label>
+                <select name="class_info" id="class_select" required disabled>
+                    <option value="">حدد المعلم أولاً</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display:block; margin-bottom:5px;">اليوم</label>
+                <select name="jour" required>
+                    <option value="الأحد">الأحد</option>
+                    <option value="الإثنين">الإثنين</option>
+                    <option value="الثلاثاء">الثلاثاء</option>
+                    <option value="الأربعاء">الأربعاء</option>
+                    <option value="الخميس">الخميس</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display:block; margin-bottom:5px;">الحصة</label>
+                <select name="periode" required>
+                    <% for(let i=1; i<=8; i++) { %> <option value="<%= i %>">الحصة <%= i %></option> <% } %>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-add">حفظ الحصة</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2 style="text-align:center; color: #1a237e;">
+            <% if(teacher_filter) { %> 
+                جدول المعلم: <%= enseignants.find(e => e.id == teacher_filter).nom %> 
+            <% } else if(class_filter) { %> 
+                جدول الصف: <%= class_filter.replace('-',' / ') %> 
+            <% } else { %> 
+                الجدول العام للمدرسة 
+            <% } %>
+        </h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 100px;">اليوم</th>
+                    <% for(let i=1; i<=8; i++) { %> <th>الحصة <%= i %></th> <% } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% const jours = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس']; %>
+                <% jours.forEach(j => { %>
+                    <tr>
+                        <td style="background:#eee; font-weight:bold;"><%= j %></td>
+                        <% for(let p=1; p<=8; p++) { %>
+                            <td>
+                                <% let cell = schedule.find(s => s.jour === j && s.periode === p); %>
+                                <% if(cell) { %>
+                                    <div class="cell-info">
+                                        <strong><%= cell.matiere %></strong><br>
+                                        <span><%= cell.prof_nom %></span><br>
+                                        <small>(<%= cell.classe %>/<%= cell.section %>)</small>
+                                    </div>
+                                <% } %>
+                            </td>
+                        <% } %>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // جلب التكليفات من السيرفر بشكل آمن
+        const allAffectations = <%- JSON.stringify(all_affectations) %>;
+
+        function filterClasses() {
+            const teacherId = document.getElementById('teacher_select').value;
+            const classSelect = document.getElementById('class_select');
+            
+            classSelect.innerHTML = '<option value="">اختر الصف...</option>';
+            
+            // البحث عن الصفوف المسندة لهذا المعلم في جدول التكليفات (affectations)
+            const filtered = allAffectations.filter(a => a.enseignant_id == teacherId);
+            
+            if(filtered.length > 0) {
+                classSelect.disabled = false;
+                filtered.forEach(a => {
+                    let opt = document.createElement('option');
+                    opt.value = a.classe + "|" + a.section;
+                    opt.text = "صف " + a.classe + " / شعبة " + a.section;
+                    classSelect.add(opt);
+                });
+            } else {
+                classSelect.disabled = true;
+                classSelect.innerHTML = '<option value="">لا توجد صفوف مسندة لهذا المعلم</option>';
+            }
+        }
+    </script>
+</body>
+</html>

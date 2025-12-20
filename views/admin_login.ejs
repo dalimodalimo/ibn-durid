@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>دخول الأدمن - مدرسة ابن دريد</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 350px; text-align: center; }
+        h1 { color: #c0392b; margin-bottom: 20px; font-size: 24px; }
+        input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; text-align: center; }
+        button { width: 100%; padding: 12px; background: #c0392b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 18px; transition: 0.3s; }
+        button:hover { background: #a93226; }
+        .error { color: #e74c3c; margin-bottom: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h1>قفل الإدارة</h1>
+    <% if (error) { %> <p class="error"><%= error %></p> <% } %>
+    
+    <form action="/admin/login" method="POST">
+        <label>كلمة مرور المسؤول:</label>
+        <input type="password" name="password" placeholder="••••••••" required autofocus>
+        <button type="submit">دخول للوحة التحكم</button>
+    </form>
+    <p style="margin-top: 20px;"><a href="/teacher/login" style="color: #7f8c8d; text-decoration: none; font-size: 14px;">عودة لدخول المعلمين</a></p>
+</div>
+
+</body>
+</html>

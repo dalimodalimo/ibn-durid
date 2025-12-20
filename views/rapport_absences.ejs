@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>كشف غياب المعلمين - مدرسة ابن دريد</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 30px; background: #f4f7f6; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #2c3e50; color: white; }
+    </style>
+</head>
+<body>
+    <a href="/admin/dashboard">🏠 العودة للوحة التحكم</a>
+    <h1>سجل غياب المعلمين التاريخي</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>التاريخ</th>
+                <th>اسم المعلم</th>
+                <th>المادة</th>
+                <th>السبب</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% rapports.forEach(r => { %>
+                <tr>
+                    <td><%= r.date %></td>
+                    <td><%= r.nom %></td>
+                    <td><%= r.matiere %></td>
+                    <td><%= r.raison %></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <button onclick="window.print()" style="margin-top:20px; padding:10px 20px; cursor:pointer;">طباعة التقرير</button>
+</body>
+</html>

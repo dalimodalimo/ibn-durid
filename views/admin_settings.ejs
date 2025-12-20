@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title><%= titre %></title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
+        .sidebar { width: 250px; background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main { margin-right: 270px; padding: 40px; width: 100%; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .grid-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-save { background: #27ae60; margin-top: 10px; }
+        .btn-danger { background: var(--danger); padding: 5px 10px; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #f8f9fa; }
+        .flex-form { display: flex; gap: 10px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>الإعدادات ⚙️</h2>
+    <hr>
+    <a href="/admin/dashboard" style="color:white; text-decoration:none;">🏠 العودة للوحة التحكم</a>
+</div>
+
+<div class="main">
+    <h1><%= titre %></h1>
+
+    <div class="grid-settings">
+        <div class="card">
+            <h3>🏢 تنظيم الهيكل الدراسي (الصفوف)</h3>
+            <form action="/admin/settings/classes/add" method="POST" class="flex-form">
+                <input type="text" name="class_name" placeholder="اسم الصف (مثال: الخامس)" required>
+                <input type="number" name="num_sections" placeholder="عدد الشعب" min="1" max="15" required style="width: 100px;">
+                <button type="submit" class="btn">إضافة</button>
+            </form>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>الصف</th>
+                        <th>الشعب المتاحة</th>
+                        <th>حذف</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% classes.forEach(c => { %>
+                    <tr>
+                        <td><b><%= c.class_name %></b></td>
+                        <td>من 1 إلى <%= c.num_sections %></td>
+                        <td>
+                            <form action="/admin/settings/classes/delete" method="POST" style="margin:0;">
+                                <input type="hidden" name="class_id" value="<%= c.id %>">
+                                <button type="submit" class="btn btn-danger">❌</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>📚 المواد الدراسية المعتمدة</h3>
+            <form action="/admin/settings/subjects/add" method="POST" class="flex-form">
+                <input type="text" name="subject_name" placeholder="اسم المادة (مثل: علوم)" required>
+                <button type="submit" class="btn">إضافة</button>
+            </form>
+            <table>
+                <% subjects.forEach(sub => { %>
+                    <tr>
+                        <td style="text-align: right; padding-right: 20px;"><%= sub.name %></td>
+                    </tr>
+                <% }) %>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>⏰ ضبط توقيت الحصص اليومي</h3>
+        <form action="/admin/settings/periods/update" method="POST">
+            <table>
+                <thead>
+                    <tr><th>الحصة</th><th>وقت البدء</th><th>وقت الانتهاء</th></tr>
+                </thead>
+                <tbody>
+                    <% for(let i=1; i<=8; i++) { %>
+                    <tr>
+                        <td>الحصة <%= i %> <input type="hidden" name="id[]" value="<%= i %>"></td>
+                        <td><input type="time" name="start_time[]"></td>
+                        <td><input type="time" name="end_time[]"></td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-save">تحديث الجدول الزمني</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>🔐 إدارة حسابات المعلمين</h3>
+        <table>
+            <thead>
+                <tr><th>المعلم</th><th>كلمة المرور</th><th>تحديث</th></tr>
+            </thead>
+            <tbody>
+                <% teachers.forEach(t => { %>
+                <tr>
+                    <td><%= t.nom %></td>
+                    <td><code><%= t.password %></code></td>
+                    <td>
+                        <form action="/admin/settings/password/update" method="POST" style="display:flex; gap:5px; justify-content: center;">
+                            <input type="hidden" name="teacher_id" value="<%= t.id %>">
+                            <input type="text" name="new_password" placeholder="جديدة" required style="width: 100px;">
+                            <button type="submit" class="btn" style="background:#e67e22; padding: 5px 10px;">💾</button>
+                        </form>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

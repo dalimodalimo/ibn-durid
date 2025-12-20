@@ -171,6 +171,37 @@ initializeDatabase().then(() => {
         const classes = await db.all("SELECT * FROM school_classes");
         res.render('gestion_enseignants', { enseignants, affectations, subjects, classes, titre: "إدارة المعلمين" });
     });
+    // --- [ المسار الجديد: إسناد فصول متعددة ] ---
+    app.post('/admin/enseignants/affecter-multiple', async (req, res) => {
+        try {
+            const { enseignant_id, classes_data } = req.body;
+            
+            // تحويل البيانات القادمة من نص JSON إلى مصفوفة
+            const selectedClasses = JSON.parse(classes_data);
+
+            if (!selectedClasses || selectedClasses.length === 0) {
+                return res.redirect('/admin/enseignants');
+            }
+
+            // تنفيذ العمليات داخل قاعدة البيانات
+            for (const classInfo of selectedClasses) {
+                // تقسيم البيانات (مثلاً "العاشر|1" إلى اسم الصف ورقم الشعبة)
+                const [classe, section] = classInfo.split('|');
+                
+                // إدخال البيانات في جدول affectations
+                await db.run(
+                    "INSERT INTO affectations (enseignant_id, classe, section) VALUES (?, ?, ?)", 
+                    [enseignant_id, classe, section]
+                );
+            }
+
+            // النجاح وإعادة التوجيه
+            res.redirect('/admin/enseignants?success=bulk');
+        } catch (e) {
+            console.error("خطأ في الإسناد المتعدد:", e);
+            res.status(500).send("حدث خطأ أثناء معالجة إسناد الفصول");
+        }
+    });
 
     app.post('/admin/enseignants/ajouter', async (req, res) => {
         try {

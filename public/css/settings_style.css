@@ -1,0 +1,156 @@
+/* --- الإعدادات العامة --- */
+:root {
+    --primary: #1a237e;
+    --accent: #4fc3f7;
+    --bg: #f8fafc;
+    --white: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.4);
+    --sidebar-width: 260px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    display: flex;
+    direction: rtl;
+}
+
+/* --- القائمة الجانبية Sidebar --- */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--primary);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-header {
+    padding: 25px 20px;
+    background: rgba(0,0,0,0.15);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-nav {
+    padding: 15px;
+}
+
+/* عناوين الأقسام داخل القائمة */
+.nav-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin: 25px 12px 10px 0;
+    font-weight: 800;
+    display: block;
+}
+
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.sidebar-nav a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    padding-right: 22px; /* تأثير حركة عند الوقوف */
+}
+
+/* --- المحتوى الرئيسي Main Content --- */
+.main {
+    margin-right: var(--sidebar-width);
+    padding: 40px;
+    width: 100%;
+    scroll-behavior: smooth; /* تمرير سلس عند الضغط على الروابط */
+}
+
+h1 {
+    color: var(--primary);
+    margin-bottom: 35px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* البطاقات Cards */
+.grid-settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+    margin-top: 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f1f5f9;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary);
+}
+
+/* الجداول والمدخلات */
+table { width: 100%; border-collapse: collapse; }
+th { background: #f8fafc; padding: 12px; font-size: 0.85rem; border-bottom: 2px solid #edf2f7; }
+td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+
+input, select {
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+
+/* الأزرار */
+.btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-save { background: #27ae60; width: 100%; margin-top: 15px; font-size: 1rem; }
+.btn-danger { background: #e74c3c; }
+.btn-orange { background: #f39c12; }
+
+code {
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #334155;
+}

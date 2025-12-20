@@ -3,23 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= titre %> - مدرسة ابن دريد</title>
+    <title><%= titre %></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/enseignants_style.css">
 </head>
 <body>
 
-<div class="container">
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><i class="fas fa-chalkboard-teacher"></i> شؤون المعلمين</h2>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-label">الأساسيات</div>
+        <a href="/admin/dashboard"><i class="fas fa-home"></i> العودة للرئيسية</a>
+        
+        <div class="nav-label">الإجراءات</div>
+        <a href="#section-add-teacher"><i class="fas fa-user-plus"></i> إضافة معلم</a>
+        <a href="#section-assign"><i class="fas fa-link"></i> إسناد الفصول</a>
+
+        <div class="nav-label">البيانات</div>
+        <a href="#section-table"><i class="fas fa-table"></i> سجل المعلمين</a>
+        <a href="/admin/settings"><i class="fas fa-cog"></i> إعدادات النظام</a>
+    </div>
+</div>
+
+<div class="main">
     <header class="page-header">
-        <h1>إدارة شؤون المعلمين</h1>
-        <a href="/admin/dashboard" class="back-link">
-            <span>لوحة التحكم</span>
-            <i class="fas fa-home"></i>
-        </a>
+        <h1>إدارة الكادر التعليمي</h1>
     </header>
 
-    <section class="section-card">
-        <h2><i class="fas fa-user-plus"></i> إضافة معلم جديد للنظام</h2>
+    <section class="card" id="section-add-teacher">
+        <h3><i class="fas fa-user-plus"></i> إضافة معلم جديد للنظام</h3>
         <form action="/admin/enseignants/ajouter" method="POST" class="form-grid">
             <div class="input-group">
                 <label>اسم المعلم الكامل</label>
@@ -41,16 +57,15 @@
                 <input type="text" name="phone" placeholder="0XXXXXXXXX">
             </div>
 
-            <button type="submit" class="btn btn-add">
+            <button type="submit" class="btn btn-save" style="width: auto; margin-top: 25px;">
                 <i class="fas fa-save"></i> حفظ البيانات
             </button>
         </form>
     </section>
 
-    <section class="section-card">
-        <h2><i class="fas fa-chalkboard-teacher"></i> إسناد الفصول والجداول</h2>
-        
-        <form action="/admin/enseignants/affecter" method="POST" class="form-grid" style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+    <section class="card" id="section-assign">
+        <h3><i class="fas fa-link"></i> إسناد الفصول والجداول</h3>
+        <form action="/admin/enseignants/affecter" method="POST" class="form-grid" style="background: #f8fafc; padding: 20px; border-radius: 10px;">
             <div class="input-group">
                 <label>اختيار المعلم</label>
                 <select name="enseignant_id" required>
@@ -75,12 +90,15 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-assign">
+            <button type="submit" class="btn btn-save" style="width: auto; margin-top: 25px; background: #3498db;">
                 <i class="fas fa-link"></i> تأكيد الإسناد
             </button>
         </form>
+    </section>
 
-        <div class="table-container">
+    <section class="card" id="section-table">
+        <h3><i class="fas fa-list-ul"></i> سجل المعلمين والتكليفات الحالية</h3>
+        <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
@@ -94,30 +112,31 @@
                 <tbody>
                     <% enseignants.forEach(prof => { %>
                     <tr>
-                        <td><b style="color: var(--primary-blue);"><%= prof.nom %></b></td>
+                        <td><b style="color: #1a237e;"><%= prof.nom %></b></td>
                         <td><span class="badge-matiere"><%= prof.matiere %></span></td>
-                        <td><code style="font-family: monospace;"><%= prof.phone_number || '---' %></code></td>
+                        <td><code><%= prof.phone_number || '---' %></code></td>
                         <td>
+                            <div class="tags-container">
                             <% 
                                let profAff = affectations.filter(a => a.nom === prof.nom);
                                if(profAff.length > 0) { 
                                  profAff.forEach(aff => { %>
                                     <div class="tag-classe">
-                                        <i class="fas fa-users-class" style="font-size: 0.7rem;"></i>
                                         <%= aff.classe %> / <%= aff.section %>
                                         <form action="/admin/enseignants/desaffecter" method="POST" style="display:inline;">
                                             <input type="hidden" name="id" value="<%= aff.id %>">
-                                            <button type="submit" class="btn-remove-aff" title="إلغاء التعيين" onclick="return confirm('إلغاء تعيين هذا الفصل؟')">&times;</button>
+                                            <button type="submit" class="btn-remove-tag" onclick="return confirm('إلغاء تعيين هذا الفصل؟')">&times;</button>
                                         </form>
                                     </div>
                                  <% }) 
                                } else { %>
-                                 <span style="color:#94a3b8; font-style: italic; font-size: 0.8rem;">لا توجد تكليفات</span>
+                                 <span class="no-data">لا توجد تكليفات</span>
                                <% } 
                             %>
+                            </div>
                         </td>
                         <td>
-                            <a href="/admin/enseignants/supprimer/<%= prof.id %>" class="btn-delete" onclick="return confirm('حذف المعلم وسجلاته نهائياً؟')">
+                            <a href="/admin/enseignants/supprimer/<%= prof.id %>" class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="return confirm('حذف المعلم وسجلاته نهائياً؟')">
                                 <i class="fas fa-trash-alt"></i> حذف
                             </a>
                         </td>

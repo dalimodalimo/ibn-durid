@@ -2,62 +2,62 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %></title>
-    <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
-        .sidebar { width: 250px; background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
-        .main { margin-right: 270px; padding: 40px; width: 100%; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .grid-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn:hover { opacity: 0.9; }
-        .btn-save { background: #27ae60; margin-top: 10px; }
-        .btn-danger { background: var(--danger); padding: 5px 10px; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background: #f8f9fa; }
-        .flex-form { display: flex; gap: 10px; margin-bottom: 15px; }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/settings_style.css">
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>الإعدادات ⚙️</h2>
-    <hr>
-    <a href="/admin/dashboard" style="color:white; text-decoration:none;">🏠 العودة للوحة التحكم</a>
+    <div class="sidebar-header">
+        <h2><i class="fas fa-tools"></i> الإعدادات</h2>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-label">الأساسيات</div>
+        <a href="/admin/dashboard"><i class="fas fa-home"></i> العودة للرئيسية</a>
+        
+        <div class="nav-label">إدارة البيانات</div>
+        <a href="#section-classes"><i class="fas fa-school"></i> الهيكل الدراسي</a>
+        <a href="#section-subjects"><i class="fas fa-book"></i> المواد الدراسية</a>
+        <a href="/admin/enseignants"><i class="fas fa-chalkboard-teacher"></i> إدارة المعلمين</a>
+
+        <div class="nav-label">الحماية والوقت</div>
+        <a href="#section-time"><i class="fas fa-clock"></i> التوقيت المدرسي</a>
+        <a href="#section-accounts"><i class="fas fa-user-shield"></i> حسابات الدخول</a>
+    </div>
 </div>
 
 <div class="main">
-    <h1><%= titre %></h1>
+    <h1><i class="fas fa-cogs"></i> تهيئة النظام</h1>
 
     <div class="grid-settings">
-        <div class="card">
-            <h3>🏢 تنظيم الهيكل الدراسي (الصفوف)</h3>
+        <div class="card" id="section-classes">
+            <h3><i class="fas fa-school"></i> تنظيم الهيكل الدراسي</h3>
             <form action="/admin/settings/classes/add" method="POST" class="flex-form">
-                <input type="text" name="class_name" placeholder="اسم الصف (مثال: الخامس)" required>
-                <input type="number" name="num_sections" placeholder="عدد الشعب" min="1" max="15" required style="width: 100px;">
-                <button type="submit" class="btn">إضافة</button>
+                <input type="text" name="class_name" placeholder="اسم الصف" required style="flex: 2;">
+                <input type="number" name="num_sections" placeholder="الشعب" min="1" max="15" required style="flex: 1;">
+                <button type="submit" class="btn"><i class="fas fa-plus"></i> إضافة</button>
             </form>
             
             <table>
                 <thead>
                     <tr>
                         <th>الصف</th>
-                        <th>الشعب المتاحة</th>
-                        <th>حذف</th>
+                        <th>الشعب</th>
+                        <th>الإجراء</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% classes.forEach(c => { %>
                     <tr>
-                        <td><b><%= c.class_name %></b></td>
-                        <td>من 1 إلى <%= c.num_sections %></td>
+                        <td><strong><%= c.class_name %></strong></td>
+                        <td><span class="badge">1 - <%= c.num_sections %></span></td>
                         <td>
                             <form action="/admin/settings/classes/delete" method="POST" style="margin:0;">
                                 <input type="hidden" name="class_id" value="<%= c.id %>">
-                                <button type="submit" class="btn btn-danger">❌</button>
+                                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -66,28 +66,38 @@
             </table>
         </div>
 
-        <div class="card">
-            <h3>📚 المواد الدراسية المعتمدة</h3>
+        <div class="card" id="section-subjects">
+            <h3><i class="fas fa-book"></i> المواد الدراسية</h3>
             <form action="/admin/settings/subjects/add" method="POST" class="flex-form">
-                <input type="text" name="subject_name" placeholder="اسم المادة (مثل: علوم)" required>
-                <button type="submit" class="btn">إضافة</button>
+                <input type="text" name="subject_name" placeholder="اسم المادة" required style="flex: 1;">
+                <button type="submit" class="btn"><i class="fas fa-plus"></i> إضافة</button>
             </form>
-            <table>
-                <% subjects.forEach(sub => { %>
-                    <tr>
-                        <td style="text-align: right; padding-right: 20px;"><%= sub.name %></td>
-                    </tr>
-                <% }) %>
-            </table>
+            <div style="max-height: 250px; overflow-y: auto;">
+                <table>
+                    <tbody>
+                        <% subjects.forEach(sub => { %>
+                        <tr>
+                            <td style="text-align: right; font-weight: 500;">
+                                <i class="fas fa-chevron-left" style="font-size: 0.8rem; color: #3498db;"></i> <%= sub.name %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <h3>⏰ ضبط توقيت الحصص اليومي</h3>
+    <div class="card" id="section-time">
+        <h3><i class="fas fa-clock"></i> ضبط الجدول الزمني اليومي</h3>
         <form action="/admin/settings/periods/update" method="POST">
             <table>
                 <thead>
-                    <tr><th>الحصة</th><th>وقت البدء</th><th>وقت الانتهاء</th></tr>
+                    <tr>
+                        <th>الحصة</th>
+                        <th><i class="far fa-play-circle"></i> وقت البدء</th>
+                        <th><i class="far fa-stop-circle"></i> وقت الانتهاء</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <% for(let i=1; i<=8; i++) { %>
@@ -99,15 +109,19 @@
                     <% } %>
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-save">تحديث الجدول الزمني</button>
+            <button type="submit" class="btn btn-save"><i class="fas fa-save"></i> حفظ جميع المواعيد</button>
         </form>
     </div>
 
-    <div class="card">
-        <h3>🔐 إدارة حسابات المعلمين</h3>
+    <div class="card" id="section-accounts">
+        <h3><i class="fas fa-user-shield"></i> إدارة حسابات المعلمين</h3>
         <table>
             <thead>
-                <tr><th>المعلم</th><th>كلمة المرور</th><th>تحديث</th></tr>
+                <tr>
+                    <th>المعلم</th>
+                    <th>كلمة المرور الحالية</th>
+                    <th>تعيين كلمة مرور جديدة</th>
+                </tr>
             </thead>
             <tbody>
                 <% teachers.forEach(t => { %>
@@ -115,10 +129,10 @@
                     <td><%= t.nom %></td>
                     <td><code><%= t.password %></code></td>
                     <td>
-                        <form action="/admin/settings/password/update" method="POST" style="display:flex; gap:5px; justify-content: center;">
+                        <form action="/admin/settings/password/update" method="POST" class="flex-form" style="margin:0; justify-content: center;">
                             <input type="hidden" name="teacher_id" value="<%= t.id %>">
-                            <input type="text" name="new_password" placeholder="جديدة" required style="width: 100px;">
-                            <button type="submit" class="btn" style="background:#e67e22; padding: 5px 10px;">💾</button>
+                            <input type="text" name="new_password" placeholder="جديدة" required style="width: 120px; padding: 5px;">
+                            <button type="submit" class="btn btn-orange" style="padding: 8px 12px;"><i class="fas fa-key"></i></button>
                         </form>
                     </td>
                 </tr>

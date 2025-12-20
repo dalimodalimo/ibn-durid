@@ -5,24 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %> - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/timetable_style.css">
 </head>
 <body>
 
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><i class="fas fa-calendar-alt"></i> الجدول المدرسي</h2>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-label">الأساسيات</div>
+        <a href="/admin/dashboard"><i class="fas fa-home"></i> العودة للرئيسية</a>
+        
+        <div class="nav-label">العرض والتصفية</div>
+        <a href="#section-filter"><i class="fas fa-search"></i> بحث وتصفية</a>
+        <a href="#section-add"><i class="fas fa-plus-circle"></i> إضافة حصة</a>
+
+        <div class="nav-label">البيانات</div>
+        <a href="#section-table"><i class="fas fa-table"></i> عرض الجدول</a>
+        <a href="/admin/settings"><i class="fas fa-cog"></i> إعدادات الأوقات</a>
+    </div>
+</div>
+
+<div class="main-content">
     <header class="page-header">
-        <div>
-            <h1>إدارة الجدول المدرسي</h1>
-            <p style="margin: 5px 0 0; color: #666;">تنظيم وتوزيع الحصص الأسبوعية</p>
-        </div>
-        <a href="/admin/dashboard" class="back-link">
-            <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
-        </a>
+        <h1>إدارة الجدول الأسبوعي</h1>
     </header>
 
-    <div class="filter-card">
-        <form action="/admin/timetable" method="GET" class="filter-grid">
+    <div class="card" id="section-filter">
+        <h3><i class="fas fa-filter"></i> تصفية عرض البيانات</h3>
+        <form action="/admin/timetable" method="GET" class="filter-grid-row">
             <div class="input-group">
-                <label><i class="fas fa-filter"></i> عرض حسب المعلم:</label>
+                <label>حسب المعلم:</label>
                 <select name="teacher_filter" onchange="this.form.submit()">
                     <option value="">-- كل المعلمين --</option>
                     <% enseignants.forEach(p => { %>
@@ -32,7 +48,7 @@
             </div>
             
             <div class="input-group">
-                <label><i class="fas fa-layer-group"></i> عرض حسب الصف:</label>
+                <label>حسب الصف:</label>
                 <select name="class_filter" onchange="this.form.submit()">
                     <option value="">-- كل الصفوف --</option>
                     <% unique_classes.forEach(c => { %>
@@ -41,13 +57,13 @@
                     <% }) %>
                 </select>
             </div>
-            <a href="/admin/timetable" style="color: #d32f2f; text-decoration: none; font-size: 0.9rem;">إعادة تعيين</a>
+            <a href="/admin/timetable" class="btn-reset">إعادة تعيين الفلتر</a>
         </form>
     </div>
 
-    <div class="section-card">
+    <section class="card" id="section-add">
         <h3><i class="fas fa-plus-circle"></i> إضافة حصة جديدة</h3>
-        <form action="/admin/timetable/ajouter" method="POST" class="form-inline">
+        <form action="/admin/timetable/ajouter" method="POST" class="form-grid-layout">
             <div class="input-group">
                 <label>المعلم</label>
                 <select name="enseignant_id" id="teacher_select" required onchange="filterClasses()">
@@ -81,24 +97,24 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn-save"><i class="fas fa-save"></i> حفظ الحصة</button>
+            <button type="submit" class="btn-save-action"><i class="fas fa-save"></i> حفظ الحصة</button>
         </form>
-    </div>
+    </section>
 
-    <div class="section-card">
-        <h2 style="text-align:center; color: var(--primary-blue); margin-bottom: 20px;">
-            <i class="fas fa-table"></i>
+    <div class="card" id="section-table">
+        <h2 class="table-title">
+            <i class="fas fa-th"></i>
             <% if(teacher_filter) { %> 
                 جدول المعلم: <%= enseignants.find(e => e.id == teacher_filter).nom %> 
             <% } else if(class_filter) { %> 
                 جدول الصف: <%= class_filter.replace('-',' / ') %> 
             <% } else { %> 
-                الجدول العام للمدرسة 
+                الجدول الدراسي العام 
             <% } %>
         </h2>
         
         <div class="table-responsive">
-            <table>
+            <table class="timetable">
                 <thead>
                     <tr>
                         <th>اليوم</th>
@@ -109,15 +125,15 @@
                     <% const jours = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس']; %>
                     <% jours.forEach(j => { %>
                         <tr>
-                            <td class="day-column"><%= j %></td>
+                            <td class="day-header"><%= j %></td>
                             <% for(let p=1; p<=8; p++) { %>
-                                <td>
+                                <td class="slot-cell">
                                     <% let cell = schedule.find(s => s.jour === j && s.periode === p); %>
                                     <% if(cell) { %>
                                         <div class="cell-info">
-                                            <strong><%= cell.matiere %></strong>
-                                            <span><%= cell.prof_nom %></span>
-                                            <small>(<%= cell.classe %>/<%= cell.section %>)</small>
+                                            <span class="subject-name"><%= cell.matiere %></span>
+                                            <span class="prof-name"><%= cell.prof_nom %></span>
+                                            <span class="class-tag"><%= cell.classe %>/<%= cell.section %></span>
                                         </div>
                                     <% } %>
                                 </td>
@@ -128,27 +144,28 @@
             </table>
         </div>
     </div>
+</div>
 
-    <script>
-        const allAffectations = <%- JSON.stringify(all_affectations) %>;
-        function filterClasses() {
-            const teacherId = document.getElementById('teacher_select').value;
-            const classSelect = document.getElementById('class_select');
-            classSelect.innerHTML = '<option value="">اختر الصف...</option>';
-            const filtered = allAffectations.filter(a => a.enseignant_id == teacherId);
-            if(filtered.length > 0) {
-                classSelect.disabled = false;
-                filtered.forEach(a => {
-                    let opt = document.createElement('option');
-                    opt.value = a.classe + "|" + a.section;
-                    opt.text = "صف " + a.classe + " / شعبة " + a.section;
-                    classSelect.add(opt);
-                });
-            } else {
-                classSelect.disabled = true;
-                classSelect.innerHTML = '<option value="">لا توجد صفوف مسندة لهذا المعلم</option>';
-            }
+<script>
+    const allAffectations = <%- JSON.stringify(all_affectations) %>;
+    function filterClasses() {
+        const teacherId = document.getElementById('teacher_select').value;
+        const classSelect = document.getElementById('class_select');
+        classSelect.innerHTML = '<option value="">اختر الصف...</option>';
+        const filtered = allAffectations.filter(a => a.enseignant_id == teacherId);
+        if(filtered.length > 0) {
+            classSelect.disabled = false;
+            filtered.forEach(a => {
+                let opt = document.createElement('option');
+                opt.value = a.classe + "|" + a.section;
+                opt.text = "صف " + a.classe + " / شعبة " + a.section;
+                classSelect.add(opt);
+            });
+        } else {
+            classSelect.disabled = true;
+            classSelect.innerHTML = '<option value="">لا توجد صفوف مسندة</option>';
         }
-    </script>
+    }
+</script>
 </body>
 </html>

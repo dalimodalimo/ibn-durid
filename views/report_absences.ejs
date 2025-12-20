@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title><%= titre %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/settings_style.css">
+    <style>
+        .report-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        .report-table th { background: #1a237e; color: white; padding: 15px; }
+        .report-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+        .date-badge { background: #eef2ff; color: #3949ab; padding: 4px 10px; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="main-content" style="margin-right:0; width:100%">
+        <header class="page-header">
+            <h1><i class="fas fa-file-alt"></i> سجل الغياب العام</h1>
+            <a href="/admin/absence-profs" class="btn-save" style="text-decoration:none; background:#64748b">العودة لإدارة الغياب</a>
+        </header>
+
+        <div class="card">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>المعلم</th>
+                        <th>التخصص</th>
+                        <th>السبب</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if(absences.length === 0) { %>
+                        <tr><td colspan="4">لا توجد سجلات غياب سابقة.</td></tr>
+                    <% } %>
+                    <% absences.forEach(row => { %>
+                        <tr>
+                            <td><span class="date-badge"><%= row.date %></span></td>
+                            <td><strong><%= row.nom %></strong></td>
+                            <td><%= row.matiere %></td>
+                            <td><%= row.raison || 'غير مذكور' %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

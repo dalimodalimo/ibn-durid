@@ -372,5 +372,28 @@ initializeDatabase().then(() => {
         }
     });
 
+    // مسار عرض تقرير الغياب العام
+// مسار عرض تقرير الغياب العام - تم تغيير router إلى app وإزالة الكلمات الزائدة
+app.get('/admin/reports/absences', async (req, res) => {
+    try {
+        // جلب جميع الغيابات من قاعدة البيانات مع ربطها بجدول المعلمين
+        // تم تصحيح اسم العمود من date_absence إلى date ليناسب جدولك
+        const allAbsences = await db.all(`
+            SELECT a.*, e.nom, e.matiere 
+            FROM absences a 
+            JOIN enseignants e ON a.enseignant_id = e.id 
+            ORDER BY a.date DESC
+        `);
+
+        res.render('report_absences', {
+            titre: 'سجل الغياب العام',
+            absences: allAbsences
+        });
+    } catch (error) {
+        console.error("Error in reports:", error);
+        res.status(500).send("خطأ في جلب بيانات التقارير");
+    }
+});
+
     app.listen(3000, () => console.log(`🚀 النظام يعمل: http://localhost:3000/admin/dashboard`));
 });

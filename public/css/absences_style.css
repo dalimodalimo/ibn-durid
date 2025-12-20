@@ -1,39 +1,34 @@
 /* public/css/absences_style.css */
 :root {
+    --sidebar-width: 260px;
     --primary-navy: #1a237e;
     --accent-blue: #3949ab;
     --danger-red: #d32f2f;
     --success-green: #2e7d32;
     --bg-light: #f4f7fa;
     --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --border-color: #e2e8f0;
 }
 
+/* إعدادات التخطيط مع السايدبار */
 body {
     font-family: 'Segoe UI', Tahoma, sans-serif;
     background-color: var(--bg-light);
     margin: 0;
-    padding: 20px;
+    display: flex; /* لضمان موازاة السايدبار */
     direction: rtl;
     color: #334155;
 }
 
-.container {
-    max-width: 1100px;
-    margin: 0 auto;
+.main-content {
+    margin-right: var(--sidebar-width);
+    padding: 35px;
+    width: calc(100% - var(--sidebar-width));
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
-/* Header & Back Link */
-.back-btn {
-    text-decoration: none;
-    color: var(--primary-navy);
-    font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 25px;
-    transition: 0.3s;
-}
-
+/* الهيدر الرئيسي */
 .main-header {
     background: white;
     padding: 25px;
@@ -43,43 +38,68 @@ body {
     margin-bottom: 30px;
 }
 
-.main-header h1 { margin: 0; color: var(--primary-navy); font-size: 1.8rem; }
-.main-header p { margin: 5px 0 0; color: #64748b; }
+.main-header h1 { 
+    margin: 0; 
+    color: var(--primary-navy); 
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-/* Cards & Sections */
+.main-header p { margin: 8px 0 0; color: #64748b; }
+
+/* البطاقات (Cards) */
 .card {
     background: white;
     padding: 25px;
     border-radius: 15px;
     box-shadow: var(--card-shadow);
     margin-bottom: 25px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
 }
 
 h3 {
     margin-top: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     color: var(--primary-navy);
+    font-size: 1.25rem;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-/* Forms */
+/* النماذج (Forms) */
 .form-inline {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
     background: #f8fafc;
     padding: 20px;
     border-radius: 12px;
+    align-items: flex-end;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
 }
 
 select, input {
     padding: 12px 15px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
     font-size: 0.95rem;
-    transition: 0.3s;
+    transition: all 0.3s;
 }
 
 select:focus, input:focus {
@@ -92,91 +112,124 @@ select:focus, input:focus {
     background: var(--danger-red);
     color: white;
     border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-weight: bold;
+    padding: 13px 30px;
+    border-radius: 10px;
+    font-weight: 800;
     cursor: pointer;
     transition: 0.3s;
+    height: fit-content;
 }
 
-.btn-submit:hover { background: #b71c1c; transform: translateY(-2px); }
+.btn-submit:hover { 
+    background: #b71c1c; 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+}
 
-/* Absent List */
+/* قائمة الغائبين */
 .absent-list { list-style: none; padding: 0; margin: 0; }
 
 .absent-item {
     background: white;
     border-right: 6px solid var(--danger-red);
     padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    border-top: 1px solid #f1f5f9;
-    border-left: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
-    transition: 0.3s;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    transition: transform 0.3s ease;
 }
 
-.absent-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+.absent-item:hover { 
+    transform: scale(1.01);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
 
 .item-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
 }
 
-.teacher-info strong { font-size: 1.15rem; color: #1e293b; }
+.teacher-info strong { 
+    font-size: 1.2rem; 
+    color: #1e293b; 
+    display: block;
+    margin-bottom: 5px;
+}
 
 .badge {
     background: #fee2e2;
     color: var(--danger-red);
-    padding: 4px 12px;
-    border-radius: 20px;
+    padding: 5px 14px;
+    border-radius: 30px;
     font-size: 0.8rem;
-    font-weight: bold;
+    font-weight: 700;
 }
 
-/* Action Buttons */
-.actions { display: flex; gap: 10px; }
+/* أزرار الإجراءات */
+.actions { display: flex; gap: 12px; }
 
 .btn-icon {
-    padding: 10px 18px;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
     text-decoration: none;
     font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     border: none;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s;
 }
 
-.btn-search { background: #eef2ff; color: var(--accent-blue); }
+.btn-search { 
+    background: #eef2ff; 
+    color: var(--accent-blue);
+    border: 1px solid #c7d2fe;
+}
 .btn-search:hover { background: var(--accent-blue); color: white; }
 
-.btn-print { background: #ecfdf5; color: var(--success-green); }
+.btn-print { 
+    background: #ecfdf5; 
+    color: var(--success-green);
+    border: 1px solid #a7f3d0;
+}
 .btn-print:hover { background: var(--success-green); color: white; }
 
-/* Suggestion Box */
+/* صندوق الاقتراحات (Suggestions) */
 .suggestion-box {
     margin-top: 20px;
-    padding: 20px;
+    padding: 25px;
     background: #f8fafc;
-    border-radius: 10px;
-    display: none;
-    border: 1px dashed #cbd5e1;
-    animation: fadeIn 0.4s ease;
+    border-radius: 12px;
+    display: none; /* يتم إظهاره عبر JS */
+    border: 2px dashed #cbd5e1;
+    animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 768px) {
-    .form-inline { flex-direction: column; }
-    .item-content { flex-direction: column; align-items: flex-start; }
+.suggestion-box h4 {
+    margin-top: 0;
+    color: var(--accent-blue);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
 }
+
+/* الميديا كويري للهواتف */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-right: 0;
+        width: 100%;
+        padding: 20px;
+    }
+} une mise ajour 

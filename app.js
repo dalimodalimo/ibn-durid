@@ -140,13 +140,14 @@ async function initializeDatabase() {
         `);
 
        const columnsToAdd = [
-            { table: 'substitute_logs', col: 'absent_id', type: 'INTEGER' },
-            { table: 'substitute_logs', col: 'substitute_id', type: 'INTEGER' },
-            { table: 'substitute_logs', col: 'periode', type: 'INTEGER' },
-            { table: 'substitute_logs', col: 'classe', type: 'TEXT' },
-            { table: 'substitute_logs', col: 'section', type: 'TEXT' },
-            { table: 'enseignants', col: 'last_login', type: 'TEXT' } // أضف هذا السطر
-        ];
+    { table: 'substitute_logs', col: 'absent_id', type: 'INTEGER' },
+    { table: 'substitute_logs', col: 'substitute_id', type: 'INTEGER' },
+    { table: 'substitute_logs', col: 'periode', type: 'INTEGER' },
+    { table: 'substitute_logs', col: 'classe', type: 'TEXT' },
+    { table: 'substitute_logs', col: 'section', type: 'TEXT' },
+    { table: 'enseignants', col: 'last_login', type: 'TEXT' },
+    { table: 'absences', col: 'status', type: "TEXT DEFAULT 'pending'" } // أضف هذا السطر هنا
+];
 
         for (const item of columnsToAdd) {
             try {
@@ -329,12 +330,18 @@ initializeDatabase().then(() => {
 
     // --- [ 6. إدارة غياب المعلمين والاحتياط ] ---
 
+   // --- [ 6. إدارة غياب المعلمين والاحتياط ] ---
+
     app.get('/admin/absence-profs', async (req, res) => {
         try {
             const today = new Date().toISOString().split('T')[0];
             const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
             const todayName = days[new Date().getDay()];
 
+            // 1. جلب قائمة كل المعلمين لعرضهم في قائمة الاختيار
+            const enseignants = await db.all("SELECT * FROM enseignants ORDER BY nom ASC") || [];
+
+            // 2. جلب الغائبين الذين لديهم حصص اليوم ولم يتم تعويضهم بعد
             const ghaibeen = await db.all(`
                 SELECT e.id as teacher_id, e.nom, e.matiere, t.periode, t.classe, t.section
                 FROM absences a
@@ -346,44 +353,126 @@ initializeDatabase().then(() => {
                     WHERE sl.absent_id = e.id AND sl.date = ? AND sl.periode = t.periode
                 )
                 ORDER BY t.periode ASC
-            `, [today, todayName, today]);
+            `, [today, todayName, today]) || [];
 
+            // 3. جلب اقتراحات المعلمين المتاحين للاحتياط
             let suggestions = await db.all(`
                 SELECT e.*, 
                 (SELECT COUNT(*) FROM substitute_logs WHERE substitute_id = e.id AND strftime('%m', date) = strftime('%m', 'now')) as reserve_this_month
                 FROM enseignants e 
-                WHERE e.is_admin_duty = 0 
-                AND e.id NOT IN (SELECT enseignant_id FROM absences WHERE date = ?)
+                WHERE e.id NOT IN (SELECT enseignant_id FROM absences WHERE date = ?)
                 ORDER BY reserve_this_month ASC, weekly_load ASC
-            `, [today]);
+            `, [today]) || [];
 
-            const recapSubstitutions = await db.all(`
-                SELECT sl.*, sub.nom as substitute_name, abs_p.nom as absent_name 
-                FROM substitute_logs sl
-                JOIN enseignants sub ON sl.substitute_id = sub.id
-                JOIN enseignants abs_p ON sl.absent_id = abs_p.id
-                WHERE sl.date = ?
-            `, [today]);
+            // 4. جلب سجل الاحتياط لهذا اليوم
+            // 4. جلب سجل الاحتياط لهذا اليوم (الحصص التي تم تغطيتها)
+const recapSubstitutions = await db.all(`
+    SELECT 
+        sl.id, 
+        sl.date, 
+        sl.periode, 
+        sl.classe, 
+        sl.section,
+        sub.nom as substitute_name, 
+        abs_p.nom as absent_name 
+    FROM substitute_logs sl
+    LEFT JOIN enseignants sub ON sl.substitute_id = sub.id
+    LEFT JOIN enseignants abs_p ON sl.absent_id = abs_p.id
+    WHERE sl.date = ?
+    ORDER BY sl.periode ASC
+`, [today]) || [];
 
             res.render('gestion_absences', { 
-                ghaibeen, suggestions, today, recapSubstitutions, titre: "توزيع حصص الاحتياط" 
+                enseignants, 
+                ghaibeen, 
+                suggestions, 
+                today, 
+                recapSubstitutions, 
+                titre: "توزيع حصص الاحتياط" 
             });
         } catch (e) {
-            res.status(500).send("خطأ في نظام الاحتياط");
+            console.error(e);
+            res.status(500).send("خطأ في نظام الاحتياط: " + e.message);
+        }
+    });
+
+    // المسار المفقود الذي تسبب في الخطأ (استقبال بيانات غياب المعلم)
+    app.post('/admin/absences/ajouter', async (req, res) => {
+        try {
+            const { enseignant_id, date, raison } = req.body;
+            
+            // التحقق إذا كان الغياب مسجلاً مسبقاً لنفس المعلم في نفس اليوم
+            const existing = await db.get("SELECT id FROM absences WHERE enseignant_id = ? AND date = ?", [enseignant_id, date]);
+            
+            if (!existing) {
+                await db.run("INSERT INTO absences (enseignant_id, date, raison, status) VALUES (?, ?, ?, 'confirmed')", 
+                    [enseignant_id, date, raison]);
+            }
+            
+            res.redirect('/admin/absence-profs?success=absence_added');
+        } catch (e) {
+            console.error("Error adding absence:", e);
+            res.status(500).send("فشل تسجيل الغياب");
         }
     });
 
     app.post('/admin/substitute/assign-session', async (req, res) => {
-        try {
-            const { substitute_id, absent_id, periode, classe, section } = req.body;
-            const today = new Date().toISOString().split('T')[0];
-            await db.run(`INSERT INTO substitute_logs (substitute_id, absent_id, date, periode, classe, section) VALUES (?, ?, ?, ?, ?, ?)`,
-                [substitute_id, absent_id, today, periode, classe, section]);
-            res.redirect('/admin/absence-profs');
-        } catch (e) {
-            res.status(500).send("فشل تعيين البديل");
+    try {
+        let { substitute_id, absent_id, periode, classe, section } = req.body;
+        const today = new Date().toISOString().split('T')[0];
+
+        // --- منطق التوزيع التلقائي الذكي ---
+        if (!substitute_id || substitute_id === "") {
+            // البحث عن أفضل معلم متاح (ليس غائباً، وليس لديه حصة في نفس الفترة، ولديه أقل عدد احتياط هذا الشهر)
+            const bestSubstitute = await db.get(`
+                SELECT e.id 
+                FROM enseignants e 
+                WHERE e.id NOT IN (SELECT enseignant_id FROM absences WHERE date = ?) -- ليس غائباً
+                AND e.id != ? -- ليس المعلم الغائب نفسه
+                AND e.id NOT IN (SELECT enseignant_id FROM timetable WHERE jour = (
+                    SELECT CASE strftime('%w', ?) 
+                        WHEN '0' THEN 'الأحد' WHEN '1' THEN 'الإثنين' WHEN '2' THEN 'الثلاثاء' 
+                        WHEN '3' THEN 'الأربعاء' WHEN '4' THEN 'الخميس' ELSE '' END
+                ) AND periode = ?) -- ليس لديه حصة رسمية الآن
+                ORDER BY 
+                    (SELECT COUNT(*) FROM substitute_logs WHERE substitute_id = e.id AND strftime('%m', date) = strftime('%m', 'now')) ASC, 
+                    e.weekly_load ASC 
+                LIMIT 1
+            `, [today, absent_id, today, periode]);
+
+            if (bestSubstitute) {
+                substitute_id = bestSubstitute.id;
+            } else {
+                return res.status(400).send("نعتذر، لا يوجد معلم متاح للاحتياط في هذه الحصة حالياً.");
+            }
         }
-    });
+
+        // إدخال البيانات في الجدول (سواء كان الاختيار يدوي أو تلقائي)
+        await db.run(`INSERT INTO substitute_logs (substitute_id, absent_id, date, periode, classe, section) VALUES (?, ?, ?, ?, ?, ?)`,
+            [substitute_id, absent_id, today, periode, classe, section]);
+
+        res.redirect('/admin/absence-profs?success=assigned');
+    } catch (e) {
+        console.error("خطأ في تعيين الاحتياط:", e);
+        res.status(500).send("فشل تعيين البديل: " + e.message);
+    }
+});
+
+    // مسار إلغاء حصة احتياط وإعادتها لقائمة الاحتياج
+app.get('/admin/substitute/delete/:id', async (req, res) => {
+    try {
+        const substitute_id = req.params.id;
+        
+        // حذف السجل من جدول الاحتياط
+        await db.run("DELETE FROM substitute_logs WHERE id = ?", [substitute_id]);
+        
+        // العودة لصفحة الغياب والاحتياط مع رسالة نجاح
+        res.redirect('/admin/absence-profs?success=substitute_cancelled');
+    } catch (e) {
+        console.error("Error deleting substitute log:", e);
+        res.status(500).send("خطأ في إلغاء حصة الاحتياط");
+    }
+});
 
     // --- [ 7. إدارة الطلاب ] ---
 
@@ -469,16 +558,24 @@ initializeDatabase().then(() => {
         }
     });
 
-    app.post('/admin/announcements/add', async (req, res) => {
-        try {
-            const { title, content } = req.body;
-            const today = new Date().toISOString().split('T')[0];
-            await db.run("INSERT INTO announcements (title, content, date) VALUES (?, ?, ?)", [title, content, today]);
-            res.redirect('/admin/dashboard?success=announcement_sent');
-        } catch (e) {
-            res.status(500).send("خطأ في نشر الإعلان");
-        }
-    });
+    // --- في قسم إدارة الإعلانات (داخل منطقة حماية admin) ---
+app.post('/admin/announcements/add', async (req, res) => {
+    try {
+        const { title, content } = req.body;
+        // استخدام تنسيق تاريخ مقروء بدلاً من ISO فقط ليظهر بشكل جميل للمعلم
+        const today = new Date().toLocaleDateString('ar-EG', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+        
+        await db.run("INSERT INTO announcements (title, content, date) VALUES (?, ?, ?)", 
+            [title, content, today]);
+            
+        res.redirect('/admin/dashboard?success=announcement_sent');
+    } catch (e) {
+        console.error("Error adding announcement:", e);
+        res.status(500).send("خطأ في نشر الإعلان");
+    }
+} );
 
     // --- [ 10. منطقة المعلم (خارج حماية admin) ] ---
 
@@ -509,34 +606,52 @@ initializeDatabase().then(() => {
         }
     });
 
-  app.get('/teacher/dashboard/:id', async (req, res) => {
+app.get('/teacher/dashboard/:id', async (req, res) => {
     try {
         const teacher_id = req.params.id;
         const prof = await db.get("SELECT * FROM enseignants WHERE id = ?", [teacher_id]);
         
         if (!prof) return res.redirect('/teacher/login');
 
-        // إعداد التاريخ واليوم بشكل سليم
         const now = new Date();
         const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
         const todayName = days[now.getDay()];
         const todayDate = now.toISOString().split('T')[0];
 
-        // جلب البيانات مع التأكد من أنها ليست undefined
+        // 1. جلب أوقات الحصص
         const periods = await db.all("SELECT * FROM school_periods ORDER BY id ASC") || [];
         
-        // جلب الحصص العادية
-        const regularSessions = await db.all(`
+        // 2. جلب الإعلانات من قاعدة البيانات (هذا ما كان ينقصك)
+        const announcements = await db.all("SELECT * FROM announcements ORDER BY id DESC LIMIT 5") || [];
+
+        // 3. جلب الحصص العادية مع التحقق إذا تم رصد الغياب (بواسطة أي معلم لنفس الفصل)
+        const sessions = await db.all(`
             SELECT t.*, 
-            (SELECT COUNT(*) FROM student_absences WHERE enseignant_id = t.enseignant_id AND date = ? AND periode = t.periode) > 0 as is_marked
+            (SELECT COUNT(*) FROM student_absences 
+             WHERE date = ? AND periode = t.periode 
+             AND EXISTS (
+                 SELECT 1 FROM eleves e 
+                 WHERE e.id = student_absences.eleve_id 
+                 AND e.classe = t.classe 
+                 AND e.section = t.section
+             )
+            ) > 0 as is_marked
             FROM timetable t 
             WHERE t.enseignant_id = ? AND t.jour = ?
         `, [todayDate, teacher_id, todayName]) || [];
 
-        // جلب حصص الاحتياط
+        // 4. جلب حصص الاحتياط
         const substitutions = await db.all(`
-            SELECT sl.*, 'احتياط' as type,
-            (SELECT COUNT(*) FROM student_absences WHERE enseignant_id = sl.substitute_id AND date = sl.date AND periode = sl.periode) > 0 as is_marked
+            SELECT sl.*, 
+            (SELECT COUNT(*) FROM student_absences 
+             WHERE date = sl.date AND periode = sl.periode 
+             AND EXISTS (
+                 SELECT 1 FROM eleves e 
+                 WHERE e.id = student_absences.eleve_id 
+                 AND e.classe = sl.classe 
+                 AND e.section = sl.section
+             )
+            ) > 0 as is_marked
             FROM substitute_logs sl 
             WHERE sl.substitute_id = ? AND sl.date = ?
         `, [teacher_id, todayDate]) || [];
@@ -546,21 +661,16 @@ initializeDatabase().then(() => {
             classe: s.classe, 
             section: s.section, 
             matiere: "إحتياط", 
-            isSubstitute: true,
+            isSubstitute: true, 
             is_marked: s.is_marked 
         }));
 
-        const allSessions = [...regularSessions, ...mappedSubs];
+        const allSessions = [...sessions, ...mappedSubs];
+        
+        // 5. جلب الطلاب
+        const students = await db.all("SELECT * FROM eleves") || [];
 
-        // جلب الطلاب المرتبطين بالمعلم
-        const students = await db.all(`
-            SELECT DISTINCT e.* FROM eleves e
-            WHERE EXISTS (SELECT 1 FROM affectations a WHERE a.enseignant_id = ? AND a.classe = e.classe AND a.section = e.section)
-            OR EXISTS (SELECT 1 FROM timetable t WHERE t.enseignant_id = ? AND t.classe = e.classe AND t.section = e.section)
-        `, [teacher_id, teacher_id]) || [];
-
-        const announcements = await db.all("SELECT * FROM announcements ORDER BY id DESC LIMIT 5") || [];
-
+        // 6. إرسال البيانات للوحة التحكم
         res.render('teacher_dashboard', { 
             prof, 
             sessions: allSessions, 
@@ -568,13 +678,14 @@ initializeDatabase().then(() => {
             students, 
             today: todayDate, 
             todayName, 
-            announcements, 
-            success: req.query.success || null, 
+            announcements, // تم التعديل هنا ليرسل الإعلانات الحقيقية
+            success: req.query.success, 
             titre: "لوحة المعلم" 
         });
-    } catch (e) {
+
+    } catch (e) { 
         console.error("Dashboard Error:", e);
-        res.status(500).send("خطأ في عرض لوحة المعلم: " + e.message);
+        res.status(500).send("Erreur: " + e.message); 
     }
 });
 

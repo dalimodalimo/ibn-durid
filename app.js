@@ -6,7 +6,6 @@ const cookieParser = require('cookie-parser');
 
 /**
  * إعدادات التطبيق الأساسية
- * تم تجميعها لسهولة الإدارة وتجنب تكرار المسارات
  */
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,14 +14,13 @@ const ADMIN_PASSWORD = "admin123";
 app.use(cookieParser());
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json()); // لدعم طلبات API مستقبلاً
+app.use(express.json()); 
 app.use(express.static(path.join(__dirname, 'public')));
 
 let db;
 
 /**
- * نظام تهيئة قاعدة البيانات - تم تحسينه ليدعم التوسعات المستقبلية
- * يضمن وجود جميع الجداول والحقول المطلوبة عند بدء التشغيل
+ * نظام تهيئة قاعدة البيانات
  */
 async function initializeDatabase() {
     try {
@@ -31,11 +29,9 @@ async function initializeDatabase() {
             driver: sqlite3.Database
         });
 
-        // تحسين أداء SQLite للتعامل مع الطلبات المتزامنة
         await db.exec("PRAGMA journal_mode = WAL;");
         await db.exec("PRAGMA synchronous = NORMAL;");
         
-        // إنشاء الجداول الأساسية
         await db.exec(`
             CREATE TABLE IF NOT EXISTS announcements (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -143,7 +139,6 @@ async function initializeDatabase() {
             );
         `);
 
-        // تحديثات هيكلية الأمان والتوافقية
         const columnsToAdd = [
             { table: 'substitute_logs', col: 'absent_id', type: 'INTEGER' },
             { table: 'substitute_logs', col: 'substitute_id', type: 'INTEGER' },
@@ -155,9 +150,7 @@ async function initializeDatabase() {
         for (const item of columnsToAdd) {
             try {
                 await db.exec(`ALTER TABLE ${item.table} ADD COLUMN ${item.col} ${item.type};`);
-            } catch (e) {
-                // العمود موجود مسبقاً، تجاهل الخطأ
-            }
+            } catch (e) {}
         }
 
         console.log("✅ قاعدة البيانات جاهزة ومحدثة بالكامل.");
@@ -171,18 +164,24 @@ async function initializeDatabase() {
  * Middleware حماية المسارات الإدارية
  */
 function isAdmin(req, res, next) {
+    // إذا كان المسار هو صفحة اللوجن، اسمح بالمرور دون فحص الكوكيز
+    if (req.path === '/login') { 
+        return next();
+    }
+    
     if (req.cookies.admin_auth === 'authenticated') {
         return next();
     }
+    
     res.redirect('/admin/login');
 }
 
 /**
- * تشغيل الخادم بعد التأكد من جاهزية قاعدة البيانات
+ * تشغيل الخادم
  */
 initializeDatabase().then(() => {
 
-    // --- [ بوابات الدخول ] ---
+    // --- [ 1. بوابات الدخول (يجب أن تسبق الـ Middleware) ] ---
 
     app.get('/', (req, res) => res.redirect('/teacher/login'));
 
@@ -190,24 +189,20 @@ initializeDatabase().then(() => {
         res.render('admin_login', { error: null, titre: "دخول الإدارة" });
     });
 
-    app.post('/admin/login', (req, res) => {
-        const { password } = req.body;
-        if (password === ADMIN_PASSWORD) {
-            res.cookie('admin_auth', 'authenticated', { 
-                httpOnly: true, 
-                maxAge: 3600000, 
-                sameSite: 'strict' 
-            });
-            res.redirect('/admin/dashboard');
-        } else {
-            res.render('admin_login', { error: "كلمة المرور غير صحيحة", titre: "دخول الإدارة" });
-        }
-    });
+   app.post('/admin/login', (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+        res.cookie('admin_auth', 'authenticated', { httpOnly: true });
+        return res.redirect('/admin/dashboard'); // الـ return هنا جوهرية
+    } else {
+        return res.render('admin_login', { error: "خطأ", titre: "دخول" });
+    }
+});
 
-    // تطبيق حماية الإدارة على جميع مسارات /admin
+    // --- [ 2. تطبيق حماية الإدارة بعد استثناء صفحات اللوجن ] ---
     app.use('/admin', isAdmin);
 
-    // --- [ لوحة تحكم المدير ] ---
+    // --- [ 3. لوحة تحكم المدير ] ---
 
     app.get('/admin/dashboard', async (req, res) => {
         try {
@@ -226,7 +221,7 @@ initializeDatabase().then(() => {
         }
     });
 
-    // --- [ إدارة المعلمين والتعيينات ] ---
+    // --- [ 4. إدارة المعلمين والتعيينات ] ---
 
     app.get('/admin/enseignants', async (req, res) => {
         try {
@@ -258,7 +253,6 @@ initializeDatabase().then(() => {
             const selectedClasses = JSON.parse(classes_data);
             for (const item of selectedClasses) {
                 const [classe, section] = item.split('|');
-                // منع التكرار
                 const exists = await db.get("SELECT id FROM affectations WHERE enseignant_id = ? AND classe = ? AND section = ?", [enseignant_id, classe, section]);
                 if (!exists) {
                     await db.run("INSERT INTO affectations (enseignant_id, classe, section) VALUES (?, ?, ?)", [enseignant_id, classe, section]);
@@ -279,7 +273,7 @@ initializeDatabase().then(() => {
         }
     });
 
-    // --- [ إدارة الجدول الزمني ] ---
+    // --- [ 5. إدارة الجدول الزمني ] ---
 
     app.get('/admin/timetable', async (req, res) => {
         try {
@@ -298,9 +292,11 @@ initializeDatabase().then(() => {
                 params.push(t_filter); 
             }
             if (c_filter) {
-                const [c, s] = c_filter.split('-');
-                query += ` AND t.classe = ? AND t.section = ?`;
-                params.push(c, s);
+                const parts = c_filter.split('-');
+                if(parts.length === 2) {
+                    query += ` AND t.classe = ? AND t.section = ?`;
+                    params.push(parts[0], parts[1]);
+                }
             }
             
             const schedule = await db.all(query, params);
@@ -319,7 +315,6 @@ initializeDatabase().then(() => {
             const [classe, section] = class_info.split('|');
             const prof = await db.get("SELECT matiere FROM enseignants WHERE id = ?", [enseignant_id]);
             
-            // التحقق من تعارض الحصص للمعلم
             const conflict = await db.get("SELECT id FROM timetable WHERE enseignant_id = ? AND jour = ? AND periode = ?", [enseignant_id, jour, periode]);
             if (conflict) return res.status(400).send("هذا المعلم لديه حصة بالفعل في هذا الوقت");
 
@@ -331,7 +326,7 @@ initializeDatabase().then(() => {
         }
     });
 
-    // --- [ إدارة غياب المعلمين والاحتياط ] ---
+    // --- [ 6. إدارة غياب المعلمين والاحتياط ] ---
 
     app.get('/admin/absence-profs', async (req, res) => {
         try {
@@ -339,10 +334,6 @@ initializeDatabase().then(() => {
             const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
             const todayName = days[new Date().getDay()];
 
-            const currentAbsences = await db.all("SELECT enseignant_id FROM absences WHERE date = ?", [today]);
-            const absentIds = currentAbsences.map(a => Number(a.enseignant_id));
-
-            // جلب الحصص التي تحتاج احتياط (المعلم غائب ولم يتم تعيين بديل)
             const ghaibeen = await db.all(`
                 SELECT e.id as teacher_id, e.nom, e.matiere, t.periode, t.classe, t.section
                 FROM absences a
@@ -356,7 +347,6 @@ initializeDatabase().then(() => {
                 ORDER BY t.periode ASC
             `, [today, todayName, today]);
 
-            // جلب المعلمين المتاحين للاحتياط مرتبين حسب الأقل عبئاً
             let suggestions = await db.all(`
                 SELECT e.*, 
                 (SELECT COUNT(*) FROM substitute_logs WHERE substitute_id = e.id AND strftime('%m', date) = strftime('%m', 'now')) as reserve_this_month
@@ -378,7 +368,6 @@ initializeDatabase().then(() => {
                 ghaibeen, suggestions, today, recapSubstitutions, titre: "توزيع حصص الاحتياط" 
             });
         } catch (e) {
-            console.error(e);
             res.status(500).send("خطأ في نظام الاحتياط");
         }
     });
@@ -387,17 +376,15 @@ initializeDatabase().then(() => {
         try {
             const { substitute_id, absent_id, periode, classe, section } = req.body;
             const today = new Date().toISOString().split('T')[0];
-            
             await db.run(`INSERT INTO substitute_logs (substitute_id, absent_id, date, periode, classe, section) VALUES (?, ?, ?, ?, ?, ?)`,
                 [substitute_id, absent_id, today, periode, classe, section]);
-            
             res.redirect('/admin/absence-profs');
         } catch (e) {
             res.status(500).send("فشل تعيين البديل");
         }
     });
 
-    // --- [ إدارة الطلاب ] ---
+    // --- [ 7. إدارة الطلاب ] ---
 
     app.get('/admin/eleves', async (req, res) => {
         try {
@@ -421,7 +408,7 @@ initializeDatabase().then(() => {
         }
     });
 
-    // --- [ التقارير الإدارية ] ---
+    // --- [ 8. التقارير الإدارية ] ---
 
     app.get('/admin/rapport-absences-eleves', async (req, res) => {
         try {
@@ -453,11 +440,10 @@ initializeDatabase().then(() => {
         }
     });
 
-    // --- [ إعدادات النظام ] ---
+    // --- [ 9. إعدادات النظام ] ---
 
     app.get('/admin/settings', async (req, res) => {
         try {
-            // تحديث نصاب المعلمين تلقائياً عند الدخول للإعدادات
             await db.run("UPDATE enseignants SET weekly_load = 0"); 
             const loads = await db.all("SELECT enseignant_id, COUNT(*) as count FROM timetable GROUP BY enseignant_id");
             for (let load of loads) {
@@ -493,7 +479,7 @@ initializeDatabase().then(() => {
         }
     });
 
-    // --- [ منطقة المعلم ] ---
+    // --- [ 10. منطقة المعلم (خارج حماية admin) ] ---
 
     app.get('/teacher/login', async (req, res) => {
         try {
@@ -510,7 +496,7 @@ initializeDatabase().then(() => {
             const user = await db.get("SELECT * FROM enseignants WHERE id = ? AND password = ?", [teacher_id, password]);
             if (user) {
                 await db.run("UPDATE enseignants SET last_login = datetime('now') WHERE id = ?", [user.id]);
-                res.redirect(`/teacher/dashboard/${user.id}`);
+                return res.redirect(`/teacher/dashboard/${user.id}`);
             } else {
                 const enseignants = await db.all("SELECT id, nom FROM enseignants");
                 res.render('teacher_login', { enseignants, error: "كلمة المرور غير صحيحة", titre: "دخول المعلمين" });
@@ -521,81 +507,66 @@ initializeDatabase().then(() => {
     });
 
     app.get('/teacher/dashboard/:id', async (req, res) => {
-    try {
-        const teacher_id = req.params.id;
-        const now = new Date();
-        // تنسيق التاريخ المحلي الصحيح YYYY-MM-DD
-        const today = now.toLocaleDateString('en-CA'); 
-        
-        const prof = await db.get("SELECT * FROM enseignants WHERE id = ?", [teacher_id]);
-        if (!prof) return res.redirect('/teacher/login');
+        try {
+            const teacher_id = req.params.id;
+            const now = new Date();
+            const today = now.toLocaleDateString('en-CA'); 
+            
+            const prof = await db.get("SELECT * FROM enseignants WHERE id = ?", [teacher_id]);
+            if (!prof) return res.redirect('/teacher/login');
 
-        const periods = await db.all("SELECT * FROM school_periods ORDER BY id ASC") || [];
-        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const todayName = days[now.getDay()];
+            const periods = await db.all("SELECT * FROM school_periods ORDER BY id ASC") || [];
+            const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            const todayName = days[now.getDay()];
 
-        // جلب حصص الجدول مع التحقق من حالة الرصد (is_marked)
-        const regularSessions = await db.all(`
-            SELECT t.*, 
-            (SELECT COUNT(*) FROM student_absences WHERE enseignant_id = t.enseignant_id AND date = ? AND periode = t.periode) > 0 as is_marked
-            FROM timetable t 
-            WHERE t.enseignant_id = ? AND t.jour = ?
-        `, [today, teacher_id, todayName]) || [];
-        
-        // جلب حصص الاحتياط
-        const substitutions = await db.all(`
-            SELECT sl.*, 'احتياط' as type, e.matiere,
-            (SELECT COUNT(*) FROM student_absences WHERE enseignant_id = sl.substitute_id AND date = sl.date AND periode = sl.periode) > 0 as is_marked
-            FROM substitute_logs sl 
-            JOIN enseignants e ON sl.absent_id = e.id 
-            WHERE sl.substitute_id = ? AND sl.date = ?
-        `, [teacher_id, today]) || [];
+            const regularSessions = await db.all(`
+                SELECT t.*, 
+                (SELECT COUNT(*) FROM student_absences WHERE enseignant_id = t.enseignant_id AND date = ? AND periode = t.periode) > 0 as is_marked
+                FROM timetable t 
+                WHERE t.enseignant_id = ? AND t.jour = ?
+            `, [today, teacher_id, todayName]) || [];
+            
+            const substitutions = await db.all(`
+                SELECT sl.*, 'احتياط' as type, e.matiere,
+                (SELECT COUNT(*) FROM student_absences WHERE enseignant_id = sl.substitute_id AND date = sl.date AND periode = sl.periode) > 0 as is_marked
+                FROM substitute_logs sl 
+                JOIN enseignants e ON sl.absent_id = e.id 
+                WHERE sl.substitute_id = ? AND sl.date = ?
+            `, [teacher_id, today]) || [];
 
-        const mappedSubs = substitutions.map(s => ({
-            periode: s.periode, 
-            classe: s.classe, 
-            section: s.section, 
-            matiere: s.matiere, 
-            isSubstitute: true,
-            is_marked: s.is_marked 
-        }));
+            const mappedSubs = substitutions.map(s => ({
+                periode: s.periode, 
+                classe: s.classe, 
+                section: s.section, 
+                matiere: s.matiere, 
+                isSubstitute: true,
+                is_marked: s.is_marked 
+            }));
 
-        const allSessions = [...regularSessions, ...mappedSubs];
+            const allSessions = [...regularSessions, ...mappedSubs];
 
-        // جلب الطلاب المرتبطين بالمعلم
-        const students = await db.all(`
-            SELECT DISTINCT e.* FROM eleves e
-            JOIN affectations a ON e.classe = a.classe AND e.section = a.section
-            WHERE a.enseignant_id = ?
-            ORDER BY e.classe, e.section, e.nom ASC
-        `, [teacher_id]) || [];
+            const students = await db.all(`
+                SELECT DISTINCT e.* FROM eleves e
+                JOIN affectations a ON e.classe = a.classe AND e.section = a.section
+                WHERE a.enseignant_id = ?
+                ORDER BY e.classe, e.section, e.nom ASC
+            `, [teacher_id]) || [];
 
-        const announcements = await db.all("SELECT * FROM announcements ORDER BY id DESC LIMIT 5") || [];
+            const announcements = await db.all("SELECT * FROM announcements ORDER BY id DESC LIMIT 5") || [];
 
-        // إرسال البيانات
-        res.render('teacher_dashboard', { 
-            prof, 
-            sessions: allSessions, 
-            periods, 
-            students, 
-            today, 
-            todayName, // أضفنا هذا المتغير
-            announcements,
-            success: req.query.success || null,
-            titre: "لوحة المعلم" 
-        });
-    } catch (e) {
-        console.error("Error in Teacher Dashboard:", e);
-        res.status(500).send("حدث خطأ داخلي في الخادم: " + e.message);
-    }
-});
+            res.render('teacher_dashboard', { 
+                prof, sessions: allSessions, periods, students, today, todayName, 
+                announcements, success: req.query.success || null, titre: "لوحة المعلم" 
+            });
+        } catch (e) {
+            res.status(500).send("حدث خطأ داخلي في الخادم: " + e.message);
+        }
+    });
 
     app.post('/teacher/absences/mark', async (req, res) => {
         const { teacher_id, date, periode, student_ids } = req.body;
         try {
-            // مسح أي رصد سابق لنفس الحصة لتجنب التكرار عند التعديل
             await db.run("DELETE FROM student_absences WHERE enseignant_id = ? AND date = ? AND periode = ?", [teacher_id, date, periode]);
-            
             if (student_ids) {
                 const ids = Array.isArray(student_ids) ? student_ids : [student_ids];
                 const stmt = await db.prepare("INSERT INTO student_absences (eleve_id, enseignant_id, date, periode) VALUES (?, ?, ?, ?)");
@@ -622,29 +593,19 @@ initializeDatabase().then(() => {
         }
     });
 
-    // --- [ الخروج وإنهاء الجلسة ] ---
+    // --- [ الخروج ] ---
 
     app.get('/logout', (req, res) => {
         res.clearCookie('admin_auth');
         res.redirect('/teacher/login');
     });
 
-    // تشغيل الخادم
     app.listen(PORT, () => {
-        console.log(`
-        ===========================================
-        🚀 نظام مدرسة ابن دريد جاهز للعمل
-        📡 الرابط المحلى: http://localhost:${PORT}
-        👤 دخول الإدارة: /admin/login (Pass: admin123)
-        ===========================================
-        `);
+        console.log(`🚀 نظام مدرسة ابن دريد يعمل على: http://localhost:${PORT}`);
     });
 
 });
 
-/**
- * معالجة الأخطاء غير المتوقعة لمنع توقف السيرفر
- */
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });

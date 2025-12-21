@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/settings_style.css">
     <style>
-        /* --- الأساسيات الهيكلية --- */
+        /* --- الأساسيات الهيكلية (نفس كودك السابق) --- */
         :root {
             --sidebar-width: 260px;
             --transition-speed: 0.3s;
@@ -16,6 +16,7 @@
             --primary: #2563eb;
             --success: #22c55e;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         body {
@@ -26,7 +27,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* --- القائمة الجانبية --- */
         .sidebar {
             width: var(--sidebar-width);
             transition: all var(--transition-speed) ease;
@@ -59,7 +59,6 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
-        /* --- تصميم البطاقات والشبكة --- */
         .grid-settings {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -73,6 +72,7 @@
             padding: 20px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
         }
 
         .card h3 {
@@ -84,31 +84,34 @@
             font-size: 1.1rem;
         }
 
-        /* --- النماذج والجداول --- */
         .flex-form { display: flex; gap: 10px; margin-bottom: 20px; }
         
         input, select {
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             outline: none;
         }
 
-        input:focus { border-color: var(--primary); }
+        input:focus, select:focus { border-color: var(--primary); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #f8fafc; text-align: right; padding: 12px; font-size: 0.9rem; color: #64748b; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 
         .btn-add { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .btn-save-sm { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
         .btn-danger { background: var(--danger); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
 
-        .scroll-area { max-height: 250px; overflow-y: auto; }
+        .scroll-area { max-height: 300px; overflow-y: auto; }
 
-        @media (max-width: 768px) {
-            .sidebar { right: calc(var(--sidebar-width) * -1); }
-            .sidebar.active { right: 0; }
-            .main { margin-right: 0; }
+        /* ستايل مخصص لسياسة الاحتياط */
+        .policy-badge {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: #475569;
         }
     </style>
 </head>
@@ -125,45 +128,86 @@
     <div class="sidebar-nav">
         <div class="nav-label" style="padding: 15px 20px 5px; font-size: 0.8rem; color: #94a3b8;">الأساسيات</div>
         <a href="/admin/dashboard" style="display: block; padding: 12px 20px; color: #cbd5e1; text-decoration: none;"><i class="fas fa-home"></i> العودة للرئيسية</a>
-        
-        <div class="nav-label" style="padding: 15px 20px 5px; font-size: 0.8rem; color: #94a3b8;">إدارة المدخلات</div>
+        <a href="#section-policy" style="display: block; padding: 12px 20px; color: #cbd5e1; text-decoration: none;"><i class="fas fa-user-shield"></i> سياسة الاحتياط</a>
         <a href="#section-classes" style="display: block; padding: 12px 20px; color: #cbd5e1; text-decoration: none;"><i class="fas fa-school"></i> الفصول الدراسية</a>
-        <a href="#section-subjects" style="display: block; padding: 12px 20px; color: #cbd5e1; text-decoration: none;"><i class="fas fa-book"></i> المواد العلمية</a>
-        <a href="/admin/enseignants" style="display: block; padding: 12px 20px; color: #cbd5e1; text-decoration: none;"><i class="fas fa-chalkboard-teacher"></i> سجل المعلمين</a>
+        <a href="#section-time" style="display: block; padding: 12px 20px; color: #cbd5e1; text-decoration: none;"><i class="fas fa-clock"></i> التوقيت المدرسي</a>
     </div>
 </div>
 
 <div class="main" id="mainContent">
     <header style="margin-bottom: 30px;">
-        <h1 style="margin: 0; color: var(--sidebar-dark);"><i class="fas fa-cogs"></i> تهيئة بيانات النظام</h1>
-        <p style="color: #64748b;">تتحكم هذه الإعدادات في الخيارات المتاحة بجميع صفحات النظام</p>
+        <h1 style="margin: 0; color: var(--sidebar-dark); font-size: 1.8rem;"><i class="fas fa-cogs"></i> تهيئة بيانات النظام</h1>
+        <p style="color: #64748b;">تتحكم هذه الإعدادات في معايير اختيار الاحتياط والبيانات الأساسية</p>
     </header>
+
+    <div class="card" id="section-policy">
+        <h3 style="color: var(--primary); border-bottom-color: var(--primary);"><i class="fas fa-balance-scale"></i> إعدادات سياسة توزيع الاحتياط</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">قم بتحديد معايير كل معلم ليأخذها النظام بالحسبان عند اقتراح "معلم الاحتياط".</p>
+        
+        <div class="table-responsive scroll-area">
+            <table>
+                <thead>
+                    <tr>
+                        <th>المعلم / المادة</th>
+                        <th>الرتبة</th>
+                        <th>التزام إداري</th>
+                        <th>العبء (أسبوعي)</th>
+                        <th>رصيد الاحتياط (الشهر)</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% teachers.forEach(t => { %>
+                    <tr>
+                        <td>
+                            <strong><%= t.nom %></strong><br>
+                            <small style="color:#94a3b8"><%= t.matiere %></small>
+                        </td>
+                        <form action="/admin/settings/teachers/update-policy" method="POST">
+                            <input type="hidden" name="teacher_id" value="<%= t.id %>">
+                            <td>
+                                <select name="rank" style="font-size: 0.8rem;">
+                                    <option value="معلم" <%= t.rank === 'معلم' ? 'selected' : '' %>>معلم</option>
+                                    <option value="معلم أول" <%= t.rank === 'معلم أول' ? 'selected' : '' %>>معلم أول</option>
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" name="is_admin_duty" <%= t.is_admin_duty ? 'checked' : '' %> style="width: 18px; height: 18px;">
+                            </td>
+                            <td>
+                                <input type="number" name="weekly_load" value="<%= t.weekly_load || 0 %>" min="0" max="40" style="width: 50px; text-align: center;">
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="policy-badge" style="background: #dcfce7; color: #166534;"><%= t.monthly_reserve || 0 %> حصص</span>
+                            </td>
+                            <td>
+                                <button type="submit" class="btn-save-sm"><i class="fas fa-save"></i> حفظ</button>
+                            </td>
+                        </form>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="grid-settings">
         <div class="card" id="section-classes">
             <h3><i class="fas fa-layer-group"></i> تعريف الفصول والشعب</h3>
             <form action="/admin/settings/classes/add" method="POST" class="flex-form">
                 <input type="text" name="class_name" placeholder="مثال: أول ثانوي" required style="flex: 2;">
-                <input type="number" name="num_sections" placeholder="عدد الشعب" min="1" max="15" required style="flex: 1;">
+                <input type="number" name="num_sections" placeholder="الشعب" min="1" max="15" required style="flex: 1;">
                 <button type="submit" class="btn-add"><i class="fas fa-plus"></i></button>
             </form>
-            
             <div class="scroll-area">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>اسم الصف</th>
-                            <th>عدد الشعب</th>
-                            <th>حذف</th>
-                        </tr>
-                    </thead>
                     <tbody>
                         <% classes.forEach(c => { %>
                         <tr>
                             <td><strong><%= c.class_name %></strong></td>
                             <td><span style="background: #eff6ff; color: #2563eb; padding: 3px 8px; border-radius: 5px;">شعبة 1 إلى <%= c.num_sections %></span></td>
                             <td>
-                                <form action="/admin/settings/classes/delete" method="POST" onsubmit="return confirm('هل تريد حذف هذا الصف؟')">
+                                <form action="/admin/settings/classes/delete" method="POST" onsubmit="return confirm('حذف الصف؟')">
                                     <input type="hidden" name="class_id" value="<%= c.id %>">
                                     <button type="submit" class="btn-danger"><i class="fas fa-trash-alt"></i></button>
                                 </form>
@@ -178,8 +222,8 @@
         <div class="card" id="section-subjects">
             <h3><i class="fas fa-book-open"></i> قائمة المواد الدراسية</h3>
             <form action="/admin/settings/subjects/add" method="POST" class="flex-form">
-                <input type="text" name="subject_name" placeholder="اسم المادة الجديدة..." required style="flex: 1;">
-                <button type="submit" class="btn-add"><i class="fas fa-plus"></i> إضافة</button>
+                <input type="text" name="subject_name" placeholder="المادة الجديدة..." required style="flex: 1;">
+                <button type="submit" class="btn-add"><i class="fas fa-plus"></i></button>
             </form>
             <div class="scroll-area">
                 <table>
@@ -202,42 +246,40 @@
     </div>
 
     <div class="card" id="section-time">
-        <h3><i class="fas fa-clock"></i> توقيت الحصص (تغذية جدول الاحتياط)</h3>
+        <h3><i class="fas fa-clock"></i> توقيت الحصص</h3>
         <form action="/admin/settings/periods/update" method="POST">
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الحصة</th>
-                            <th>بداية الحصة</th>
-                            <th>نهاية الحصة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% for(let i=1; i<=8; i++) { %>
-                        <tr>
-                            <td><b>الحصة <%= i %></b> <input type="hidden" name="id[]" value="<%= i %>"></td>
-                            <td><input type="time" name="start_time[]" required></td>
-                            <td><input type="time" name="end_time[]" required></td>
-                        </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-            <button type="submit" style="margin-top: 15px; width: 100%; padding: 12px; background: var(--sidebar-dark); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                <i class="fas fa-save"></i> تحديث التوقيت المدرسي
+            <table>
+                <thead>
+                    <tr>
+                        <th>الحصة</th>
+                        <th>البداية</th>
+                        <th>النهاية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(let i=1; i<=8; i++) { %>
+                    <tr>
+                        <td><b>الحصة <%= i %></b> <input type="hidden" name="id[]" value="<%= i %>"></td>
+                        <td><input type="time" name="start_time[]"></td>
+                        <td><input type="time" name="end_time[]"></td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <button type="submit" style="margin-top: 15px; width: 100%; padding: 10px; background: var(--sidebar-dark); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-save"></i> حفظ توقيت الجدول
             </button>
         </form>
     </div>
 
     <div class="card" id="section-accounts">
         <h3><i class="fas fa-key"></i> إدارة كلمات مرور المعلمين</h3>
-        <div class="table-responsive">
+        <div class="scroll-area">
             <table>
                 <thead>
                     <tr>
                         <th>المعلم</th>
-                        <th>كلمة المرور الحالية</th>
+                        <th>كلمة المرور</th>
                         <th>تحديث</th>
                     </tr>
                 </thead>
@@ -249,8 +291,8 @@
                         <td>
                             <form action="/admin/settings/password/update" method="POST" style="display: flex; gap: 5px;">
                                 <input type="hidden" name="teacher_id" value="<%= t.id %>">
-                                <input type="text" name="new_password" placeholder="جديدة" required style="width: 80px; padding: 5px; font-size: 0.8rem;">
-                                <button type="submit" style="background:#f59e0b; color:white; border:none; padding: 5px 10px; border-radius: 5px; cursor:pointer;"><i class="fas fa-sync"></i></button>
+                                <input type="text" name="new_password" placeholder="جديدة" required style="width: 70px; padding: 5px;">
+                                <button type="submit" style="background:var(--warning); color:white; border:none; padding: 5px 10px; border-radius: 5px;"><i class="fas fa-sync"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -272,13 +314,6 @@
         } else {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
-        }
-    });
-
-    // إغلاق القائمة عند النقر خارجها (للجوال)
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-            sidebar.classList.remove('active');
         }
     });
 </script>

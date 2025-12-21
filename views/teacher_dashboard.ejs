@@ -6,6 +6,63 @@
     <title><%= titre %> - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/teacher_inter_style.css">  
+    <style>
+        /* التنسيقات الأساسية وتحسينات الواجهة */
+        .top-info-bar {
+            background: linear-gradient(135deg, #1a237e, #3949ab);
+            color: white; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .live-clock { font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; }
+        .live-date { font-size: 0.95rem; opacity: 0.9; text-align: left; }
+
+        .announcements-container {
+            margin-bottom: 20px; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.5s ease;
+        }
+        .ann-header {
+            background: #fff3cd; color: #856404; padding: 10px 15px;
+            display: flex; align-items: center; gap: 10px; font-weight: bold;
+        }
+        .ann-list { background: #fff; padding: 10px 15px; border: 1px solid #ffeeba; }
+        
+        .ann-item { 
+            border-bottom: 1px dashed #ddd; padding: 10px 0; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .ann-item:last-child { border-bottom: none; }
+        .btn-ann-ok {
+            background: #27ae60; color: white; border: none;
+            padding: 5px 12px; border-radius: 6px; cursor: pointer;
+            font-size: 0.8rem; font-weight: bold; transition: 0.3s;
+        }
+        .ann-fade-out { opacity: 0; transform: translateX(50px); pointer-events: none; transition: 0.5s ease; }
+
+        .timetable-scroll-wrapper { background: #ffffff; border-radius: 15px; padding: 15px; }
+        .horiz-scroll-container { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px 20px 5px; scroll-snap-type: x mandatory; }
+        .period-item { min-width: 145px; flex-shrink: 0; background: #f8fafc; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; text-align: center; scroll-snap-align: center; }
+        .period-item.has-class { border: 2px solid #4f46e5; background: #eef2ff; }
+        .period-item.is-substitute { border: 2px dashed #f59e0b !important; background: #fffbeb !important; }
+        .period-item.starting-soon { border: 2px solid #ef4444 !important; background: #fff1f2 !important; animation: pulse-red 2s infinite; }
+
+        #sessionSelect.unmarked { border: 2px solid #ef4444 !important; }
+        .disabled-view { filter: grayscale(1); opacity: 0.7; pointer-events: none; position: relative; }
+        .disabled-view::after { 
+            content: "تم رصد الغياب ✅"; position: absolute; top: 10px; left: 50%; 
+            transform: translateX(-50%); background: #22c55e; color: white; padding: 5px 15px; 
+            border-radius: 20px; font-size: 0.8rem; z-index: 10; 
+        }
+
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        .hidden { display: none !important; }
+        .search-input-wrapper { position: relative; margin-bottom: 10px; }
+        .search-input-wrapper i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .search-input-wrapper input { width: 100%; padding: 12px 35px 12px 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; }
+        
+        .student-card { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+    </style>
 </head>
 <body>
 
@@ -26,10 +83,9 @@
 </nav>
 
 <div class="container">
-    
-    <% if (success) { %>
-        <div class="toast success-toast">
-            <i class="fas fa-check-circle"></i> تم رصد الغياب بنجاح.
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="toast success-toast" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+            <i class="fas fa-check-circle"></i> تم تنفيذ العملية بنجاح.
         </div>
     <% } %>
 
@@ -43,142 +99,208 @@
         <div class="avatar-mini"><i class="fas fa-user-circle"></i></div>
     </header>
 
-    <section class="section no-padding" id="timetableSection">
-        <div class="section-header pd-20">
-            <i class="fas fa-clock"></i>
-            <h2>جدول الحصص</h2>
+    <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
+    <section class="announcements-container" id="annContainer">
+        <div class="ann-header"><i class="fas fa-bullhorn"></i> إعلانات الإدارة</div>
+        <div class="ann-list" id="annList">
+            <% announcements.forEach((ann, index) => { %>
+                <div class="ann-item" id="ann-item-<%= index %>" data-ann-id="<%= ann.id %>">
+                    <div class="ann-content-wrapper">
+                        <strong><%= ann.title %></strong>: <%= ann.content %>
+                        <br><small><%= ann.date %></small>
+                    </div>
+                    <button class="btn-ann-ok" onclick="dismissAnnouncement('<%= index %>')">فهمت</button>
+                </div>
+            <% }) %>
         </div>
-        <div class="timetable-wrapper">
-            <div class="timetable-slider">
-                <% if (sessions.length === 0) { %>
-                    <p class="empty-msg">لا توجد حصص اليوم</p>
-                <% } else { %>
-                    <% sessions.sort((a,b) => a.periode - b.periode).forEach((s, index) => { 
-                       let isNext = (index === 0); 
-                    %>
-                        <div class="session-card <%= isNext ? 'next-session' : '' %>">
-                            <% if(isNext) { %><div class="neon-badge">التالية</div><% } %>
-                            <span class="period">حصة <%= s.periode %></span>
-                            <span class="class-name"><%= s.classe %> / <%= s.section %></span>
+    </section>
+    <% } %>
+
+    <section class="section no-padding" id="timetableSection">
+        <div class="top-info-bar">
+            <div class="live-clock" id="current-clock">00:00:00</div>
+            <div class="live-date" id="current-date">جاري التحميل...</div>
+        </div>
+        <div class="section-header pd-20">
+            <i class="fas fa-calendar-day"></i> <h2>جدول الحصص اليومي</h2>
+        </div>
+        <div class="timetable-scroll-wrapper">
+            <div class="horiz-scroll-container">
+                <% for(let i=1; i<=8; i++) { 
+                    let pTime = periods.find(p => p.id === i);
+                    let session = sessions.find(s => s.periode === i);
+                    let isSub = session && session.isSubstitute;
+                %>
+                    <div class="period-item <%= session ? (isSub ? 'is-substitute' : 'has-class') : '' %>" 
+                         id="period-<%= i %>" 
+                         data-start="<%= pTime ? pTime.start_time : '' %>"
+                         data-end="<%= pTime ? pTime.end_time : '' %>">
+                        <span class="p-num">الحصة <%= i %></span>
+                        <span class="p-time"><%= pTime ? pTime.start_time : '--:--' %></span>
+                        <div class="p-content">
+                            <% if(session) { %>
+                                <span class="p-class"><%= session.classe %> / <%= session.section %></span>
+                                <span class="p-subject"><%= session.matiere %></span>
+                            <% } else { %>
+                                <span class="p-free">فراغ</span>
+                            <% } %>
                         </div>
-                    <% }) %>
+                    </div>
                 <% } %>
             </div>
         </div>
     </section>
 
-    <section class="section alert-section">
-        <div class="section-header">
-            <i class="fas fa-bullhorn"></i>
-            <h2>تنبيهات الإدارة</h2>
-        </div>
-        <div class="alerts-wrapper">
-            <% if (replacements.length === 0) { %>
-                <p class="no-alerts">✅ الكادر مكتمل اليوم.</p>
-            <% } else { %>
-                <% replacements.forEach(t => { %>
-                    <div class="alert-item">
-                        <span>غياب: <b><%= t.nom %></b></span>
-                    </div>
-                <% }) %>
-            <% } %>
-        </div>
-    </section>
-
     <section class="section main-section" id="attendanceSection">
-        <div class="section-header">
-            <i class="fas fa-user-check"></i>
-            <h2>رصد غياب الطلاب</h2>
-        </div>
-        <form action="/teacher/absences/mark" method="POST">
+        <div class="section-header"><i class="fas fa-user-check"></i> <h2>رصد غياب الطلاب</h2></div>
+        <form action="/teacher/absences/mark" method="POST" id="attendanceForm">
             <input type="hidden" name="teacher_id" value="<%= prof.id %>">
             <input type="hidden" name="date" value="<%= today %>">
+            
             <div class="selection-box">
-                <select name="periode" id="sessionSelect" required onchange="filterStudents()">
-                    <option value="" disabled selected>-- اختر الحصة --</option>
-                    <% sessions.forEach(s => { %>
-                        <option value="<%= s.periode %>" data-class="<%= s.classe %>-<%= s.section %>">
-                            حصة <%= s.periode %>: <%= s.classe %>/<%= s.section %>
+                <select name="periode" id="sessionSelect" required onchange="handleSessionChange()">
+                    <option value="" disabled selected>-- اختر الحصة لرؤية الطلاب --</option>
+                    <% sessions.sort((a,b)=>a.periode-b.periode).forEach(s => { 
+                        let pTime = periods.find(p => p.id === s.periode);
+                    %>
+                        <option value="<%= s.periode %>" 
+                                data-class-full="<%= s.classe %>-<%= s.section %>"
+                                data-marked="<%= s.is_marked || false %>"
+                                data-start="<%= pTime ? pTime.start_time : '' %>"
+                                data-end="<%= pTime ? pTime.end_time : '' %>">
+                            الحصة <%= s.periode %>: <%= s.classe %>/<%= s.section %>
                         </option>
                     <% }) %>
                 </select>
             </div>
+
+            <div id="attendanceSearchWrapper" class="search-input-wrapper hidden">
+                <i class="fas fa-search"></i>
+                <input type="text" id="attendanceSearch" placeholder="بحث عن طالب...">
+            </div>
+
             <div id="tableContainer" class="table-container hidden">
-                <div class="student-list-mobile">
+                <div class="student-list-mobile" id="attendanceStudentList">
                     <% students.forEach(s => { %>
-                        <div class="student-card student-row" data-class-id="<%= s.classe %>-<%= s.section %>">
+                        <div class="student-card student-row" data-class-id="<%= s.classe %>-<%= s.section %>" style="display: none;">
                             <span class="student-name"><%= s.nom %></span>
                             <label class="switch">
                                 <input type="checkbox" name="student_ids[]" value="<%= s.id %>">
-                                <span class="slider-toggle"></span>
+                                <span class="slider-toggle"></span> (غائب)
                             </label>
                         </div>
                     <% }) %>
                 </div>
-                <button type="submit" class="btn-submit-full">إرسال الكشف</button>
+                <button type="submit" id="submitBtn" class="btn-submit-full" style="width: 100%; padding: 15px; background: #1a237e; color: white; border: none; border-radius: 10px; margin-top: 15px;">إرسال الغياب</button>
             </div>
         </form>
     </section>
 
     <section class="section behavior-section" id="behaviorSection">
-        <div class="section-header">
-            <i class="fas fa-pen-nib"></i>
-            <h2>ملاحظة سلوكية</h2>
+        <div class="section-header"><i class="fas fa-pen-nib"></i> <h2>ملاحظة سلوكية</h2></div>
+        <div class="search-input-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="behaviorSearch" placeholder="ابحث عن الطالب...">
         </div>
         <form action="/teacher/behavior/add" method="POST" class="quick-form">
             <input type="hidden" name="teacher_id" value="<%= prof.id %>">
-            <select name="student_id" required>
+            <select name="student_id" id="behaviorStudentSelect" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
                 <option value="">اختر الطالب...</option>
                 <% students.forEach(s => { %>
-                    <option value="<%= s.id %>"><%= s.nom %></option>
+                    <option value="<%= s.id %>">
+                        <%= s.nom %> (<%= s.classe %>/<%= s.section %>)
+                    </option>
                 <% }) %>
             </select>
-            <textarea name="event_desc" placeholder="اكتب الملاحظة هنا..." required></textarea>
-            <button type="submit" class="btn-save-full">حفظ</button>
+            <textarea name="event_text" placeholder="اكتب الملاحظة هنا..." required style="width: 100%; height: 80px; padding: 10px;"></textarea>
+            <button type="submit" class="btn-save-full" style="width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px;">حفظ الملاحظة</button>
         </form>
     </section>
-
-</div>
-
-<div class="bottom-nav">
-    <a href="#timetableSection" class="nav-item"><i class="fas fa-clock"></i><span>الجدول</span></a>
-    <a href="#attendanceSection" class="nav-item active"><i class="fas fa-user-check"></i><span>الغياب</span></a>
-    <a href="#behaviorSection" class="nav-item"><i class="fas fa-star"></i><span>سلوك</span></a>
-    <a href="javascript:void(0)" onclick="toggleSidebar()" class="nav-item"><i class="fas fa-bars"></i><span>المزيد</span></a>
 </div>
 
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.toggle('active');
-        overlay.classList.toggle('active');
+    const CURRENT_PROF_ID = "<%= prof.id %>";
+
+    function updateClock() {
+        const now = new Date();
+        const clockEl = document.getElementById('current-clock');
+        const dateEl = document.getElementById('current-date');
+        
+        if (clockEl) clockEl.textContent = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        if (dateEl) dateEl.textContent = now.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
+        
+        const currentMins = now.getHours() * 60 + now.getMinutes();
+
+        // تحديث حالة الجدول
+        document.querySelectorAll('.period-item').forEach(item => {
+            const start = item.getAttribute('data-start');
+            if (!start) return;
+            const [h, m] = start.split(':').map(Number);
+            const startMins = h * 60 + m;
+            if (currentMins >= (startMins - 5) && currentMins <= (startMins + 45)) {
+                item.classList.add('starting-soon');
+            } else {
+                item.classList.remove('starting-soon');
+            }
+        });
     }
 
-    function filterStudents() {
+    function handleSessionChange() {
         const select = document.getElementById('sessionSelect');
-        const target = select.options[select.selectedIndex].getAttribute('data-class');
-        const cards = document.querySelectorAll('.student-card');
-        const container = document.getElementById('tableContainer');
-        let count = 0;
-        cards.forEach(card => {
-            if (card.getAttribute('data-class-id') === target) {
+        const selected = select.selectedOptions[0];
+        if (!selected) return;
+
+        const targetClass = selected.getAttribute('data-class-full');
+        const isMarked = selected.getAttribute('data-marked') === 'true';
+        
+        // إظهار الطلاب الذين ينتمون لهذا الفصل فقط
+        let foundAny = false;
+        document.querySelectorAll('.student-card').forEach(card => {
+            if (card.getAttribute('data-class-id') === targetClass) {
                 card.style.display = 'flex';
-                count++;
+                foundAny = true;
             } else {
                 card.style.display = 'none';
             }
         });
-        if(count > 0) container.classList.remove('hidden');
-        else container.classList.add('hidden');
-    }
 
-    window.onload = function() {
-        const nextSession = document.querySelector('.next-session');
-        if (nextSession) {
-            nextSession.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        // التحكم في الواجهة
+        document.getElementById('tableContainer').classList.remove('hidden');
+        document.getElementById('attendanceSearchWrapper').classList.remove('hidden');
+        
+        const submitBtn = document.getElementById('submitBtn');
+        if (isMarked) {
+            document.getElementById('tableContainer').classList.add('disabled-view');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "تم رصد الغياب لهذه الحصة";
+        } else {
+            document.getElementById('tableContainer').classList.remove('disabled-view');
+            submitBtn.disabled = false;
+            submitBtn.innerText = "إرسال كشف الغياب";
         }
     }
+
+    // محرك البحث
+    document.getElementById('attendanceSearch').addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const selected = document.getElementById('sessionSelect').selectedOptions[0];
+        if (!selected) return;
+        const targetClass = selected.getAttribute('data-class-full');
+
+        document.querySelectorAll('.student-card').forEach(card => {
+            const name = card.querySelector('.student-name').innerText.toLowerCase();
+            const sameClass = card.getAttribute('data-class-id') === targetClass;
+            card.style.display = (sameClass && name.includes(filter)) ? 'flex' : 'none';
+        });
+    });
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
 </script>
 </body>
 </html>

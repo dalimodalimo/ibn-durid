@@ -15,8 +15,9 @@
             --success: #27ae60;
             --warning: #f39c12;
             --info: #3498db;
-            --purple: #9b59b6; /* لون جديد لتقارير السلوك */
+            --purple: #9b59b6;
             --white: #ffffff;
+            --gold: #f1c40f; /* لون جديد للإعلانات */
         }
 
         body { 
@@ -130,18 +131,67 @@
             background-color: #fafafa;
         }
 
-        /* ألوان تمييز الكروت عند التمرير */
         .card.teachers:hover { border-bottom-color: var(--info); }
         .card.students:hover { border-bottom-color: var(--success); }
         .card.timetable:hover { border-bottom-color: var(--accent-blue); }
         .card.absence:hover { border-bottom-color: var(--danger); }
         .card.reports:hover { border-bottom-color: var(--warning); }
         .card.behavior:hover { border-bottom-color: var(--purple); }
+        .card.announcements:hover { border-bottom-color: var(--gold); }
         .card.settings:hover { border-bottom-color: #95a5a6; }
 
         .card .icon { font-size: 2.5rem; margin-bottom: 15px; }
         .card h3 { color: var(--primary-blue); margin: 10px 0 5px 0; font-size: 1.2rem; }
         .card p { color: #7f8c8d; font-size: 0.9rem; margin: 0; line-height: 1.4; }
+
+        /* تنسيق الـ Modal (النافذة المنبثقة) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            font-size: 1.4rem;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .btn-send {
+            background: var(--gold); color: white; border: none; padding: 12px 25px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;
+        }
+        .btn-send:hover { background: #d4ac0d; }
+
+        .close-modal {
+            position: absolute; left: 20px; top: 20px; cursor: pointer; color: #aaa; font-size: 1.5rem;
+        }
 
         @media (max-width: 768px) {
             .sidebar { width: 70px; padding: 10px; }
@@ -179,6 +229,12 @@
     </header>
 
     <div class="grid">
+        <div class="card announcements" onclick="openAnnModal()">
+            <div class="icon">📢</div>
+            <h3>إرسال إعلان / تنبيه</h3>
+            <p>تنبيه المعلمين باجتماع أو تعميم إداري جديد</p>
+        </div>
+
         <div class="card teachers" onclick="location.href='/admin/enseignants'">
             <div class="icon">👨‍🏫</div>
             <h3>إدارة المعلمين</h3>
@@ -222,6 +278,44 @@
         </div>
     </div>
 </div>
+
+<div id="announcementModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeAnnModal()">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-bullhorn" style="color: var(--gold);"></i> إرسال إعلان جديد
+        </div>
+        <form action="/admin/announcements/add" method="POST">
+            <div class="form-group">
+                <label>عنوان الإعلان</label>
+                <input type="text" name="title" placeholder="مثلاً: اجتماع عام للموظفين" required>
+            </div>
+            <div class="form-group">
+                <label>تفاصيل الإعلان</label>
+                <textarea name="content" rows="4" placeholder="اكتب نص الإعلان هنا بالتفصيل..." required></textarea>
+            </div>
+            <button type="submit" class="btn-send">إرسال لجميع المعلمين 🚀</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAnnModal() {
+        document.getElementById('announcementModal').style.display = 'block';
+    }
+
+    function closeAnnModal() {
+        document.getElementById('announcementModal').style.display = 'none';
+    }
+
+    // إغلاق النافذة عند الضغط خارجها
+    window.onclick = function(event) {
+        let modal = document.getElementById('announcementModal');
+        if (event.target == modal) {
+            closeAnnModal();
+        }
+    }
+</script>
 
 </body>
 </html>

@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة الغياب والاحتياط - مدرسة ابن دريد</title>
+    <title>إدارة حصص الاحتياط - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/absences_style.css">
     <style>
-        /* --- تحديثات الهيكلية ونظام القائمة الجانبية --- */
         :root {
             --sidebar-width: 260px;
             --transition-speed: 0.3s;
+            --primary-color: #1e293b;
+            --success-color: #10b981;
+            --accent-color: #3b82f6;
+            --info-bg: #e0f2fe;
+            --info-border: #0284c7;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
         }
 
         body {
@@ -20,244 +26,271 @@
             overflow-x: hidden;
             background-color: #f4f7fe;
             margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* القائمة الجانبية */
+        /* --- تحديثات القائمة الجانبية --- */
         .sidebar {
             width: var(--sidebar-width);
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all var(--transition-speed) ease;
             right: 0;
             position: fixed;
             height: 100vh;
-            z-index: 1000;
-            background: #1e293b;
+            z-index: 2000;
+            background: var(--primary-color);
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
         }
 
-        /* حالة التصغير */
         .sidebar.collapsed {
             right: calc(var(--sidebar-width) * -1);
         }
 
-        /* المحتوى الرئيسي */
         .main-content {
             flex: 1;
             margin-right: var(--sidebar-width);
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all var(--transition-speed) ease;
             width: 100%;
             padding: 20px;
-            padding-top: 70px;
+            padding-top: 80px;
         }
 
         .main-content.expanded {
             margin-right: 0;
         }
 
-        /* زر التبديل (Toggle) */
         .sidebar-toggle {
             position: fixed;
             top: 15px;
             right: 15px;
-            z-index: 1100;
-            background: #1e293b;
+            z-index: 2100;
+            background: var(--primary-color);
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        .sidebar-toggle:hover {
-            background: #334155;
-            transform: scale(1.05);
+        /* --- تنسيقات المحتوى --- */
+        .recap-banner {
+            background: var(--info-bg); border-right: 5px solid var(--info-border);
+            padding: 20px; border-radius: 12px; margin-bottom: 25px;
         }
 
-        /* تحسين بطاقات الغياب */
+        .recap-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px; margin-top: 15px;
+        }
+
+        .recap-item {
+            background: white; padding: 12px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid #e2e8f0; font-size: 0.85rem;
+            position: relative;
+        }
+
+        .btn-retirer {
+            background: none; border: none; color: var(--danger-color);
+            cursor: pointer; padding: 5px; font-size: 1rem;
+            transition: 0.2s; margin-right: 10px;
+        }
+        .btn-retirer:hover { transform: scale(1.2); color: #b91c1c; }
+
         .absent-item-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
+            background: white; border-radius: 12px; padding: 15px;
+            margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-right: 5px solid var(--warning-color);
         }
+
+        .session-info { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+
+        .badge-periode {
+            background: var(--primary-color); color: white;
+            padding: 4px 10px; border-radius: 6px; font-weight: bold;
+        }
+
+        .distribution-options {
+            display: flex; gap: 10px; margin-top: 12px;
+            padding-top: 12px; border-top: 1px solid #f1f5f9;
+        }
+
+        .btn-auto {
+            background-color: var(--success-color); color: white; border: none;
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+        }
+
+        .btn-manual {
+            background-color: white; color: var(--accent-color);
+            border: 1px solid var(--accent-color); padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+        }
+
+        .manual-suggestions-table {
+            width: 100%; margin-top: 10px; border-collapse: collapse; display: none;
+            background: #f8fafc; border-radius: 8px; overflow: hidden;
+        }
+
+        .manual-suggestions-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
 
         @media (max-width: 768px) {
             .sidebar { right: calc(var(--sidebar-width) * -1); }
             .sidebar.active { right: 0; }
-            .main-content { margin-right: 0; }
+            .main-content { margin-right: 0 !important; }
         }
     </style>
 </head>
 <body>
 
-<button class="sidebar-toggle" id="toggleSidebar" title="تبديل القائمة">
-    <i class="fas fa-bars"></i>
-</button>
+<button class="sidebar-toggle" id="toggleSidebar"><i class="fas fa-bars"></i></button>
 
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h2><i class="fas fa-user-clock"></i> شؤون الغياب</h2>
+    <div class="sidebar-header" style="padding: 20px; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <h2><i class="fas fa-user-clock"></i> الاحتياط</h2>
     </div>
-
-    <div class="sidebar-nav">
-        <div class="nav-label">الأساسيات</div>
-        <a href="/admin/dashboard"><i class="fas fa-home"></i> العودة للرئيسية</a>
-        
-        <div class="nav-label">العمليات اليومية</div>
-        <a href="#section-record"><i class="fas fa-user-plus"></i> تسجيل غياب</a>
-        <a href="#section-list"><i class="fas fa-clipboard-list"></i> قائمة الغائبين</a>
-
-        <div class="nav-label">التقارير</div>
-        <a href="/admin/reports/absences"><i class="fas fa-file-invoice"></i> سجل الغياب العام</a>
-        <a href="/admin/settings"><i class="fas fa-cog"></i> إعدادات النظام</a>
+    <div class="sidebar-nav" style="padding: 10px;">
+        <a href="/admin/dashboard" style="display: block; padding: 12px; color: white; text-decoration: none; border-radius: 8px; margin-bottom: 5px;">
+            <i class="fas fa-home" style="margin-left: 10px;"></i> الرئيسية
+        </a>
+        <a href="/admin/settings" style="display: block; padding: 12px; color: white; text-decoration: none; border-radius: 8px;">
+            <i class="fas fa-cog" style="margin-left: 10px;"></i> الإعدادات
+        </a>
     </div>
 </div>
 
 <div class="main-content" id="mainContent">
     <header class="page-header">
-        <h1>إدارة الغياب والاحتياط الذكي</h1>
-        <p>تاريخ اليوم: <strong><%= today %></strong></p>
+        <h1>إدارة حصص الاحتياط الذكية</h1>
+        <p>اليوم: <strong><%= today %></strong></p>
     </header>
 
-    <section class="card" id="section-record">
-        <h3><i class="fas fa-user-plus"></i> تسجيل معلم غائب</h3>
+    <% if (recapSubstitutions && recapSubstitutions.length > 0) { %>
+        <section class="recap-banner">
+            <h3 style="margin:0; color: var(--info-border);"><i class="fas fa-check-circle"></i> حصص تم تغطيتها بنجاح</h3>
+            <div class="recap-grid">
+                <% recapSubstitutions.forEach(r => { %>
+                    <div class="recap-item">
+                        <div style="display: flex; align-items: center;">
+                            <a href="/admin/substitute/delete/<%= r.id %>" class="btn-retirer" title="حذف التغطية وإعادة التعيين" onclick="return confirm('هل تريد إلغاء هذا الاحتياط وإعادة الحصة لقائمة الاحتياج؟')">
+                                <i class="fas fa-times-circle"></i>
+                            </a>
+                            <div>
+                                <span class="badge-periode">ح <%= r.periode %></span>
+                                <small><%= r.absent_name %></small>
+                            </div>
+                        </div>
+                        <i class="fas fa-arrow-left" style="color: var(--success-color); margin: 0 10px;"></i>
+                        <div style="text-align: left;">
+                            <strong style="color: var(--success-color);"><%= r.substitute_name %></strong>
+                            <small style="display:block; font-size:0.7rem;"><%= r.classe %> - <%= r.section %></small>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </section>
+    <% } %>
+
+    <section class="card">
+        <h3><i class="fas fa-user-plus"></i> تسجيل معلم غائب (يوم كامل)</h3>
         <form action="/admin/absences/ajouter" method="POST" class="form-abs-grid">
             <div class="input-group">
-                <label>المعلم الغائب</label>
                 <select name="enseignant_id" required>
-                    <option value="">-- اختر المعلم --</option>
+                    <option value="">-- اختر المعلم الغائب --</option>
                     <% enseignants.forEach(e => { %> 
                         <option value="<%= e.id %>"><%= e.nom %> (<%= e.matiere %>)</option> 
                     <% }) %>
                 </select>
             </div>
             <div class="input-group" style="flex: 2;">
-                <label>سبب الغياب</label>
-                <input type="text" name="raison" placeholder="مثال: ظرف طارئ، إجازة مرضية...">
+                <input type="text" name="raison" placeholder="سبب الغياب (اختياري)...">
             </div>
-            <button type="submit" class="btn-submit-abs">
-                <i class="fas fa-save"></i> تسجيل
-            </button>
+            <button type="submit" class="btn-submit-abs">تفعيل الغياب</button>
         </form>
     </section>
 
-    <section class="card" id="section-list">
-        <h3><i class="fas fa-clipboard-list"></i> قائمة الغيابات والبدلاء المقترحين</h3>
-        <div class="absent-list-container">
-            <% if (ghaibeen.length === 0) { %>
-                <div class="empty-state-abs">
-                    <i class="fas fa-check-circle"></i>
-                    <p>لا يوجد غيابات مسجلة لهذا اليوم. اليوم يسير بانتظام!</p>
-                </div>
-            <% } else { %>
-                <% ghaibeen.forEach(g => { %>
-                    <div class="absent-item-card">
-                        <div class="item-main-info">
-                            <div class="teacher-details">
-                                <span class="teacher-name"><%= g.nom %></span>
-                                <span class="badge-subject"><%= g.matiere %></span>
-                                <% if(g.raison) { %> 
-                                    <p class="absence-reason"><i class="fas fa-info-circle"></i> <%= g.raison %></p>
-                                <% } %>
-                            </div>
-                            <div class="item-actions">
-                                <button onclick="getSuggestions('<%= g.enseignant_id %>', this)" class="btn-action-magic">
-                                    <i class="fas fa-magic"></i> تحليل الاحتياط
-                                </button>
-                                <a href="/admin/absences/print-reserve/<%= g.enseignant_id %>" class="btn-action-print">
-                                    <i class="fas fa-print"></i> طباعة
-                                </a>
-                                <a href="/admin/absences/supprimer/<%= g.id %>" class="btn-action-delete" onclick="return confirm('إلغاء تسجيل الغياب؟')">
-                                    <i class="fas fa-times"></i>
-                                </a>
-                            </div>
+    <section class="card">
+        <h3><i class="fas fa-chalkboard-teacher"></i> حصص تحتاج إلى بدلاء</h3>
+        
+        <% if (ghaibeen.length === 0) { %>
+            <div style="text-align:center; padding:30px; color:#64748b;">
+                <i class="fas fa-mug-hot fa-3x"></i>
+                <p>كل الحصص مغطاة حالياً أو لا يوجد غيابات مسجلة.</p>
+            </div>
+        <% } else { %>
+            <% ghaibeen.forEach(session => { %>
+                <div class="absent-item-card">
+                    <div class="session-info">
+                        <span class="badge-periode">الحصة <%= session.periode %></span>
+                        <div>
+                            <strong style="font-size: 1.1rem;"><%= session.nom %></strong>
+                            <span class="badge-subject" style="margin-right:10px;"><%= session.matiere %></span>
                         </div>
-
-                        <div id="box-<%= g.enseignant_id %>" class="suggestion-box-ui">
-                            <div class="box-header">
-                                <h4><i class="fas fa-lightbulb"></i> المعلمون المتاحون حالياً</h4>
-                            </div>
-                            <div id="load-<%= g.enseignant_id %>" class="loader-ui" style="display:none;">
-                                <i class="fas fa-spinner fa-spin"></i> جاري فحص الجدول المدرسي...
-                            </div>
-                            <div id="results-<%= g.enseignant_id %>"></div>
+                        <div style="margin-right: auto; background: #f1f5f9; padding: 5px 12px; border-radius: 20px;">
+                            <i class="fas fa-users"></i> القسم: <strong><%= session.classe %> - <%= session.section %></strong>
                         </div>
                     </div>
-                <% }) %>
-            <% } %>
-        </div>
+
+                    <div class="distribution-options">
+                        <form action="/admin/substitute/assign-session" method="POST">
+                            <input type="hidden" name="absent_id" value="<%= session.teacher_id %>">
+                            <input type="hidden" name="periode" value="<%= session.periode %>">
+                            <input type="hidden" name="classe" value="<%= session.classe %>">
+                            <input type="hidden" name="section" value="<%= session.section %>">
+                            <button type="submit" class="btn-auto">توزيع تلقائي</button>
+                        </form>
+                        <button class="btn-manual" onclick="toggleManual('m_<%= session.teacher_id %>_<%= session.periode %>')">اختيار يدوي</button>
+                    </div>
+
+                    <div id="m_<%= session.teacher_id %>_<%= session.periode %>" class="manual-suggestions-table">
+                        <table style="width: 100%;">
+                            <tbody>
+                                <% suggestions.slice(0, 6).forEach(s => { %>
+                                    <tr>
+                                        <td><strong><%= s.nom %></strong> <small>(<%= s.reserve_this_month %>)</small></td>
+                                        <td style="text-align: left;">
+                                            <form action="/admin/substitute/assign-session" method="POST">
+                                                <input type="hidden" name="substitute_id" value="<%= s.id %>">
+                                                <input type="hidden" name="absent_id" value="<%= session.teacher_id %>">
+                                                <input type="hidden" name="periode" value="<%= session.periode %>">
+                                                <input type="hidden" name="classe" value="<%= session.classe %>">
+                                                <input type="hidden" name="section" value="<%= session.section %>">
+                                                <button type="submit" class="btn-submit-abs" style="padding: 4px 10px;">تعيين</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <% }) %>
+        <% } %>
     </section>
 </div>
 
 <script>
-    // نظام التحكم في القائمة الجانبية
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
 
-    toggleBtn.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-            sidebar.classList.toggle('active');
-        } else {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebar.classList.toggle('active');
+            });
         }
     });
 
-    // إغلاق القائمة عند النقر خارجها في الجوال
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-            sidebar.classList.remove('active');
-        }
-    });
-
-    // دالة جلب الاقتراحات (كودك الأصلي مع تحسين بسيط)
-    async function getSuggestions(teacherId, btnElement) {
-        const box = document.getElementById(`box-${teacherId}`);
-        const resultsDiv = document.getElementById(`results-${teacherId}`);
-        const loader = document.getElementById(`load-${teacherId}`);
-
-        if (box.classList.contains('active')) {
-            box.classList.remove('active');
-            return;
-        }
-
-        box.classList.add('active');
-        resultsDiv.innerHTML = '';
-        loader.style.display = 'block';
-
-        try {
-            const response = await fetch(`/admin/absences/suggestions/${teacherId}`);
-            const data = await response.json();
-            loader.style.display = 'none';
-
-            if (data.suggestions && data.suggestions.length > 0) {
-                let html = `<div class="absent-periods-info">فترات الاحتياج: <span>${data.absent_periods.join('، ')}</span></div>`;
-                html += `<div class="suggestions-grid">`;
-                data.suggestions.forEach(s => {
-                    html += `
-                        <div class="suggestion-item">
-                            <div class="sug-icon"><i class="fas fa-user-check"></i></div>
-                            <div class="sug-data">
-                                <b>${s.nom}</b>
-                                <small>${s.matiere}</small>
-                            </div>
-                        </div>`;
-                });
-                html += `</div>`;
-                resultsDiv.innerHTML = html;
-            } else {
-                resultsDiv.innerHTML = `<div class="no-suggestions-error"><i class="fas fa-exclamation-triangle"></i> لا يوجد معلمون متاحون في هذه الحصص.</div>`;
-            }
-        } catch (error) {
-            loader.style.display = 'none';
-            resultsDiv.innerHTML = `<p class="error-text">❌ فشل الاتصال بالنظام.</p>`;
+    function toggleManual(id) {
+        const area = document.getElementById(id);
+        if(area) {
+            area.style.display = (area.style.display === 'table') ? 'none' : 'table';
         }
     }
 </script>

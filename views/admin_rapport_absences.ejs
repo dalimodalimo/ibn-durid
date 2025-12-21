@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titre %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin_style.css">
+    <style>
+        .report-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 20px; }
+        .abs-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .abs-table th { background: #1a237e; color: white; padding: 12px; text-align: right; }
+        .abs-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .badge-count { background: #ef4444; color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+        .safe { background: #10b981 !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1><i class="fas fa-chart-line"></i> تقرير غياب الطلاب</h1>
+            <a href="/admin/dashboard" class="btn-back">العودة للوحة التحكم</a>
+        </header>
+
+        <div class="report-card">
+            <table class="abs-table">
+                <thead>
+                    <tr>
+                        <th>اسم الطالب</th>
+                        <th>الصف / القسم</th>
+                        <th>عدد حصص الغياب</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% rapports.forEach(student => { %>
+                        <tr>
+                            <td><%= student.nom %></td>
+                            <td><%= student.classe %> - <%= student.section %></td>
+                            <td><span class="badge-count <%= student.total_absences < 5 ? 'safe' : '' %>"><%= student.total_absences %> حصة</span></td>
+                            <td>
+                                <% if(student.total_absences >= 15) { %>
+                                    <strong style="color: #d32f2f;">فصل نهائي</strong>
+                                <% } else if(student.total_absences >= 10) { %>
+                                    <strong style="color: #f57c00;">إنذار ثاني</strong>
+                                <% } else if(student.total_absences >= 5) { %>
+                                    <strong style="color: #fbc02d;">إنذار أول</strong>
+                                <% } else { %>
+                                    <span style="color: #388e3c;">مستقر</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة حصص الاحتياط - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/settings_style.css">
-    <link rel="stylesheet" href="/css/absences_style.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <style>
         :root {
             --sidebar-width: 260px;
@@ -161,6 +164,112 @@
             .main-content { margin-right: 0 !important; }
             .recap-grid { grid-template-columns: 1fr; }
         }
+
+        /* تحسين حاوية البطاقة العامة */
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            border: 1px solid #edf2f7;
+        }
+
+        .card h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* تنسيق نموذج تسجيل الغياب الجديد */
+        .form-abs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr auto; /* توزيع الأعمدة */
+            gap: 15px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group-custom label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        /* تحسين مظهر Select2 ليتناسب مع تصميمك */
+        .select2-container--default .select2-selection--single {
+            height: 48px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px;
+        }
+
+        .form-abs-grid select, 
+        .form-abs-grid input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-abs-grid select:focus, 
+        .form-abs-grid input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* تحسين الزر */
+        .btn-submit-abs {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 48px; /* توحيد الطول مع الحقول */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit-abs:hover {
+            background: #334155;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* التجاوب مع الجوال */
+        @media (max-width: 992px) {
+            .form-abs-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn-submit-abs {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -187,51 +296,59 @@
         <p>اليوم: <strong><%= today %></strong></p>
     </header>
 
-    <% if (recapSubstitutions && recapSubstitutions.length > 0) { %>
-        <section class="recap-banner">
-            <h3 style="margin:0; color: var(--info-border); margin-bottom: 15px;">
-                <i class="fas fa-check-circle"></i> حصص تم تغطيتها بنجاح
-            </h3>
-            <div class="recap-grid">
-                <% recapSubstitutions.forEach(r => { %>
-                    <div class="recap-item">
-                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                            <a href="/admin/substitute/delete/<%= r.id %>" class="btn-retirer" title="حذف" onclick="return confirm('هل تريد إلغاء هذا الاحتياط؟')">
-                                <i class="fas fa-times-circle"></i>
-                            </a>
-                            <div style="display: flex; flex-direction: column;">
-                                <span class="badge-periode">ح <%= r.periode %></span>
-                                <span style="font-size: 0.9rem; margin-top: 4px;"><%= r.absent_name %></span>
-                            </div>
-                        </div>
+   <% if (recapSubstitutions && recapSubstitutions.length > 0) { %>
+    <section class="recap-banner">
+        <h3 style="margin:0; color: var(--info-border); margin-bottom: 15px;">
+            <i class="fas fa-check-circle"></i> حصص تم تغطيتها بنجاح
+        </h3>
+        <div class="recap-grid">
+            <% recapSubstitutions.forEach(r => { %>
+                <div class="recap-item">
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                        
+                        <a href="/admin/substitute/delete/<%= r.id %>" class="btn-retirer" title="إلغاء لإعادة التعيين" onclick="return confirm('إلغاء هذا التعيين وإعادة الحصة لقائمة الاحتياج؟')">
+                            <i class="fas fa-times-circle" style="color: var(--danger-color);"></i>
+                        </a>
 
-                        <div class="arrow-icon">
-                            <i class="fas fa-arrow-left"></i>
-                        </div>
+                        <a href="/admin/substitute/delete/<%= r.id %>?reason=present" class="btn-retirer" title="المعلم حضر" onclick="return confirm('تأكيد حضور المعلم الغائب وإلغاء الاحتياط؟')">
+                            <i class="fas fa-user-check" style="color: var(--success-color);"></i>
+                        </a>
 
-                        <div style="flex: 1; text-align: right;">
-                            <strong style="color: var(--success-color); font-size: 1rem;"><%= r.substitute_name %></strong>
-                            <small style="display:block; color: #64748b; font-size:0.75rem;"><%= r.classe %> - <%= r.section %></small>
+                        <div style="display: flex; flex-direction: column; margin-right: 5px;">
+                            <span class="badge-periode">ح <%= r.periode %></span>
+                            <span style="font-size: 0.85rem; margin-top: 4px; font-weight: bold;"><%= r.absent_name %></span>
                         </div>
                     </div>
-                <% }) %>
-            </div>
-        </section>
-    <% } %>
+
+                    <div class="arrow-icon">
+                        <i class="fas fa-arrow-left"></i>
+                    </div>
+
+                    <div style="flex: 1; text-align: right;">
+                        <strong style="color: var(--success-color); font-size: 0.95rem;"><%= r.substitute_name %></strong>
+                        <small style="display:block; color: #64748b; font-size:0.75rem;"><%= r.classe %> - <%= r.section %></small>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </section>
+<% } %>
 
     <section class="card">
         <h3><i class="fas fa-user-plus"></i> تسجيل معلم غائب (يوم كامل)</h3>
         <form action="/admin/absences/ajouter" method="POST" class="form-abs-grid">
-            <div class="input-group">
-                <select name="enseignant_id" required>
+            <div class="input-group-custom" style="flex: 1;">
+                <label>بحث بالاسم أو المادة:</label>
+                <select name="enseignant_id" id="searchTeacher" required>
                     <option value="">-- اختر المعلم الغائب --</option>
                     <% enseignants.forEach(e => { %> 
                         <option value="<%= e.id %>"><%= e.nom %> (<%= e.matiere %>)</option> 
                     <% }) %>
                 </select>
             </div>
-            <div class="input-group" style="flex: 2;">
-                <input type="text" name="raison" placeholder="سبب الغياب (اختياري)...">
+            <div class="input-group-custom" style="flex: 1.5;">
+                <label>سبب الغياب:</label>
+                <input type="text" name="reason" placeholder="سبب الغياب (اختياري)...">
                 <input type="hidden" name="date" value="<%= today %>">
             </div>
             <button type="submit" class="btn-submit-abs">تفعيل الغياب</button>
@@ -299,7 +416,14 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
+        // تفعيل ميزة البحث السريع في القائمة المنسدلة
+        $('#searchTeacher').select2({
+            placeholder: '-- ابحث بالاسم أو المادة --',
+            allowClear: true,
+            dir: "rtl"
+        });
+
         const toggleBtn = document.getElementById('toggleSidebar');
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');

@@ -145,8 +145,10 @@ async function initializeDatabase() {
     { table: 'substitute_logs', col: 'periode', type: 'INTEGER' },
     { table: 'substitute_logs', col: 'classe', type: 'TEXT' },
     { table: 'substitute_logs', col: 'section', type: 'TEXT' },
+    { table: 'substitute_logs', col: 'status', type: "TEXT DEFAULT 'pending'" }, // جديد: حالة الطلب
+    { table: 'substitute_logs', col: 'reject_reason', type: "TEXT" },           // جديد: سبب الرفض
     { table: 'enseignants', col: 'last_login', type: 'TEXT' },
-    { table: 'absences', col: 'status', type: "TEXT DEFAULT 'pending'" } // أضف هذا السطر هنا
+    { table: 'absences', col: 'status', type: "TEXT DEFAULT 'pending'" }
 ];
 
         for (const item of columnsToAdd) {
@@ -342,19 +344,31 @@ initializeDatabase().then(() => {
             const enseignants = await db.all("SELECT * FROM enseignants ORDER BY nom ASC") || [];
 
             // 2. جلب الغائبين الذين لديهم حصص اليوم ولم يتم تعويضهم بعد
-            const ghaibeen = await db.all(`
-                SELECT e.id as teacher_id, e.nom, e.matiere, t.periode, t.classe, t.section
-                FROM absences a
-                JOIN enseignants e ON a.enseignant_id = e.id
-                JOIN timetable t ON e.id = t.enseignant_id
-                WHERE a.date = ? AND t.jour = ?
-                AND NOT EXISTS (
-                    SELECT 1 FROM substitute_logs sl 
-                    WHERE sl.absent_id = e.id AND sl.date = ? AND sl.periode = t.periode
-                )
-                ORDER BY t.periode ASC
-            `, [today, todayName, today]) || [];
-
+           // جلب الغائبين الذين لديهم حصص اليوم ولم يتم تغطيتها بحصة "مقبولة"
+const ghaibeen = await db.all(`
+    SELECT DISTINCT 
+        e.id as teacher_id, 
+        e.nom, 
+        e.matiere, 
+        t.periode, 
+        t.classe, 
+        t.section
+    FROM absences a
+    JOIN enseignants e ON a.enseignant_id = e.id
+    JOIN timetable t ON e.id = t.enseignant_id
+    WHERE a.date = ? 
+    AND (t.jour = ? OR t.jour = REPLACE(?, 'إ', 'ا')) -- يحل مشكلة الإثنين/الاثنين
+    AND NOT EXISTS (
+        SELECT 1 FROM substitute_logs sl 
+        WHERE sl.absent_id = e.id 
+        AND sl.date = a.date 
+        AND sl.periode = t.periode
+        AND sl.classe = t.classe
+        AND sl.section = t.section
+        AND sl.status IN ('accepted', 'pending') -- يختفي فقط إذا قُبل أو قيد الانتظار
+    )
+    ORDER BY t.periode ASC
+`, [today, todayName, todayName]) || [];
             // 3. جلب اقتراحات المعلمين المتاحين للاحتياط
             let suggestions = await db.all(`
                 SELECT e.*, 
@@ -448,8 +462,10 @@ const recapSubstitutions = await db.all(`
         }
 
         // إدخال البيانات في الجدول (سواء كان الاختيار يدوي أو تلقائي)
-        await db.run(`INSERT INTO substitute_logs (substitute_id, absent_id, date, periode, classe, section) VALUES (?, ?, ?, ?, ?, ?)`,
-            [substitute_id, absent_id, today, periode, classe, section]);
+        // قم بتغيير سطر الـ INSERT ليكون هكذا:
+await db.run(`INSERT INTO substitute_logs (substitute_id, absent_id, date, periode, classe, section, status) 
+              VALUES (?, ?, ?, ?, ?, ?, 'pending')`, // وضعنا 'pending' كحالة افتراضية
+    [substitute_id, absent_id, today, periode, classe, section]);
 
         res.redirect('/admin/absence-profs?success=assigned');
     } catch (e) {
@@ -459,20 +475,7 @@ const recapSubstitutions = await db.all(`
 });
 
     // مسار إلغاء حصة احتياط وإعادتها لقائمة الاحتياج
-app.get('/admin/substitute/delete/:id', async (req, res) => {
-    try {
-        const substitute_id = req.params.id;
-        
-        // حذف السجل من جدول الاحتياط
-        await db.run("DELETE FROM substitute_logs WHERE id = ?", [substitute_id]);
-        
-        // العودة لصفحة الغياب والاحتياط مع رسالة نجاح
-        res.redirect('/admin/absence-profs?success=substitute_cancelled');
-    } catch (e) {
-        console.error("Error deleting substitute log:", e);
-        res.status(500).send("خطأ في إلغاء حصة الاحتياط");
-    }
-});
+
 
     // --- [ 7. إدارة الطلاب ] ---
 
@@ -614,17 +617,19 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
         if (!prof) return res.redirect('/teacher/login');
 
         const now = new Date();
-        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const todayName = days[now.getDay()];
+const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+let todayName = days[now.getDay()];
+
+// فحص يدوي: إذا كانت قاعدة البيانات تستخدم "الاثنين" بدون همزة، فقم بإزالتها برمجياً
+// أو الأفضل: اجعل الاستعلام يبحث عن الكلمتين
         const todayDate = now.toISOString().split('T')[0];
 
-        // 1. جلب أوقات الحصص
+        // 1. جلب البيانات الأساسية (أوقات، إعلانات، طلاب)
         const periods = await db.all("SELECT * FROM school_periods ORDER BY id ASC") || [];
-        
-        // 2. جلب الإعلانات من قاعدة البيانات (هذا ما كان ينقصك)
         const announcements = await db.all("SELECT * FROM announcements ORDER BY id DESC LIMIT 5") || [];
+        const students = await db.all("SELECT * FROM eleves") || [];
 
-        // 3. جلب الحصص العادية مع التحقق إذا تم رصد الغياب (بواسطة أي معلم لنفس الفصل)
+        // 2. جلب الحصص العادية
         const sessions = await db.all(`
             SELECT t.*, 
             (SELECT COUNT(*) FROM student_absences 
@@ -640,9 +645,9 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
             WHERE t.enseignant_id = ? AND t.jour = ?
         `, [todayDate, teacher_id, todayName]) || [];
 
-        // 4. جلب حصص الاحتياط
+        // 3. جلب حصص الاحتياط
         const substitutions = await db.all(`
-            SELECT sl.*, 
+            SELECT sl.*, e_abs.nom as absent_name,
             (SELECT COUNT(*) FROM student_absences 
              WHERE date = sl.date AND periode = sl.periode 
              AND EXISTS (
@@ -653,32 +658,41 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
              )
             ) > 0 as is_marked
             FROM substitute_logs sl 
+            JOIN enseignants e_abs ON sl.absent_id = e_abs.id
             WHERE sl.substitute_id = ? AND sl.date = ?
         `, [teacher_id, todayDate]) || [];
 
+        // 4. معالجة بيانات الاحتياط (Mapping) - يجب أن يكون هنا قبل الاستخدام
         const mappedSubs = substitutions.map(s => ({
+            id: s.id,
             periode: s.periode, 
             classe: s.classe, 
             section: s.section, 
             matiere: "إحتياط", 
             isSubstitute: true, 
+            status: s.status || 'pending', 
+            absent_name: s.absent_name,
             is_marked: s.is_marked 
         }));
 
-        const allSessions = [...sessions, ...mappedSubs];
-        
-        // 5. جلب الطلاب
-        const students = await db.all("SELECT * FROM eleves") || [];
+        // 5. تصفية الحصص (المقبولة للجدول، والمعلقة للتنبيهات)
+        const activeSessions = [
+            ...sessions, 
+            ...mappedSubs.filter(s => s.status === 'accepted')
+        ];
 
-        // 6. إرسال البيانات للوحة التحكم
+        const pendingRequests = mappedSubs.filter(s => s.status === 'pending');
+
+        // 6. إرسال كل البيانات للوحة التحكم مرة واحدة
         res.render('teacher_dashboard', { 
             prof, 
-            sessions: allSessions, 
+            sessions: activeSessions, // تذهب للجدول ولرصد الغياب
+            pendingRequests,          // تذهب لصندوق التنبيهات العلوي
             periods, 
             students, 
             today: todayDate, 
             todayName, 
-            announcements, // تم التعديل هنا ليرسل الإعلانات الحقيقية
+            announcements, 
             success: req.query.success, 
             titre: "لوحة المعلم" 
         });
@@ -725,7 +739,67 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
         res.clearCookie('admin_auth');
         res.redirect('/teacher/login');
     });
+    // Route pour retirer une séance affectée (si l'enseignant absent se présente)
+// ... الكود السابق (مسار assign-session) ...
 
+
+// --- [ مسار حذف أو إلغاء الاحتياط - النسخة النهائية الموحدة ] ---
+app.get('/admin/substitute/delete/:id', async (req, res) => {
+    try {
+        const sub_id = req.params.id;
+        const reason = req.query.reason; // سيستقبل 'present' من الزر الأخضر
+        const today = new Date().toISOString().split('T')[0];
+
+        // 1. جلب بيانات السجل قبل حذفه لمعرفة من هو المعلم الغائب
+        const subEntry = await db.get("SELECT absent_id FROM substitute_logs WHERE id = ?", [sub_id]);
+
+        if (subEntry) {
+            // 2. حذف سجل الاحتياط من قاعدة البيانات (يحدث في الحالتين)
+            await db.run("DELETE FROM substitute_logs WHERE id = ?", [sub_id]);
+
+            // 3. المنطق الجوهري: إذا كان الإلغاء بسبب حضور المعلم
+            if (reason === 'present') {
+                // حذف سجل غياب المعلم الأصلي لهذا اليوم
+                // هذا سيمنع ظهوره مرة أخرى في قائمة "حصص تحتاج إلى بدلاء"
+                await db.run("DELETE FROM absences WHERE enseignant_id = ? AND date = ?", [subEntry.absent_id, today]);
+                console.log(`تم إلغاء غياب المعلم ID: ${subEntry.absent_id} بسبب حضوره.`);
+            }
+        }
+
+        let message = (reason === 'present') ? 'teacher_present' : 'substitute_cancelled';
+        res.redirect(`/admin/absence-profs?success=${message}`);
+    } catch (e) {
+        console.error("Error in delete route:", e);
+        res.status(500).send("خطأ في معالجة طلب الحذف");
+    }
+});
+
+
+// مسار معالجة قبول أو رفض حصة الاحتياط من قبل المعلم
+app.post('/teacher/substitute/respond', async (req, res) => {
+    try {
+        const { sub_id, action, reason } = req.body;
+        
+        // جلب بيانات الحصة للتوجيه لاحقاً
+        const subData = await db.get("SELECT substitute_id FROM substitute_logs WHERE id = ?", [sub_id]);
+        if (!subData) return res.status(404).send("الطلب غير موجود");
+
+        if (action === 'accept') {
+            // تحديث الحالة إلى مقبول
+            await db.run("UPDATE substitute_logs SET status = 'accepted' WHERE id = ?", [sub_id]);
+        } 
+        else if (action === 'reject') {
+            // تحديث الحالة إلى مرفوض مع ذكر السبب
+            // ملاحظة: يمكنك حذف السجل أو تركه بحالة 'rejected' ليراه المدير
+            await db.run("UPDATE substitute_logs SET status = 'rejected', reject_reason = ? WHERE id = ?", [reason, sub_id]);
+        }
+
+        res.redirect(`/teacher/dashboard/${subData.substitute_id}?success=sub_response_sent`);
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ في معالجة الرد");
+    }
+});
     app.listen(PORT, () => {
         console.log(`🚀 نظام مدرسة ابن دريد يعمل على: http://localhost:${PORT}`);
     });

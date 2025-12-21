@@ -17,6 +17,28 @@
         .live-clock { font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; }
         .live-date { font-size: 0.95rem; opacity: 0.9; text-align: left; }
 
+        /* --- إضافات نظام الاحتياط الجديد --- */
+        .sub-notification-card {
+            background: #fffbeb; border: 2px solid #f59e0b; border-radius: 15px;
+            padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
+            animation: slideInDown 0.5s ease;
+        }
+        .sub-header { color: #92400e; font-weight: bold; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .sub-request-item { 
+            background: white; padding: 15px; border-radius: 12px; border: 1px solid #fef3c7;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .sub-details b { color: #1e293b; }
+        .sub-actions { display: flex; gap: 8px; }
+        .btn-sub-accept { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-sub-reject { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-sub-accept:hover { background: #059669; transform: scale(1.05); }
+        .btn-sub-reject:hover { background: #dc2626; transform: scale(1.05); }
+        
+        .reject-form-overlay { display: none; margin-top: 10px; padding: 15px; background: #fff1f2; border-radius: 10px; border: 1px solid #fecaca; }
+        .reject-form-overlay input { width: 100%; padding: 10px; border: 1px solid #fda4af; border-radius: 8px; margin-bottom: 10px; }
+        /* ---------------------------------- */
+
         .announcements-container {
             margin-bottom: 20px; border-radius: 15px; overflow: hidden;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.5s ease;
@@ -45,18 +67,15 @@
         .timetable-scroll-wrapper { background: #ffffff; border-radius: 15px; padding: 15px; }
         .horiz-scroll-container { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px 20px 5px; scroll-snap-type: x mandatory; }
         
-        /* تحسينات الحصص (الحالات الثلاث) */
         .period-item { min-width: 145px; flex-shrink: 0; background: #f8fafc; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; text-align: center; scroll-snap-align: center; transition: 0.3s; }
         .period-item.has-class { border: 2px solid #4f46e5; background: #eef2ff; }
         
-        /* 1. الحصة الجارية (باللون الأحمر) */
         .period-item.starting-soon:not(.marked-done) { 
             border: 3px solid #ef4444 !important; 
             background: #fff1f2 !important; 
             animation: pulse-red 2s infinite; 
         }
 
-        /* 2. الحصة المكتملة (باللون الرمادي) */
         .period-item.marked-done {
             background: #f1f5f9 !important;
             border: 2px solid #cbd5e1 !important;
@@ -66,6 +85,9 @@
         .marked-badge { color: #22c55e; font-size: 0.75rem; font-weight: bold; display: block; margin-top: 5px; }
 
         .period-item.is-substitute { border: 2px dashed #f59e0b !important; background: #fffbeb !important; }
+        /* حالة الانتظار في الجدول */
+        .period-item.sub-pending { opacity: 0.6; border: 2px dotted #94a3b8 !important; background: #f8fafc !important; position: relative; }
+        .period-item.sub-pending::after { content: "بانتظار الرد"; position: absolute; bottom: 5px; left: 0; right: 0; font-size: 0.65rem; color: #f59e0b; font-weight: bold; }
 
         #sessionSelect.unmarked { border: 2px solid #ef4444 !important; }
         .disabled-view { filter: grayscale(1); opacity: 0.7; pointer-events: none; position: relative; }
@@ -76,6 +98,7 @@
         }
 
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        @keyframes slideInDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .hidden { display: none !important; }
         .search-input-wrapper { position: relative; margin-bottom: 10px; }
@@ -119,6 +142,75 @@
         </div>
         <div class="avatar-mini"><i class="fas fa-user-circle"></i></div>
     </header>
+    <% if (typeof pendingRequests !== 'undefined' && pendingRequests.length > 0) { %>
+<section class="sub-notification-card">
+    <div class="sub-header"><i class="fas fa-user-clock"></i> حصص احتياط جديدة بانتظار ردك</div>
+    <% pendingRequests.forEach(sub => { %>
+        <div class="sub-request-item" id="req-<%= sub.id %>">
+            <div class="sub-details">
+                <b>الحصة <%= sub.periode %></b> | القسم: <b><%= sub.classe %>-<%= sub.section %></b>
+                <br><small>المعلم الغائب: <%= sub.absent_name %></small>
+            </div>
+            <div class="sub-actions">
+                <form action="/teacher/substitute/respond" method="POST" style="display:inline;">
+                    <input type="hidden" name="sub_id" value="<%= sub.id %>">
+                    <input type="hidden" name="action" value="accept">
+                    <button type="submit" class="btn-sub-accept">قبول</button>
+                </form>
+                <button type="button" class="btn-sub-reject" onclick="showRejectReason('<%= sub.id %>')">رفض</button>
+            </div>
+        </div>
+        <div id="reject-form-<%= sub.id %>" class="reject-form-overlay" style="display:none;">
+            <form action="/teacher/substitute/respond" method="POST">
+                <input type="hidden" name="sub_id" value="<%= sub.id %>">
+                <input type="hidden" name="action" value="reject">
+                <input type="text" name="reason" placeholder="سبب الرفض (إلزامي)..." required>
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" class="btn-sub-reject" style="width:100%">تأكيد الرفض</button>
+                    <button type="button" onclick="hideRejectReason('<%= sub.id %>')" class="btn-cancel">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    <% }) %>
+</section>
+<% } %>
+
+    <% 
+        let pendingSubs = sessions.filter(s => s.isSubstitute && s.status === 'pending');
+        if (pendingSubs.length > 0) { 
+    %>
+    <section class="sub-notification-card">
+        <div class="sub-header"><i class="fas fa-user-clock"></i> حصص احتياط جديدة بانتظار ردك</div>
+        <% pendingSubs.forEach(sub => { %>
+            <div class="sub-request-item" id="req-<%= sub.id %>">
+                <div class="sub-details">
+                    <b>الحصة <%= sub.periode %></b> | القسم: <b><%= sub.classe %>-<%= sub.section %></b>
+                    <br><small>المعلم الغائب: <%= sub.absent_name %></small>
+                </div>
+                <div class="sub-actions">
+                    <form action="/teacher/substitute/respond" method="POST" style="display:inline;">
+                        <input type="hidden" name="sub_id" value="<%= sub.id %>">
+                        <input type="hidden" name="action" value="accept">
+                        <button type="submit" class="btn-sub-accept">قبول</button>
+                    </form>
+                    <button type="button" class="btn-sub-reject" onclick="showRejectReason('<%= sub.id %>')">رفض</button>
+                </div>
+            </div>
+            
+            <div id="reject-form-<%= sub.id %>" class="reject-form-overlay">
+                <form action="/teacher/substitute/respond" method="POST">
+                    <input type="hidden" name="sub_id" value="<%= sub.id %>">
+                    <input type="hidden" name="action" value="reject">
+                    <input type="text" name="reason" placeholder="سبب الرفض (إلزامي)..." required>
+                    <div style="display:flex; gap:10px;">
+                        <button type="submit" class="btn-sub-reject" style="width:100%">تأكيد الرفض وإرسال</button>
+                        <button type="button" onclick="hideRejectReason('<%= sub.id %>')" style="background:#94a3b8; color:white; border:none; padding:8px; border-radius:8px;">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        <% }) %>
+    </section>
+    <% } %>
 
     <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
     <section class="announcements-container" id="annContainer">
@@ -152,8 +244,13 @@
                     let session = sessions.find(s => s.periode === i);
                     let isSub = session && session.isSubstitute;
                     let isMarked = session && session.is_marked;
+                    let isPending = session && session.status === 'pending';
+                    let isAccepted = session && session.status === 'accepted';
                 %>
-                    <div class="period-item <%= session ? (isSub ? 'is-substitute' : 'has-class') : '' %> <%= isMarked ? 'marked-done' : '' %>" 
+                    <div class="period-item 
+                        <%= session ? (isSub ? 'is-substitute' : 'has-class') : '' %> 
+                        <%= isMarked ? 'marked-done' : '' %>
+                        <%= isPending ? 'sub-pending' : '' %>" 
                          id="period-<%= i %>" 
                          data-start="<%= pTime ? pTime.start_time : '' %>"
                          data-end="<%= pTime ? pTime.end_time : '' %>">
@@ -165,7 +262,7 @@
                                 <% if(isMarked) { %>
                                     <span class="marked-badge"><i class="fas fa-check-circle"></i> تم الرصد</span>
                                 <% } else { %>
-                                    <span class="p-subject"><%= session.matiere %></span>
+                                    <span class="p-subject"><%= isSub ? '(إحتياط)' : session.matiere %></span>
                                 <% } %>
                             <% } else { %>
                                 <span class="p-free">فراغ</span>
@@ -186,8 +283,11 @@
             <div class="selection-box">
                 <select name="periode" id="sessionSelect" required onchange="handleSessionChange()">
                     <option value="" disabled selected>-- اختر الحصة لرؤية الطلاب --</option>
-                    <% sessions.sort((a,b)=>a.periode-b.periode).forEach(s => { 
-                        let pTime = periods.find(p => p.id === s.periode);
+                    <% 
+                        // تصفية الحصص: نظهر فقط الحصص العادية أو الاحتياط المقبول (Accepted)
+                        sessions.filter(s => !s.isSubstitute || s.status === 'accepted')
+                        .sort((a,b)=>a.periode-b.periode).forEach(s => { 
+                            let pTime = periods.find(p => p.id === s.periode);
                     %>
                         <option value="<%= s.periode %>" 
                                 data-class-full="<%= s.classe %>-<%= s.section %>"
@@ -245,22 +345,23 @@
 </div>
 
 <script>
-    // جلب رقم المعلم الحالي من EJS ليتم استخدامه في مفاتيح التخزين
     const CURRENT_PROF_ID = "<%= prof.id %>";
 
-    // 1. وظائف الإعلانات (محدثة لتعمل لكل معلم بشكل مستقل)
+    // وظائف الاحتياط الجديدة
+    function showRejectReason(id) {
+        document.getElementById('reject-form-' + id).style.display = 'block';
+    }
+    function hideRejectReason(id) {
+        document.getElementById('reject-form-' + id).style.display = 'none';
+    }
+
     function dismissAnnouncement(index) {
         const annItem = document.getElementById('ann-item-' + index);
         if (!annItem) return;
-
         const annId = annItem.getAttribute('data-ann-id');
         annItem.classList.add('ann-fade-out');
-        
-        // الحل: ننشئ مفتاح تخزين فريد يجمع بين (رقم الإعلان) و (رقم المعلم)
-        // سيتم التخزين هكذا: read_ann_12_teacher_5
         const storageKey = `read_ann_${annId}_prof_${CURRENT_PROF_ID}`;
         localStorage.setItem(storageKey, 'true');
-
         setTimeout(() => {
             annItem.remove();
             checkEmptyAnnouncements();
@@ -270,12 +371,8 @@
     function checkReadAnnouncements() {
         document.querySelectorAll('.ann-item').forEach(item => {
             const annId = item.getAttribute('data-ann-id');
-            // نبحث عن مفتاح التخزين الخاص بهذا المعلم وهذا الإعلان تحديداً
             const storageKey = `read_ann_${annId}_prof_${CURRENT_PROF_ID}`;
-            
-            if (localStorage.getItem(storageKey) === 'true') {
-                item.remove(); 
-            }
+            if (localStorage.getItem(storageKey) === 'true') { item.remove(); }
         });
         checkEmptyAnnouncements();
     }
@@ -283,55 +380,37 @@
     function checkEmptyAnnouncements() {
         const remainingItems = document.querySelectorAll('.ann-item');
         const container = document.getElementById('annContainer');
-        if (remainingItems.length === 0 && container) {
-            container.style.display = 'none';
-        }
+        if (remainingItems.length === 0 && container) { container.style.display = 'none'; }
     }
 
-    // 2. وظائف الساعة والوقت
     function updateClock() {
         const now = new Date();
         const clockEl = document.getElementById('current-clock');
         const dateEl = document.getElementById('current-date');
-        
         if (clockEl) clockEl.textContent = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
         if (dateEl) dateEl.textContent = now.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
         
         const currentMins = now.getHours() * 60 + now.getMinutes();
-
         document.querySelectorAll('.period-item').forEach(item => {
             const start = item.getAttribute('data-start');
             const end = item.getAttribute('data-end');
             if (!start || !end) return;
-
             const [hS, mS] = start.split(':').map(Number);
             const [hE, mE] = end.split(':').map(Number);
-            const startMins = hS * 60 + mS;
-            const endMins = hE * 60 + mE;
-
-            if (currentMins >= startMins && currentMins <= endMins) {
-                item.classList.add('starting-soon');
-            } else {
-                item.classList.remove('starting-soon');
-            }
+            if (currentMins >= (hS*60+mS) && currentMins <= (hE*60+mE)) { item.classList.add('starting-soon'); } 
+            else { item.classList.remove('starting-soon'); }
         });
     }
 
-    // 3. وظائف رصد الغياب والبحث
     function handleSessionChange() {
         const select = document.getElementById('sessionSelect');
         const selected = select.selectedOptions[0];
         if (!selected) return;
-
         const targetClass = selected.getAttribute('data-class-full');
         const isMarked = selected.getAttribute('data-marked') === 'true';
         
         document.querySelectorAll('.student-card').forEach(card => {
-            if (card.getAttribute('data-class-id') === targetClass) {
-                card.style.display = 'flex';
-            } else {
-                card.style.display = 'none';
-            }
+            card.style.display = (card.getAttribute('data-class-id') === targetClass) ? 'flex' : 'none';
         });
 
         document.getElementById('tableContainer').classList.remove('hidden');
@@ -349,16 +428,11 @@
         }
     }
 
-    // 4. تشغيل النظام عند التحميل
    document.addEventListener('DOMContentLoaded', () => {
-        // 1. فحص الإعلانات المقروءة
         checkReadAnnouncements();
-        
-        // 2. تشغيل وتحديث الساعة
         updateClock();
         setInterval(updateClock, 1000);
 
-        // 3. إخفاء رسالة النجاح (التوست) تلقائياً بعد 4 ثوانٍ
         const successToast = document.querySelector('.success-toast');
         if (successToast) {
             setTimeout(() => {
@@ -366,10 +440,9 @@
                 successToast.style.opacity = "0";
                 successToast.style.transform = "translateY(-10px)";
                 setTimeout(() => successToast.remove(), 600);
-            }, 4000); // 4 ثوانٍ
+            }, 4000);
         }
 
-        // 4. تفعيل مستمع البحث عن الطلاب
         const searchInput = document.getElementById('attendanceSearch');
         if (searchInput) {
             searchInput.addEventListener('keyup', function() {
@@ -377,7 +450,6 @@
                 const selected = document.getElementById('sessionSelect').selectedOptions[0];
                 if (!selected) return;
                 const targetClass = selected.getAttribute('data-class-full');
-
                 document.querySelectorAll('.student-card').forEach(card => {
                     const name = card.querySelector('.student-name').innerText.toLowerCase();
                     const sameClass = card.getAttribute('data-class-id') === targetClass;

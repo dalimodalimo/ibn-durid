@@ -3,466 +3,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><%= titre %> - مدرسة ابن دريد</title>
+    <title><%= titre %> - مدرسة ابن دريد | نظام الإدارة المتكامل</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/teacher_inter_style.css">  
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        /* التنسيقات الأساسية وتحسينات الواجهة */
-        .top-info-bar {
-            background: linear-gradient(135deg, #1a237e, #3949ab);
-            color: white; padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .live-clock { font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; }
-        .live-date { font-size: 0.95rem; opacity: 0.9; text-align: left; }
-
-        /* --- إضافات نظام الاحتياط الجديد --- */
-        .sub-notification-card {
-            background: #fffbeb; border: 2px solid #f59e0b; border-radius: 15px;
-            padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
-            animation: slideInDown 0.5s ease;
-        }
-        .sub-header { color: #92400e; font-weight: bold; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .sub-request-item { 
-            background: white; padding: 15px; border-radius: 12px; border: 1px solid #fef3c7;
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
-        }
-        .sub-details b { color: #1e293b; }
-        .sub-actions { display: flex; gap: 8px; }
-        .btn-sub-accept { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-sub-reject { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-sub-accept:hover { background: #059669; transform: scale(1.05); }
-        .btn-sub-reject:hover { background: #dc2626; transform: scale(1.05); }
-        
-        .reject-form-overlay { display: none; margin-top: 10px; padding: 15px; background: #fff1f2; border-radius: 10px; border: 1px solid #fecaca; }
-        .reject-form-overlay input { width: 100%; padding: 10px; border: 1px solid #fda4af; border-radius: 8px; margin-bottom: 10px; }
-        /* ---------------------------------- */
-
-        .announcements-container {
-            margin-bottom: 20px; border-radius: 15px; overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.5s ease;
-        }
-        .ann-header {
-            background: #fff3cd; color: #856404; padding: 10px 15px;
-            display: flex; align-items: center; gap: 10px; font-weight: bold;
-        }
-        .ann-list { background: #fff; padding: 10px 15px; border: 1px solid #ffeeba; }
-        
-        .ann-item { 
-            border-bottom: 1px dashed #ddd; padding: 10px 0; 
-            display: flex; justify-content: space-between; align-items: center;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 1; transform: translateX(0);
-        }
-        .ann-item:last-child { border-bottom: none; }
-        .ann-fade-out { opacity: 0; transform: translateX(50px); max-height: 0; padding: 0; margin: 0; overflow: hidden; pointer-events: none; }
-
-        .btn-ann-ok {
-            background: #27ae60; color: white; border: none;
-            padding: 5px 12px; border-radius: 6px; cursor: pointer;
-            font-size: 0.8rem; font-weight: bold; transition: 0.3s;
+        :root {
+            --primary: #1e3a8a;
+            --primary-gradient: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            --accent: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
         }
 
-        .timetable-scroll-wrapper { background: #ffffff; border-radius: 15px; padding: 15px; }
-        .horiz-scroll-container { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px 20px 5px; scroll-snap-type: x mandatory; }
-        
-        .period-item { min-width: 145px; flex-shrink: 0; background: #f8fafc; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; text-align: center; scroll-snap-align: center; transition: 0.3s; }
-        .period-item.has-class { border: 2px solid #4f46e5; background: #eef2ff; }
-        
-        .period-item.starting-soon:not(.marked-done) { 
-            border: 3px solid #ef4444 !important; 
-            background: #fff1f2 !important; 
-            animation: pulse-red 2s infinite; 
-        }
-
-        .period-item.marked-done {
-            background: #f1f5f9 !important;
-            border: 2px solid #cbd5e1 !important;
-            color: #64748b;
-            filter: grayscale(0.5);
-        }
-        .marked-badge { color: #22c55e; font-size: 0.75rem; font-weight: bold; display: block; margin-top: 5px; }
-
-        .period-item.is-substitute { border: 2px dashed #f59e0b !important; background: #fffbeb !important; }
-        /* حالة الانتظار في الجدول */
-        .period-item.sub-pending { opacity: 0.6; border: 2px dotted #94a3b8 !important; background: #f8fafc !important; position: relative; }
-        .period-item.sub-pending::after { content: "بانتظار الرد"; position: absolute; bottom: 5px; left: 0; right: 0; font-size: 0.65rem; color: #f59e0b; font-weight: bold; }
-
-        #sessionSelect.unmarked { border: 2px solid #ef4444 !important; }
-        .disabled-view { filter: grayscale(1); opacity: 0.7; pointer-events: none; position: relative; }
-        .disabled-view::after { 
-            content: "تم رصد الغياب ✅"; position: absolute; top: 10px; left: 50%; 
-            transform: translateX(-50%); background: #22c55e; color: white; padding: 5px 15px; 
-            border-radius: 20px; font-size: 0.8rem; z-index: 10; 
-        }
-
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        @keyframes slideInDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; scroll-behavior: smooth; }
+        body { background-color: var(--bg); color: #1e293b; line-height: 1.6; padding-bottom: 80px; } /* مسافة للشريط السفلي */
+        .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
         .hidden { display: none !important; }
-        .search-input-wrapper { position: relative; margin-bottom: 10px; }
-        .search-input-wrapper i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .search-input-wrapper input { width: 100%; padding: 12px 35px 12px 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; }
+
+        /* --- Header --- */
+        .main-header {
+            background: var(--primary-gradient); color: white; padding: 30px 20px; border-radius: var(--radius-xl);
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: var(--shadow);
+        }
+        .live-clock-box { text-align: left; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 12px; }
+        #live-clock { font-size: 1.6rem; font-weight: 900; display: block; }
+
+        /* --- Notifications Wrapper (Below Header) --- */
+        .notifications-container { margin-bottom: 25px; }
+
+        .substitution-alert {
+            background: #fff3cd; border-right: 6px solid var(--warning);
+            padding: 15px 20px; border-radius: var(--radius-lg); margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--shadow); animation: slideDown 0.5s ease-out;
+        }
+        .sub-info { display: flex; align-items: center; gap: 12px; }
+        .sub-info i { font-size: 1.5rem; color: var(--warning); animation: pulse-icon 1.5s infinite; }
         
-        .student-card { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .btn-accept { background: var(--success); color: white; border: none; padding: 8px 18px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+
+        .admin-notif-bar {
+            background: #e0f2fe; border-right: 6px solid var(--primary);
+            padding: 15px 20px; border-radius: 15px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 15px; animation: slideDown 0.5s ease;
+            box-shadow: var(--shadow);
+        }
+
+        /* --- Stats --- */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--card-bg); padding: 15px; border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; border-bottom: 4px solid var(--primary); }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: #eff6ff; color: var(--primary); }
+
+        /* --- Timetable --- */
+        .banner-container { background: #e2e8f0; padding: 20px 10px; border-radius: 25px; overflow: hidden; margin-bottom: 30px; }
+        .banner-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 10px; scrollbar-width: none; }
+        .banner-scroll::-webkit-scrollbar { display: none; }
+        .period-card {
+            min-width: 150px; background: white; border-radius: 18px; padding: 20px 10px;
+            text-align: center; flex-shrink: 0; border: 3px solid transparent; transition: var(--transition);
+        }
+        .period-card.active-now { border-color: var(--accent); background: #fff1f2; transform: scale(1.03); }
+        
+        /* --- Panels --- */
+        .panel { background: var(--card-bg); border-radius: var(--radius-xl); padding: 25px; box-shadow: var(--shadow); margin-bottom: 25px; }
+        .student-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 15px; }
+        .student-card { background: #f1f5f9; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
+
+        .todo-section { background: var(--card-bg); padding: 25px; border-radius: var(--radius-xl); box-shadow: var(--shadow); margin-bottom: 25px; }
+        .todo-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .todo-input { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; }
+
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; }
+        
+        /* --- Bottom Navigation --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white;
+            display: flex; justify-content: space-around; align-items: center;
+            height: 70px; box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
+            border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 1000;
+        }
+        .nav-item { color: #94a3b8; font-size: 1.5rem; padding: 10px; transition: var(--transition); text-decoration: none; }
+        .nav-item.active { color: var(--primary); transform: translateY(-5px); }
+
+        /* Switch */
+        .switch { position: relative; width: 45px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 34px; transition: 0.4s; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: 0.4s; }
+        input:checked + .slider { background: var(--accent); }
+        input:checked + .slider:before { transform: translateX(21px); }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-icon { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-<nav class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <img src="/img/logo.png" alt="Logo" class="sidebar-logo"> <h3>لوحة المعلم</h3>
-        <button class="close-sidebar" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
-    </div>
-    <ul class="sidebar-links">
-        <li><a href="#" onclick="toggleSidebar()"><i class="fas fa-home"></i> الرئيسية</a></li>
-        <li><a href="#timetableSection" onclick="toggleSidebar()"><i class="fas fa-calendar-alt"></i> جدول الحصص</a></li>
-        <li><a href="#attendanceSection" onclick="toggleSidebar()"><i class="fas fa-user-check"></i> رصد الغياب</a></li>
-        <li><a href="#behaviorSection" onclick="toggleSidebar()"><i class="fas fa-pen-fancy"></i> ملاحظات سلوكية</a></li>
-        <li class="separator"></li>
-        <li><a href="/logout" class="logout-link"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
-    </ul>
-</nav>
-
-<div class="container">
-    <% if (typeof success !== 'undefined' && success) { %>
-        <div class="toast success-toast" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 10px; margin-bottom: 10px;">
-            <i class="fas fa-check-circle"></i> تم تنفيذ العملية بنجاح.
-        </div>
-    <% } %>
-
+<div class="container" id="home-section">
     <header class="main-header">
-        <div class="header-right">
-            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-            <div class="user-info-mini">
-                <h1>أستاذ/ <%= prof.nom %></h1>
-            </div>
+        <div>
+            <h1 style="font-size: 1.4rem; font-weight: 900;">أهلاً أ/ <%= prof.nom %></h1>
+            <p id="today-date-text" style="font-size: 0.8rem; opacity: 0.9;"></p>
         </div>
-        <div class="avatar-mini"><i class="fas fa-user-circle"></i></div>
+        <div class="live-clock-box">
+            <span id="live-clock">00:00</span>
+            <small id="current-status-text" style="font-size: 0.6rem;">جاري الفحص...</small>
+        </div>
     </header>
-    <% if (typeof pendingRequests !== 'undefined' && pendingRequests.length > 0) { %>
-<section class="sub-notification-card">
-    <div class="sub-header"><i class="fas fa-user-clock"></i> حصص احتياط جديدة بانتظار ردك</div>
-    <% pendingRequests.forEach(sub => { %>
-        <div class="sub-request-item" id="req-<%= sub.id %>">
-            <div class="sub-details">
-                <b>الحصة <%= sub.periode %></b> | القسم: <b><%= sub.classe %>-<%= sub.section %></b>
-                <br><small>المعلم الغائب: <%= sub.absent_name %></small>
-            </div>
-            <div class="sub-actions">
-                <form action="/teacher/substitute/respond" method="POST" style="display:inline;">
-                    <input type="hidden" name="sub_id" value="<%= sub.id %>">
-                    <input type="hidden" name="action" value="accept">
-                    <button type="submit" class="btn-sub-accept">قبول</button>
-                </form>
-                <button type="button" class="btn-sub-reject" onclick="showRejectReason('<%= sub.id %>')">رفض</button>
-            </div>
-        </div>
-        <div id="reject-form-<%= sub.id %>" class="reject-form-overlay" style="display:none;">
-            <form action="/teacher/substitute/respond" method="POST">
-                <input type="hidden" name="sub_id" value="<%= sub.id %>">
-                <input type="hidden" name="action" value="reject">
-                <input type="text" name="reason" placeholder="سبب الرفض (إلزامي)..." required>
-                <div style="display:flex; gap:10px;">
-                    <button type="submit" class="btn-sub-reject" style="width:100%">تأكيد الرفض</button>
-                    <button type="button" onclick="hideRejectReason('<%= sub.id %>')" class="btn-cancel">إلغاء</button>
-                </div>
-            </form>
-        </div>
-    <% }) %>
-</section>
-<% } %>
 
-    <% 
-        let pendingSubs = sessions.filter(s => s.isSubstitute && s.status === 'pending');
-        if (pendingSubs.length > 0) { 
-    %>
-    <section class="sub-notification-card">
-        <div class="sub-header"><i class="fas fa-user-clock"></i> حصص احتياط جديدة بانتظار ردك</div>
-        <% pendingSubs.forEach(sub => { %>
-            <div class="sub-request-item" id="req-<%= sub.id %>">
-                <div class="sub-details">
-                    <b>الحصة <%= sub.periode %></b> | القسم: <b><%= sub.classe %>-<%= sub.section %></b>
-                    <br><small>المعلم الغائب: <%= sub.absent_name %></small>
-                </div>
-                <div class="sub-actions">
-                    <form action="/teacher/substitute/respond" method="POST" style="display:inline;">
-                        <input type="hidden" name="sub_id" value="<%= sub.id %>">
-                        <input type="hidden" name="action" value="accept">
-                        <button type="submit" class="btn-sub-accept">قبول</button>
-                    </form>
-                    <button type="button" class="btn-sub-reject" onclick="showRejectReason('<%= sub.id %>')">رفض</button>
-                </div>
-            </div>
-            
-            <div id="reject-form-<%= sub.id %>" class="reject-form-overlay">
-                <form action="/teacher/substitute/respond" method="POST">
-                    <input type="hidden" name="sub_id" value="<%= sub.id %>">
-                    <input type="hidden" name="action" value="reject">
-                    <input type="text" name="reason" placeholder="سبب الرفض (إلزامي)..." required>
-                    <div style="display:flex; gap:10px;">
-                        <button type="submit" class="btn-sub-reject" style="width:100%">تأكيد الرفض وإرسال</button>
-                        <button type="button" onclick="hideRejectReason('<%= sub.id %>')" style="background:#94a3b8; color:white; border:none; padding:8px; border-radius:8px;">إلغاء</button>
+    <div class="notifications-container">
+        <% if (typeof pendingRequests !== 'undefined' && pendingRequests.length > 0) { %>
+            <div id="sub-requests-container">
+                <% pendingRequests.forEach(sub => { %>
+                    <div class="substitution-alert">
+                        <div class="sub-info">
+                            <i class="fas fa-clock-rotate-left"></i>
+                            <div>
+                                <strong style="font-size: 0.9rem;">حصة احتياط: <%= sub.periode %></strong>
+                                <p style="font-size: 0.8rem;"><%= sub.classe %>-<%= sub.section %> (بديل <%= sub.absent_name %>)</p>
+                            </div>
+                        </div>
+                        <form action="/teacher/substitute/respond" method="POST">
+                            <input type="hidden" name="sub_id" value="<%= sub.id %>">
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn-accept">قبول</button>
+                        </form>
                     </div>
-                </form>
+                <% }) %>
             </div>
-        <% }) %>
-    </section>
-    <% } %>
+        <% } %>
 
-    <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
-    <section class="announcements-container" id="annContainer">
-        <div class="ann-header"><i class="fas fa-bullhorn"></i> إعلانات الإدارة</div>
-        <div class="ann-list" id="annList">
-            <% announcements.forEach((ann, index) => { %>
-                <div class="ann-item" id="ann-item-<%= index %>" data-ann-id="<%= ann.id %>">
-                    <div class="ann-content-wrapper">
-                        <strong><%= ann.title %></strong>: <%= ann.content %>
-                        <br><small><%= ann.date %></small>
+        <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
+            <div id="admin-announcements-container">
+                <% announcements.forEach(ann => { %>
+                    <div class="admin-notif-bar" id="ann-box-<%= ann.id %>">
+                        <i class="fas fa-bullhorn" style="color: var(--primary);"></i>
+                        <div style="flex:1; font-size: 0.85rem;">
+                            <strong>إشعار إداري:</strong> <%= ann.content %>
+                        </div>
+                        <button onclick="dismissAnnouncement('<%= ann.id %>')" style="background:none; border:none; cursor:pointer; color:var(--accent); padding:5px;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
                     </div>
-                    <button class="btn-ann-ok" onclick="dismissAnnouncement('<%= index %>')">فهمت</button>
-                </div>
-            <% }) %>
-        </div>
-    </section>
-    <% } %>
+                <% }) %>
+            </div>
+        <% } %>
+    </div>
 
-    <section class="section no-padding" id="timetableSection">
-        <div class="top-info-bar">
-            <div class="live-clock" id="current-clock">00:00:00</div>
-            <div class="live-date" id="current-date">جاري التحميل...</div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+            <div><h3 id="todo-count" style="font-size: 1.2rem;">0</h3><p style="font-size: 0.7rem;">مهام</p></div>
         </div>
-        <div class="section-header pd-20">
-            <i class="fas fa-calendar-day"></i> <h2>جدول الحصص اليومي</h2>
+        <div class="stat-card">
+            <div class="stat-icon" style="color: var(--success);"><i class="fas fa-check-double"></i></div>
+            <div>
+                <h3 id="marked-sessions" style="font-size: 1.2rem;"><%= sessions.filter(s => s.is_marked).length %></h3>
+                <p style="font-size: 0.7rem;">رصد مكتمل</p>
+            </div>
         </div>
-        <div class="timetable-scroll-wrapper">
-            <div class="horiz-scroll-container">
+    </div>
+
+    <div id="schedule-section">
+        <h3 style="margin-bottom: 12px; color: var(--primary); font-size: 1.1rem;"><i class="fas fa-calendar-day"></i> الجدول اليومي</h3>
+        <div class="banner-container">
+            <div class="banner-scroll" id="banner-scroll">
                 <% for(let i=1; i<=8; i++) { 
-                    let pTime = periods.find(p => p.id === i);
-                    let session = sessions.find(s => s.periode === i);
-                    let isSub = session && session.isSubstitute;
-                    let isMarked = session && session.is_marked;
-                    let isPending = session && session.status === 'pending';
-                    let isAccepted = session && session.status === 'accepted';
+                    let p = periods.find(x => x.id === i);
+                    let s = sessions.find(x => x.periode === i);
                 %>
-                    <div class="period-item 
-                        <%= session ? (isSub ? 'is-substitute' : 'has-class') : '' %> 
-                        <%= isMarked ? 'marked-done' : '' %>
-                        <%= isPending ? 'sub-pending' : '' %>" 
-                         id="period-<%= i %>" 
-                         data-start="<%= pTime ? pTime.start_time : '' %>"
-                         data-end="<%= pTime ? pTime.end_time : '' %>">
-                        <span class="p-num">الحصة <%= i %></span>
-                        <span class="p-time"><%= pTime ? pTime.start_time : '--:--' %></span>
-                        <div class="p-content">
-                            <% if(session) { %>
-                                <span class="p-class"><%= session.classe %> / <%= session.section %></span>
-                                <% if(isMarked) { %>
-                                    <span class="marked-badge"><i class="fas fa-check-circle"></i> تم الرصد</span>
-                                <% } else { %>
-                                    <span class="p-subject"><%= isSub ? '(إحتياط)' : session.matiere %></span>
-                                <% } %>
+                    <div class="period-card" id="period-<%= i %>">
+                        <span style="font-size: 0.7rem; font-weight: bold; color: #64748b;">الحصة <%= i %></span>
+                        <div style="font-size: 1.1rem; font-weight: 900; color: var(--primary); margin: 8px 0;">
+                            <% if (s) { %>
+                                <%= s.classe %>-<%= s.section %>
+                                <% if(s.isSubstitute) { %><br><small style="color:var(--accent); font-size:0.6rem;">(إحتياط)</small><% } %>
                             <% } else { %>
-                                <span class="p-free">فراغ</span>
+                                فراغ
                             <% } %>
                         </div>
+                        <span style="font-size: 0.7rem; color: #94a3b8;"><i class="far fa-clock"></i> <%= p ? p.start_time : '--:--' %></span>
                     </div>
                 <% } %>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section class="section main-section" id="attendanceSection">
-        <div class="section-header"><i class="fas fa-user-check"></i> <h2>رصد غياب الطلاب</h2></div>
-        <form action="/teacher/absences/mark" method="POST" id="attendanceForm">
+    <div class="panel" id="attendance-section">
+        <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 1.1rem;"><i class="fas fa-user-check"></i> رصد الغياب اليومي</h3>
+        <div id="no-session-msg" class="hidden" style="text-align: center; color: #94a3b8; padding: 30px;">
+            <i class="fas fa-hourglass-start" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.3;"></i>
+            <p>لا توجد حصة نشطة حالياً</p>
+        </div>
+
+        <div id="attendance-active" class="hidden">
+            <div style="background: #eff6ff; padding: 12px; border-radius: 10px; border-right: 4px solid var(--primary); margin-bottom: 15px; font-size: 0.9rem;">
+                <strong>فصل: </strong> <span id="active-class-title">--</span>
+            </div>
+            <form action="/teacher/absences/mark" method="POST">
+                <input type="hidden" name="teacher_id" value="<%= prof.id %>">
+                <input type="hidden" name="date" id="input-date">
+                <input type="hidden" name="periode" id="input-p">
+                <div class="student-grid" id="student-grid-container"></div>
+                <button type="submit" class="btn-submit">تأكيد وحفظ الغياب</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="tasks-section" class="todo-section">
+        <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 1.1rem;"><i class="fas fa-list-check"></i> قائمة المهام الشخصية</h3>
+        <div class="todo-input-group">
+            <input type="text" id="todo-input" class="todo-input" placeholder="مهمة جديدة...">
+            <button onclick="addTodo()" style="background:var(--primary); color:white; border:none; padding:10px 15px; border-radius:12px; cursor:pointer;">إضافة</button>
+        </div>
+        <ul id="todo-list" style="list-style: none;"></ul>
+    </div>
+
+    <div id="behavior-section" class="panel">
+        <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 1.1rem;"><i class="fas fa-user-shield"></i> تسجيل ملاحظة سلوكية</h3>
+        <form action="/teacher/behavior/add" method="POST">
             <input type="hidden" name="teacher_id" value="<%= prof.id %>">
-            <input type="hidden" name="date" value="<%= today %>">
-            
-            <div class="selection-box">
-                <select name="periode" id="sessionSelect" required onchange="handleSessionChange()">
-                    <option value="" disabled selected>-- اختر الحصة لرؤية الطلاب --</option>
-                    <% 
-                        // تصفية الحصص: نظهر فقط الحصص العادية أو الاحتياط المقبول (Accepted)
-                        sessions.filter(s => !s.isSubstitute || s.status === 'accepted')
-                        .sort((a,b)=>a.periode-b.periode).forEach(s => { 
-                            let pTime = periods.find(p => p.id === s.periode);
-                    %>
-                        <option value="<%= s.periode %>" 
-                                data-class-full="<%= s.classe %>-<%= s.section %>"
-                                data-marked="<%= s.is_marked || false %>"
-                                data-start="<%= pTime ? pTime.start_time : '' %>"
-                                data-end="<%= pTime ? pTime.end_time : '' %>">
-                            الحصة <%= s.periode %>: <%= s.classe %>/<%= s.section %> <%= s.is_marked ? '(تم الرصد ✅)' : '' %>
-                        </option>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <select name="student_id" required style="padding: 15px; border-radius: 12px; border: 1px solid #ddd; font-family: 'Cairo'; -webkit-appearance: none;">
+                    <option value="">اختر الطالب...</option>
+                    <% students.forEach(st => { %>
+                        <option value="<%= st.id %>"><%= st.nom %> (<%= st.classe %>-<%= st.section %>)</option>
                     <% }) %>
                 </select>
-            </div>
-
-            <div id="attendanceSearchWrapper" class="search-input-wrapper hidden">
-                <i class="fas fa-search"></i>
-                <input type="text" id="attendanceSearch" placeholder="بحث عن طالب...">
-            </div>
-
-            <div id="tableContainer" class="table-container hidden">
-                <div class="student-list-mobile" id="attendanceStudentList">
-                    <% students.forEach(s => { %>
-                        <div class="student-card student-row" data-class-id="<%= s.classe %>-<%= s.section %>" style="display: none;">
-                            <span class="student-name"><%= s.nom %></span>
-                            <label class="switch">
-                                <input type="checkbox" name="student_ids[]" value="<%= s.id %>">
-                                <span class="slider-toggle"></span> (غائب)
-                            </label>
-                        </div>
-                    <% }) %>
-                </div>
-                <button type="submit" id="submitBtn" class="btn-submit-full" style="width: 100%; padding: 15px; background: #1a237e; color: white; border: none; border-radius: 10px; margin-top: 15px;">إرسال الغياب</button>
+                <textarea name="event_text" placeholder="اكتب تفاصيل الملاحظة..." required style="padding: 15px; border-radius: 12px; border: 1px solid #ddd; height: 100px; font-family: 'Cairo';"></textarea>
+                <button type="submit" class="btn-submit">إرسال للمدير</button>
             </div>
         </form>
-    </section>
-
-    <section class="section behavior-section" id="behaviorSection">
-        <div class="section-header"><i class="fas fa-pen-nib"></i> <h2>ملاحظة سلوكية</h2></div>
-        <div class="search-input-wrapper">
-            <i class="fas fa-search"></i>
-            <input type="text" id="behaviorSearch" placeholder="ابحث عن الطالب...">
-        </div>
-        <form action="/teacher/behavior/add" method="POST" class="quick-form">
-            <input type="hidden" name="teacher_id" value="<%= prof.id %>">
-            <select name="student_id" id="behaviorStudentSelect" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
-                <option value="">اختر الطالب...</option>
-                <% students.forEach(s => { %>
-                    <option value="<%= s.id %>">
-                        <%= s.nom %> (<%= s.classe %>/<%= s.section %>)
-                    </option>
-                <% }) %>
-            </select>
-            <textarea name="event_text" placeholder="اكتب الملاحظة هنا..." required style="width: 100%; height: 80px; padding: 10px;"></textarea>
-            <button type="submit" class="btn-save-full" style="width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px;">حفظ الملاحظة</button>
-        </form>
-    </section>
+    </div>
 </div>
 
+<nav class="bottom-nav">
+    <a href="#home-section" class="nav-item active"><i class="fas fa-home"></i></a>
+    <a href="#schedule-section" class="nav-item"><i class="fas fa-calendar-alt"></i></a>
+    <a href="#attendance-section" class="nav-item"><i class="fas fa-user-check"></i></a>
+    <a href="#tasks-section" class="nav-item"><i class="fas fa-tasks"></i></a>
+    <a href="#behavior-section" class="nav-item"><i class="fas fa-exclamation-triangle"></i></a>
+</nav>
+
 <script>
-    const CURRENT_PROF_ID = "<%= prof.id %>";
+    const SESSIONS = <%- JSON.stringify(sessions) %>;
+    const PERIODS = <%- JSON.stringify(periods) %>;
+    const STUDENTS = <%- JSON.stringify(students) %>;
 
-    // وظائف الاحتياط الجديدة
-    function showRejectReason(id) {
-        document.getElementById('reject-form-' + id).style.display = 'block';
-    }
-    function hideRejectReason(id) {
-        document.getElementById('reject-form-' + id).style.display = 'none';
-    }
-
-    function dismissAnnouncement(index) {
-        const annItem = document.getElementById('ann-item-' + index);
-        if (!annItem) return;
-        const annId = annItem.getAttribute('data-ann-id');
-        annItem.classList.add('ann-fade-out');
-        const storageKey = `read_ann_${annId}_prof_${CURRENT_PROF_ID}`;
-        localStorage.setItem(storageKey, 'true');
-        setTimeout(() => {
-            annItem.remove();
-            checkEmptyAnnouncements();
-        }, 500);
-    }
-
-    function checkReadAnnouncements() {
-        document.querySelectorAll('.ann-item').forEach(item => {
-            const annId = item.getAttribute('data-ann-id');
-            const storageKey = `read_ann_${annId}_prof_${CURRENT_PROF_ID}`;
-            if (localStorage.getItem(storageKey) === 'true') { item.remove(); }
-        });
-        checkEmptyAnnouncements();
-    }
-
-    function checkEmptyAnnouncements() {
-        const remainingItems = document.querySelectorAll('.ann-item');
-        const container = document.getElementById('annContainer');
-        if (remainingItems.length === 0 && container) { container.style.display = 'none'; }
-    }
-
-    function updateClock() {
+    // --- الوظائف الأساسية ---
+    function updateApp() {
         const now = new Date();
-        const clockEl = document.getElementById('current-clock');
-        const dateEl = document.getElementById('current-date');
-        if (clockEl) clockEl.textContent = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-        if (dateEl) dateEl.textContent = now.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
+        const mins = now.getHours() * 60 + now.getMinutes();
         
-        const currentMins = now.getHours() * 60 + now.getMinutes();
-        document.querySelectorAll('.period-item').forEach(item => {
-            const start = item.getAttribute('data-start');
-            const end = item.getAttribute('data-end');
-            if (!start || !end) return;
-            const [hS, mS] = start.split(':').map(Number);
-            const [hE, mE] = end.split(':').map(Number);
-            if (currentMins >= (hS*60+mS) && currentMins <= (hE*60+mE)) { item.classList.add('starting-soon'); } 
-            else { item.classList.remove('starting-soon'); }
+        document.getElementById('live-clock').textContent = now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit', hour12:false});
+        document.getElementById('today-date-text').textContent = now.toLocaleDateString('ar-EG', {weekday:'long', day:'numeric', month:'short'});
+        document.getElementById('input-date').value = now.toISOString().split('T')[0];
+
+        let activeP = null;
+        PERIODS.forEach(p => {
+            const card = document.getElementById(`period-${p.id}`);
+            const [hS, mS] = p.start_time.split(':').map(Number);
+            const [hE, mE] = p.end_time.split(':').map(Number);
+            const start = hS * 60 + mS;
+            const end = hE * 60 + mE;
+
+            if (mins >= start && mins <= end) {
+                card.classList.add('active-now');
+                activeP = p;
+            } else {
+                card.classList.remove('active-now');
+            }
         });
+        manageAttendanceUI(activeP);
     }
 
-    function handleSessionChange() {
-        const select = document.getElementById('sessionSelect');
-        const selected = select.selectedOptions[0];
-        if (!selected) return;
-        const targetClass = selected.getAttribute('data-class-full');
-        const isMarked = selected.getAttribute('data-marked') === 'true';
-        
-        document.querySelectorAll('.student-card').forEach(card => {
-            card.style.display = (card.getAttribute('data-class-id') === targetClass) ? 'flex' : 'none';
-        });
+    function manageAttendanceUI(p) {
+        const noMsg = document.getElementById('no-session-msg');
+        const activeArea = document.getElementById('attendance-active');
+        const statusText = document.getElementById('current-status-text');
 
-        document.getElementById('tableContainer').classList.remove('hidden');
-        document.getElementById('attendanceSearchWrapper').classList.remove('hidden');
-        
-        const submitBtn = document.getElementById('submitBtn');
-        if (isMarked) {
-            document.getElementById('tableContainer').classList.add('disabled-view');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "تم رصد الغياب لهذه الحصة ✅";
+        if (!p) {
+            noMsg.classList.remove('hidden'); activeArea.classList.add('hidden');
+            statusText.textContent = "خارج وقت العمل"; return;
+        }
+
+        const session = SESSIONS.find(s => s.periode === p.id);
+        if (!session || session.is_marked) {
+            noMsg.classList.remove('hidden'); activeArea.classList.add('hidden');
+            statusText.textContent = session ? "تم الرصد" : "استراحة";
         } else {
-            document.getElementById('tableContainer').classList.remove('disabled-view');
-            submitBtn.disabled = false;
-            submitBtn.innerText = "إرسال كشف الغياب";
+            noMsg.classList.add('hidden'); activeArea.classList.remove('hidden');
+            statusText.textContent = `حصة ${p.id} جارية`;
+            document.getElementById('active-class-title').textContent = `${session.classe}-${session.section}`;
+            document.getElementById('input-p').value = p.id;
+            renderStudents(session.classe, session.section);
         }
     }
 
-   document.addEventListener('DOMContentLoaded', () => {
-        checkReadAnnouncements();
-        updateClock();
-        setInterval(updateClock, 1000);
+    function renderStudents(classe, section) {
+        const container = document.getElementById('student-grid-container');
+        container.innerHTML = "";
+        const list = STUDENTS.filter(s => s.classe == classe && s.section == section);
+        list.forEach(st => {
+            container.innerHTML += `
+                <div class="student-card">
+                    <span style="font-size: 0.9rem;">${st.nom}</span>
+                    <label class="switch">
+                        <input type="checkbox" name="student_ids[]" value="${st.id}">
+                        <span class="slider"></span>
+                    </label>
+                </div>`;
+        });
+    }
 
-        const successToast = document.querySelector('.success-toast');
-        if (successToast) {
-            setTimeout(() => {
-                successToast.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-                successToast.style.opacity = "0";
-                successToast.style.transform = "translateY(-10px)";
-                setTimeout(() => successToast.remove(), 600);
-            }, 4000);
+    // --- إدارة المهام ---
+    let todos = JSON.parse(localStorage.getItem('teacher_todos')) || [];
+    function saveTodos() { localStorage.setItem('teacher_todos', JSON.stringify(todos)); displayTodos(); }
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        if (!input.value.trim()) return;
+        todos.push({ id: Date.now(), text: input.value, completed: false });
+        input.value = ""; saveTodos();
+    }
+    function toggleTodo(id) { todos = todos.map(t => t.id === id ? {...t, completed: !t.completed} : t); saveTodos(); }
+    function deleteTodo(id) { todos = todos.filter(t => t.id !== id); saveTodos(); }
+    function displayTodos() {
+        const list = document.getElementById('todo-list');
+        list.innerHTML = "";
+        let count = 0;
+        todos.forEach(t => {
+            if(!t.completed) count++;
+            list.innerHTML += `
+                <li style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #eee;">
+                    <span onclick="toggleTodo(${t.id})" style="cursor:pointer; font-size: 0.9rem; ${t.completed ? 'text-decoration:line-through; opacity:0.5' : ''}">
+                        <i class="far ${t.completed ? 'fa-check-square' : 'fa-square'}"></i> ${t.text}
+                    </span>
+                    <i class="fas fa-trash" onclick="deleteTodo(${t.id})" style="color:var(--accent); cursor:pointer;"></i>
+                </li>`;
+        });
+        document.getElementById('todo-count').textContent = count;
+    }
+
+    // --- إدارة الإشعارات الإدارية (LOCAL STORAGE) ---
+    function dismissAnnouncement(id) {
+        const el = document.getElementById('ann-box-' + id);
+        if (el) el.remove();
+        let hidden = JSON.parse(localStorage.getItem('dismissed_ann') || '[]');
+        if (!hidden.includes(id)) {
+            hidden.push(id);
+            localStorage.setItem('dismissed_ann', JSON.stringify(hidden));
         }
+    }
 
-        const searchInput = document.getElementById('attendanceSearch');
-        if (searchInput) {
-            searchInput.addEventListener('keyup', function() {
-                const filter = this.value.toLowerCase();
-                const selected = document.getElementById('sessionSelect').selectedOptions[0];
-                if (!selected) return;
-                const targetClass = selected.getAttribute('data-class-full');
-                document.querySelectorAll('.student-card').forEach(card => {
-                    const name = card.querySelector('.student-name').innerText.toLowerCase();
-                    const sameClass = card.getAttribute('data-class-id') === targetClass;
-                    card.style.display = (sameClass && name.includes(filter)) ? 'flex' : 'none';
-                });
+    function applyHiddenAnnouncements() {
+        try {
+            const hidden = JSON.parse(localStorage.getItem('dismissed_ann') || '[]');
+            hidden.forEach(id => {
+                const el = document.getElementById('ann-box-' + id);
+                if (el) el.remove();
             });
-        }
+        } catch (e) {}
+    }
+
+    // --- Navigation Logic ---
+    document.querySelectorAll('.nav-item').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+        });
     });
 
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('sidebarOverlay').classList.toggle('active');
-    }
+    // --- الموقتات ---
+    setInterval(updateApp, 1000);
+    setInterval(() => { location.reload(); }, 120000); // تحديث تلقائي كل دقيقتين للفحص
+
+    window.onload = () => {
+        updateApp();
+        displayTodos();
+        applyHiddenAnnouncements();
+    };
 </script>
+
 </body>
 </html>

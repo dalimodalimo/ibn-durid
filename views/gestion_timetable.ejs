@@ -8,157 +8,126 @@
     <link rel="stylesheet" href="/css/settings_style.css">
     <link rel="stylesheet" href="/css/timetable_style.css">
     <style>
-        /* --- تحديثات الهيكلية والقائمة الجانبية --- */
         :root {
             --sidebar-width: 260px;
-            --transition-speed: 0.3s;
+            --primary-blue: #1e293b;
+            --accent-blue: #3b82f6;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+            --warning-orange: #f59e0b;
         }
 
         body {
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-            background-color: #f8fafc;
-            margin: 0;
+            display: flex; min-height: 100vh; overflow-x: hidden;
+            background-color: #f8fafc; margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* القائمة الجانبية */
+        /* Sidebar & Layout */
         .sidebar {
-            width: var(--sidebar-width);
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            right: 0;
-            position: fixed;
-            height: 100vh;
-            z-index: 1000;
-            background: #1e293b;
-            color: white;
+            width: var(--sidebar-width); transition: 0.3s; right: 0;
+            position: fixed; height: 100vh; z-index: 1000;
+            background: var(--primary-blue); color: white;
         }
-
-        /* حالة التصغير للقائمة */
-        .sidebar.collapsed {
-            right: calc(var(--sidebar-width) * -1);
-        }
-
-        /* المحتوى الرئيسي */
+        .sidebar.collapsed { right: calc(var(--sidebar-width) * -1); }
         .main-content {
-            flex: 1;
-            margin-right: var(--sidebar-width);
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            width: 100%;
-            padding: 20px;
-            padding-top: 70px; /* مساحة لزر التحكم */
+            flex: 1; margin-right: var(--sidebar-width); transition: 0.3s;
+            width: 100%; padding: 20px; padding-top: 70px;
         }
-
-        .main-content.expanded {
-            margin-right: 0;
-        }
-
-        /* زر التحكم (Toggle Button) */
+        .main-content.expanded { margin-right: 0; }
         .sidebar-toggle {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 1100;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; top: 15px; right: 15px; z-index: 1100;
+            background: var(--accent-blue); color: white; border: none;
+            width: 45px; height: 45px; border-radius: 10px; cursor: pointer;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            transition: 0.3s;
         }
 
-        .sidebar-toggle:hover {
-            background: #2563eb;
-            transform: scale(1.05);
+        /* Toast Notifications */
+        .toast-container { position: fixed; top: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: white; min-width: 320px; padding: 16px 20px; border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px;
+            border-right: 6px solid; animation: slideInLeft 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
+        .toast.success { border-right-color: var(--success-green); color: #065f46; }
+        .toast.error { border-right-color: var(--danger-red); color: #991b1b; }
+        .toast.info { border-right-color: var(--accent-blue); color: #0c4a6e; }
 
-        /* تحسين استجابة الجدول */
-        .table-responsive {
-            overflow-x: auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        /* Timetable UI Enhancements */
+        .slot-cell { position: relative; height: 80px; vertical-align: top; padding: 5px !important; }
+        .cell-info {
+            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;
+            padding: 5px; height: 100%; font-size: 0.75rem; position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
+        .subject-name { font-weight: bold; color: var(--primary-blue); display: block; }
+        .prof-name { color: #64748b; font-size: 0.7rem; }
+        .class-tag { background: var(--accent-blue); color: white; padding: 2px 5px; border-radius: 4px; width: fit-content; font-size: 0.65rem; }
+        .btn-delete-slot {
+            position: absolute; top: 2px; left: 2px; color: var(--danger-red);
+            text-decoration: none; font-size: 1.2rem; line-height: 1; opacity: 0.3; transition: 0.2s;
+        }
+        .cell-info:hover .btn-delete-slot { opacity: 1; }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                right: calc(var(--sidebar-width) * -1);
-            }
-            .sidebar.active {
-                right: 0;
-            }
-            .main-content {
-                margin-right: 0;
-            }
-        }
+        @keyframes slideInLeft { from { transform: translateX(-120%); } to { transform: translateX(0); } }
+        @media (max-width: 768px) { .sidebar { right: calc(var(--sidebar-width) * -1); } .sidebar.active { right: 0; } .main-content { margin-right: 0; } }
     </style>
 </head>
 <body>
 
-<button class="sidebar-toggle" id="toggleSidebar" title="إخفاء/إظهار القائمة">
-    <i class="fas fa-bars"></i>
-</button>
+<div class="toast-container" id="toastContainer"></div>
+
+<button class="sidebar-toggle" id="toggleSidebar"><i class="fas fa-bars"></i></button>
 
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h2><i class="fas fa-calendar-alt"></i> الجدول المدرسي</h2>
-    </div>
-
+    <div class="sidebar-header"><h2><i class="fas fa-calendar-alt"></i> الجدول المدرسي</h2></div>
     <div class="sidebar-nav">
         <div class="nav-label">الأساسيات</div>
         <a href="/admin/dashboard"><i class="fas fa-home"></i> العودة للرئيسية</a>
-        
         <div class="nav-label">العرض والتصفية</div>
         <a href="#section-filter"><i class="fas fa-search"></i> بحث وتصفية</a>
         <a href="#section-add"><i class="fas fa-plus-circle"></i> إضافة حصة</a>
-
         <div class="nav-label">البيانات</div>
         <a href="#section-table"><i class="fas fa-table"></i> عرض الجدول</a>
-        <a href="/admin/settings"><i class="fas fa-cog"></i> إعدادات الأوقات</a>
     </div>
 </div>
 
 <div class="main-content" id="main-content">
-    <header class="page-header">
-        <h1>إدارة الجدول الأسبوعي</h1>
-    </header>
+    <header class="page-header"><h1>إدارة الجدول الأسبوعي</h1></header>
 
     <div class="card" id="section-filter">
         <h3><i class="fas fa-filter"></i> تصفية عرض البيانات</h3>
         <form action="/admin/timetable" method="GET" class="filter-grid-row">
-            <div class="input-group">
-                <label>حسب المعلم:</label>
-                <select name="teacher_filter" onchange="this.form.submit()">
-                    <option value="">-- كل المعلمين --</option>
-                    <% enseignants.forEach(p => { %>
-                        <option value="<%= p.id %>" <%= teacher_filter == p.id ? 'selected' : '' %>><%= p.nom %></option>
-                    <% }) %>
-                </select>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="input-group">
+                    <label>حسب المعلم:</label>
+                    <select name="teacher_filter" onchange="this.form.submit()">
+                        <option value="">-- كل المعلمين --</option>
+                        <% enseignants.forEach(p => { %>
+                            <option value="<%= p.id %>" <%= teacher_filter == p.id ? 'selected' : '' %>><%= p.nom %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>حسب الصف:</label>
+                    <select name="class_filter" onchange="this.form.submit()">
+                        <option value="">-- كل الصفوف --</option>
+                        <% unique_classes.forEach(c => { %>
+                            <% let val = c.classe + "-" + c.section; %>
+                            <option value="<%= val %>" <%= class_filter == val ? 'selected' : '' %>>الصف <%= c.classe %> / <%= c.section %></option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
-            
-            <div class="input-group">
-                <label>حسب الصف:</label>
-                <select name="class_filter" onchange="this.form.submit()">
-                    <option value="">-- كل الصفوف --</option>
-                    <% unique_classes.forEach(c => { %>
-                        <% let val = c.classe + "-" + c.section; %>
-                        <option value="<%= val %>" <%= class_filter == val ? 'selected' : '' %>>الصف <%= c.classe %> / <%= c.section %></option>
-                    <% }) %>
-                </select>
+            <div style="margin-top: 15px;">
+                <a href="/admin/timetable" class="btn" style="background: #94a3b8; color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 0.9rem;">إعادة تعيين الفلتر</a>
             </div>
-            <a href="/admin/timetable" class="btn-reset">إعادة تعيين الفلتر</a>
         </form>
     </div>
 
-    <section class="card" id="section-add">
+    <section class="card" id="section-add" style="margin-top: 20px;">
         <h3><i class="fas fa-plus-circle"></i> إضافة حصة جديدة</h3>
-        <form action="/admin/timetable/ajouter" method="POST" class="form-grid-layout">
+        <form action="/admin/timetable/ajouter" method="POST" class="form-grid-layout" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end;">
             <div class="input-group">
                 <label>المعلم</label>
                 <select name="enseignant_id" id="teacher_select" required onchange="filterClasses()">
@@ -166,14 +135,12 @@
                     <% enseignants.forEach(p => { %> <option value="<%= p.id %>"><%= p.nom %></option> <% }) %>
                 </select>
             </div>
-
             <div class="input-group">
                 <label>الصف المسند</label>
                 <select name="class_info" id="class_select" required disabled>
                     <option value="">حدد المعلم أولاً</option>
                 </select>
             </div>
-
             <div class="input-group">
                 <label>اليوم</label>
                 <select name="jour" required>
@@ -184,23 +151,24 @@
                     <option value="الخميس">الخميس</option>
                 </select>
             </div>
-
             <div class="input-group">
                 <label>الحصة</label>
                 <select name="periode" required>
                     <% for(let i=1; i<=8; i++) { %> <option value="<%= i %>">الحصة <%= i %></option> <% } %>
                 </select>
             </div>
-
-            <button type="submit" class="btn-save-action"><i class="fas fa-save"></i> حفظ الحصة</button>
+            <button type="submit" class="btn-save-action" style="background: var(--success-green); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-save"></i> حفظ الحصة
+            </button>
         </form>
     </section>
 
-    <div class="card" id="section-table">
+    <div class="card" id="section-table" style="margin-top: 20px;">
         <h2 class="table-title">
             <i class="fas fa-th"></i>
-            <% if(teacher_filter) { %> 
-                جدول المعلم: <%= enseignants.find(e => e.id == teacher_filter).nom %> 
+            <% if(teacher_filter) { 
+                let t = enseignants.find(e => e.id == teacher_filter); %>
+                جدول المعلم: <%= t ? t.nom : '' %> 
             <% } else if(class_filter) { %> 
                 جدول الصف: <%= class_filter.replace('-',' / ') %> 
             <% } else { %> 
@@ -209,20 +177,20 @@
         </h2>
         
         <div class="table-responsive">
-            <table class="timetable">
+            <table class="timetable" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                 <thead>
-                    <tr>
-                        <th>اليوم</th>
-                        <% for(let i=1; i<=8; i++) { %> <th>ح<%= i %></th> <% } %>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 12px; border: 1px solid #e2e8f0;">اليوم</th>
+                        <% for(let i=1; i<=8; i++) { %> <th style="padding: 12px; border: 1px solid #e2e8f0;">ح<%= i %></th> <% } %>
                     </tr>
                 </thead>
                 <tbody>
                     <% const jours = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس']; %>
                     <% jours.forEach(j => { %>
                         <tr>
-                            <td class="day-header"><%= j %></td>
+                            <td class="day-header" style="background: #f8fafc; font-weight: bold; text-align: center; border: 1px solid #e2e8f0;"><%= j %></td>
                             <% for(let p=1; p<=8; p++) { %>
-                                <td class="slot-cell">
+                                <td class="slot-cell" style="border: 1px solid #e2e8f0;">
                                     <% let cell = schedule.find(s => s.jour === j && s.periode === p); %>
                                     <% if(cell) { %>
                                         <div class="cell-info">
@@ -243,33 +211,43 @@
 </div>
 
 <script>
-    // 1. نظام التحكم في القائمة الجانبية
+    // --- Toast Notification System ---
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+        
+        toast.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-20px)';
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }
+
+    // Handle URL Response Messages
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) showToast("تم تحديث الجدول بنجاح");
+    if (urlParams.has('error')) {
+        const err = urlParams.get('error');
+        if(err === 'teacher_busy') showToast("خطأ: المعلم مشغول في هذا الوقت بحصة أخرى", "error");
+        else if(err === 'class_busy') showToast("خطأ: هذا الفصل لديه حصة أخرى في نفس الوقت", "error");
+        else showToast("حدث خطأ أثناء حفظ البيانات", "error");
+    }
+
+    // --- Sidebar Toggle ---
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.getElementById('main-content');
 
     toggleBtn.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-            sidebar.classList.toggle('active');
-        } else {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
-        
-        // تغيير شكل الأيقونة
-        const icon = toggleBtn.querySelector('i');
-        icon.classList.toggle('fa-bars');
-        icon.classList.toggle('fa-times');
+        if (window.innerWidth <= 768) sidebar.classList.toggle('active');
+        else { sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('expanded'); }
     });
 
-    // إغلاق القائمة عند النقر خارجها في الجوال
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-            sidebar.classList.remove('active');
-        }
-    });
-
-    // 2. منطق اختيار الصفوف بناءً على المعلم (كودك الأصلي)
+    // --- Dynamic Class Selection based on Teacher ---
     const allAffectations = <%- JSON.stringify(all_affectations) %>;
     function filterClasses() {
         const teacherId = document.getElementById('teacher_select').value;
@@ -281,12 +259,12 @@
             filtered.forEach(a => {
                 let opt = document.createElement('option');
                 opt.value = a.classe + "|" + a.section;
-                opt.text = "صف " + a.classe + " / شعبة " + a.section;
+                opt.text = `صف ${a.classe} / شعبة ${a.section}`;
                 classSelect.add(opt);
             });
         } else {
             classSelect.disabled = true;
-            classSelect.innerHTML = '<option value="">لا توجد صفوف مسندة</option>';
+            classSelect.innerHTML = '<option value="">لا توجد صفوف مسندة لهذا المعلم</option>';
         }
     }
 </script>

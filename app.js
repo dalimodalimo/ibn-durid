@@ -139,14 +139,15 @@ async function initializeDatabase() {
             );
         `);
 
-       const columnsToAdd = [
+      const columnsToAdd = [
+    { table: 'eleves', col: 'parent_phone', type: 'TEXT' }, // السطر الناقص الذي يسبب الخطأ
     { table: 'substitute_logs', col: 'absent_id', type: 'INTEGER' },
     { table: 'substitute_logs', col: 'substitute_id', type: 'INTEGER' },
     { table: 'substitute_logs', col: 'periode', type: 'INTEGER' },
     { table: 'substitute_logs', col: 'classe', type: 'TEXT' },
     { table: 'substitute_logs', col: 'section', type: 'TEXT' },
-    { table: 'substitute_logs', col: 'status', type: "TEXT DEFAULT 'pending'" }, // جديد: حالة الطلب
-    { table: 'substitute_logs', col: 'reject_reason', type: "TEXT" },           // جديد: سبب الرفض
+    { table: 'substitute_logs', col: 'status', type: "TEXT DEFAULT 'pending'" },
+    { table: 'substitute_logs', col: 'reject_reason', type: "TEXT" },
     { table: 'enseignants', col: 'last_login', type: 'TEXT' },
     { table: 'absences', col: 'status', type: "TEXT DEFAULT 'pending'" }
 ];
@@ -250,23 +251,68 @@ initializeDatabase().then(() => {
             res.status(500).send("خطأ أثناء إضافة معلم جديد");
         }
     });
+    // مسار تحديث بيانات المعلم
+app.post('/admin/enseignants/modifier', async (req, res) => {
+    try {
+        const { id, nom, matiere, phone_number } = req.body;
+        
+        await db.run(
+            "UPDATE enseignants SET nom = ?, matiere = ?, phone_number = ? WHERE id = ?", 
+            [nom, matiere, phone_number, id]
+        );
+        
+        res.redirect('/admin/enseignants?success=updated');
+    } catch (e) {
+        console.error("Update Error:", e);
+        res.status(500).send("خطأ في تحديث البيانات");
+    }
+});
 
     app.post('/admin/enseignants/affecter-multiple', async (req, res) => {
-        const { enseignant_id, classes_data } = req.body;
-        try {
-            const selectedClasses = JSON.parse(classes_data);
-            for (const item of selectedClasses) {
-                const [classe, section] = item.split('|');
-                const exists = await db.get("SELECT id FROM affectations WHERE enseignant_id = ? AND classe = ? AND section = ?", [enseignant_id, classe, section]);
-                if (!exists) {
-                    await db.run("INSERT INTO affectations (enseignant_id, classe, section) VALUES (?, ?, ?)", [enseignant_id, classe, section]);
-                }
-            }
-            res.redirect('/admin/enseignants');
-        } catch (e) {
-            res.status(500).send("خطأ في تعيين الأقسام");
+    const { enseignant_id, classes_data } = req.body;
+    try {
+        const selectedClasses = JSON.parse(classes_data);
+        
+        // 1. جلب مادة المعلم الحالي أولاً
+        const currentTeacher = await db.get("SELECT nom, matiere FROM enseignants WHERE id = ?", [enseignant_id]);
+        
+        if (!currentTeacher) {
+            return res.status(404).send("المعلم غير موجود");
         }
-    });
+
+        for (const item of selectedClasses) {
+            const [classe, section] = item.split('|');
+
+            // 2. التحقق: هل يوجد معلم آخر يدرس "نفس المادة" لهذا "الفصل والشعبة"؟
+            const conflict = await db.get(`
+                SELECT e.nom 
+                FROM affectations a 
+                JOIN enseignants e ON a.enseignant_id = e.id 
+                WHERE a.classe = ? AND a.section = ? AND e.matiere = ?
+            `, [classe, section, currentTeacher.matiere]);
+
+            if (conflict) {
+                // إذا وجدنا مدرساً آخر لنفس المادة، نرسل تنبيهاً ونوقف العملية
+                return res.send(`
+                    <script>
+                        alert("خطأ: الفصل ${classe} (${section}) مسند بالفعل لمدرس مادة ${currentTeacher.matiere} آخر وهو: ${conflict.nom}");
+                        window.location.href = "/admin/enseignants";
+                    </script>
+                `);
+            }
+
+            // 3. إذا لم يوجد تعارض، نتحقق من عدم التكرار لنفس المدرس (كما في كودك القديم) ثم نضيف
+            const exists = await db.get("SELECT id FROM affectations WHERE enseignant_id = ? AND classe = ? AND section = ?", [enseignant_id, classe, section]);
+            if (!exists) {
+                await db.run("INSERT INTO affectations (enseignant_id, classe, section) VALUES (?, ?, ?)", [enseignant_id, classe, section]);
+            }
+        }
+        res.redirect('/admin/enseignants');
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ في تعيين الأقسام");
+    }
+});
 
     app.get('/admin/enseignants/supprimer/:id', async (req, res) => {
         try {
@@ -314,21 +360,29 @@ initializeDatabase().then(() => {
     });
 
     app.post('/admin/timetable/ajouter', async (req, res) => {
-        try {
-            const { enseignant_id, class_info, jour, periode } = req.body;
-            const [classe, section] = class_info.split('|');
-            const prof = await db.get("SELECT matiere FROM enseignants WHERE id = ?", [enseignant_id]);
-            
-            const conflict = await db.get("SELECT id FROM timetable WHERE enseignant_id = ? AND jour = ? AND periode = ?", [enseignant_id, jour, periode]);
-            if (conflict) return res.status(400).send("هذا المعلم لديه حصة بالفعل في هذا الوقت");
+    try {
+        const { enseignant_id, class_info, jour, periode } = req.body;
+        const [classe, section] = class_info.split('|');
+        const prof = await db.get("SELECT matiere FROM enseignants WHERE id = ?", [enseignant_id]);
 
-            await db.run("INSERT INTO timetable (enseignant_id, classe, section, jour, periode, matiere) VALUES (?, ?, ?, ?, ?, ?)",
-                [enseignant_id, classe, section, jour, periode, prof.matiere]);
-            res.redirect('/admin/timetable');
-        } catch (e) {
-            res.status(500).send("خطأ في إضافة حصة");
-        }
-    });
+        // 1. التحقق: هل المعلم مشغول في هذا الوقت؟
+        const teacherConflict = await db.get("SELECT id FROM timetable WHERE enseignant_id = ? AND jour = ? AND periode = ?", [enseignant_id, jour, periode]);
+        if (teacherConflict) return res.redirect('/admin/timetable?error=teacher_busy');
+
+        // 2. التحقق: هل الفصل مشغول في هذا الوقت؟
+        const classConflict = await db.get("SELECT id FROM timetable WHERE classe = ? AND section = ? AND jour = ? AND periode = ?", [classe, section, jour, periode]);
+        if (classConflict) return res.redirect('/admin/timetable?error=class_busy');
+
+        // 3. الإضافة إذا لم يوجد تعارض
+        await db.run("INSERT INTO timetable (enseignant_id, classe, section, jour, periode, matiere) VALUES (?, ?, ?, ?, ?, ?)",
+            [enseignant_id, classe, section, jour, periode, prof.matiere]);
+            
+        res.redirect('/admin/timetable?success=added');
+    } catch (e) {
+        console.error(e);
+        res.redirect('/admin/timetable?error=server');
+    }
+});
 
     // --- [ 6. إدارة غياب المعلمين والاحتياط ] ---
 
@@ -489,17 +543,41 @@ await db.run(`INSERT INTO substitute_logs (substitute_id, absent_id, date, perio
         }
     });
 
-    app.post('/admin/eleves/ajouter', async (req, res) => {
-        try {
-            const { nom, class_info, parent_phone } = req.body;
-            const [classe, section] = class_info.split('|');
-            await db.run("INSERT INTO eleves (nom, classe, section, parent_phone) VALUES (?, ?, ?, ?)", 
-                [nom, classe, section, parent_phone]);
-            res.redirect('/admin/eleves');
-        } catch (e) {
-            res.status(500).send("خطأ في حفظ الطالب");
-        }
-    });
+    // 1. إضافة طالب مع رقم هاتف ولي الأمر
+app.post('/admin/eleves/ajouter', async (req, res) => {
+    try {
+        const { nom, class_info, parent_phone } = req.body;
+        const [classe, section] = class_info.split('|');
+        await db.run("INSERT INTO eleves (nom, classe, section, parent_phone) VALUES (?, ?, ?, ?)", 
+            [nom, classe, section, parent_phone]);
+        res.redirect('/admin/eleves?success=added');
+    } catch (e) {
+        res.redirect('/admin/eleves?error=add_failed');
+    }
+});
+
+// 2. حذف طالب
+app.get('/admin/eleves/supprimer/:id', async (req, res) => {
+    try {
+        await db.run("DELETE FROM eleves WHERE id = ?", [req.params.id]);
+        res.redirect('/admin/eleves?success=deleted');
+    } catch (e) {
+        res.redirect('/admin/eleves?error=delete_failed');
+    }
+});
+
+// 3. تعديل بيانات طالب (جديد)
+app.post('/admin/eleves/modifier', async (req, res) => {
+    try {
+        const { id, nom, class_info, parent_phone } = req.body;
+        const [classe, section] = class_info.split('|');
+        await db.run("UPDATE eleves SET nom = ?, classe = ?, section = ?, parent_phone = ? WHERE id = ?", 
+            [nom, classe, section, parent_phone, id]);
+        res.redirect('/admin/eleves?success=updated');
+    } catch (e) {
+        res.redirect('/admin/eleves?error=update_failed');
+    }
+});
 
     // --- [ 8. التقارير الإدارية ] ---
 
@@ -646,21 +724,24 @@ let todayName = days[now.getDay()];
         `, [todayDate, teacher_id, todayName]) || [];
 
         // 3. جلب حصص الاحتياط
-        const substitutions = await db.all(`
-            SELECT sl.*, e_abs.nom as absent_name,
-            (SELECT COUNT(*) FROM student_absences 
-             WHERE date = sl.date AND periode = sl.periode 
-             AND EXISTS (
-                 SELECT 1 FROM eleves e 
-                 WHERE e.id = student_absences.eleve_id 
-                 AND e.classe = sl.classe 
-                 AND e.section = sl.section
-             )
-            ) > 0 as is_marked
-            FROM substitute_logs sl 
-            JOIN enseignants e_abs ON sl.absent_id = e_abs.id
-            WHERE sl.substitute_id = ? AND sl.date = ?
-        `, [teacher_id, todayDate]) || [];
+       // 3. جلب حصص الاحتياط (تأكد من استبدال هذا الجزء بالكامل)
+const substitutions = await db.all(`
+    SELECT sl.*, e_abs.nom as absent_name,
+    (SELECT COUNT(*) FROM student_absences 
+     WHERE date = sl.date AND periode = sl.periode 
+     AND EXISTS (
+         SELECT 1 FROM eleves e 
+         WHERE e.id = student_absences.eleve_id 
+         AND e.classe = sl.classe 
+         AND e.section = sl.section
+     )
+    ) > 0 as is_marked
+    FROM substitute_logs sl 
+    JOIN enseignants e_abs ON sl.absent_id = e_abs.id
+    WHERE sl.substitute_id = ? 
+    AND sl.date = ?
+    AND (sl.status = 'pending' OR sl.status = 'accepted') -- جلب المعلق والمقبول فقط
+`, [teacher_id, todayDate]) || [];
 
         // 4. معالجة بيانات الاحتياط (Mapping) - يجب أن يكون هنا قبل الاستخدام
         const mappedSubs = substitutions.map(s => ({
@@ -675,14 +756,13 @@ let todayName = days[now.getDay()];
             is_marked: s.is_marked 
         }));
 
-        // 5. تصفية الحصص (المقبولة للجدول، والمعلقة للتنبيهات)
-        const activeSessions = [
-            ...sessions, 
-            ...mappedSubs.filter(s => s.status === 'accepted')
-        ];
+       // 5. تصفية الحصص (المقبولة للجدول، والمعلقة للتنبيهات)
+const activeSessions = [
+    ...sessions, 
+    ...mappedSubs.filter(s => s.status === 'accepted') // الحصص المقبولة تذهب للجدول ورصد الغياب
+];
 
-        const pendingRequests = mappedSubs.filter(s => s.status === 'pending');
-
+const pendingRequests = mappedSubs.filter(s => s.status === 'pending'); // الحصص المعلقة تذهب للإشعارات فقط
         // 6. إرسال كل البيانات للوحة التحكم مرة واحدة
         res.render('teacher_dashboard', { 
             prof, 
@@ -798,6 +878,58 @@ app.post('/teacher/substitute/respond', async (req, res) => {
     } catch (e) {
         console.error(e);
         res.status(500).send("خطأ في معالجة الرد");
+    }
+});
+
+
+app.post('/admin/enseignants/modifier', async (req, res) => {
+    const { id, nom, matiere, phone_number } = req.body;
+    try {
+        await db.run(
+            "UPDATE enseignants SET nom = ?, matiere = ?, phone_number = ? WHERE id = ?", 
+            [nom, matiere, phone_number, id]
+        );
+        res.redirect('/admin/enseignants?success=teacher_updated');
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ أثناء تحديث بيانات المعلم");
+    }
+});
+// مسار إلغاء إسناد فصل من معلم
+app.post('/admin/enseignants/desaffecter', async (req, res) => {
+    try {
+        const { id } = req.body; // استلام معرف التعيين من الفورم
+        if (!id) {
+            return res.status(400).send("معرف التعيين مفقود");
+        }
+        
+        await db.run("DELETE FROM affectations WHERE id = ?", [id]);
+        
+        // إعادة التوجيه لنفس الصفحة مع رسالة نجاح (اختياري)
+        res.redirect('/admin/enseignants?success=deassigned');
+    } catch (e) {
+        console.error("Error during de-assignment:", e);
+        res.status(500).send("حدث خطأ أثناء محاولة حذف التعيين");
+    }
+});
+
+
+app.get('/admin/timetable/supprimer/:id', async (req, res) => {
+    try {
+        await db.run("DELETE FROM timetable WHERE id = ?", [req.params.id]);
+        res.redirect('/admin/timetable?success=deleted');
+    } catch (e) {
+        res.redirect('/admin/timetable?error=delete_failed');
+    }
+});
+
+app.post('/admin/enseignants/desaffecter', async (req, res) => {
+    try {
+        const { id } = req.body;
+        await db.run("DELETE FROM affectations WHERE id = ?", [id]);
+        res.redirect('/admin/enseignants?success=deassigned');
+    } catch (e) {
+        res.status(500).send("خطأ في إلغاء الإسناد");
     }
 });
     app.listen(PORT, () => {

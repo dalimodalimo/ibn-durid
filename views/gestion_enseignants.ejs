@@ -15,6 +15,8 @@
             --stat-card-2: #06b6d4;
             --stat-card-3: #8b5cf6;
             --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
         }
 
         body {
@@ -53,33 +55,41 @@
         .card-3 { border-right-color: var(--stat-card-3); }
         .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; }
 
-        /* Assignment Banner */
-        .assignment-banner {
-            margin-top: 20px; background: #ffffff; border: 2px dashed var(--stat-card-2);
-            border-radius: 15px; padding: 20px; animation: slideInUp 0.4s ease;
+        /* Toast Notifications */
+        .toast-container { position: fixed; top: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: white; min-width: 300px; padding: 16px 20px; border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px;
+            border-right: 6px solid; animation: slideInLeft 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: 0.3s;
         }
-        .banner-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; }
-        .queued-classes { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-        .queue-card {
-            background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 15px;
-            border-radius: 10px; display: flex; align-items: center; gap: 12px;
-        }
-        .btn-remove-queue { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem; }
+        .toast.success { border-right-color: var(--success-green); color: #065f46; }
+        .toast.error { border-right-color: var(--danger-red); color: #991b1b; }
+        .toast.info { border-right-color: var(--stat-card-2); color: #0c4a6e; }
 
-        /* Table Tags */
+        /* Table UI */
         .tags-container { display: flex; flex-wrap: wrap; gap: 5px; }
         .tag-classe {
             background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px;
             font-size: 0.8rem; display: flex; align-items: center; gap: 5px; border: 1px solid #bae6fd;
         }
         .btn-remove-tag { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; }
+        
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; transition: 0.3s;
+        }
         .hidden { display: none !important; }
 
+        @keyframes slideInLeft { from { transform: translateX(-120%); } to { transform: translateX(0); } }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 768px) { .sidebar { right: calc(var(--sidebar-width) * -1); } .sidebar.active { right: 0; } .main { margin-right: 0; } }
     </style>
 </head>
 <body>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <button class="sidebar-toggle" id="toggleSidebar"><i class="fas fa-bars"></i></button>
 
@@ -174,7 +184,15 @@
         </section>
     </div>
 
-    <section class="card" id="section-table" style="margin-top: 20px;">
+    <div class="card" style="margin: 20px 0; padding: 15px;">
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <i class="fas fa-search" style="color: var(--primary-blue);"></i>
+            <input type="text" id="teacherSearch" placeholder="بحث سريع باسم المعلم أو المادة..." 
+                   style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+    </div>
+
+    <section class="card" id="section-table">
         <h3><i class="fas fa-list-ul"></i> سجل المعلمين والفصول المسندة</h3>
         <div class="table-responsive">
             <table>
@@ -183,20 +201,19 @@
                         <th>المعلم</th>
                         <th>التخصص</th>
                         <th>الهاتف</th>
-                        <th style="width: 40%;">الفصول الحالية</th>
+                        <th style="width: 35%;">الفصول الحالية</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% enseignants.forEach(prof => { %>
-                    <tr>
+                    <tr class="teacher-row">
                         <td><b><%= prof.nom %></b></td>
-                        <td><span class="badge-matiere"><%= prof.matiere %></span></td>
+                        <td><span class="badge-matiere" style="background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;"><%= prof.matiere %></span></td>
                         <td><code><%= prof.phone_number || '---' %></code></td>
                         <td>
                             <div class="tags-container">
-                                <% 
-                                   let profAff = affectations.filter(a => a.enseignant_id === prof.id);
+                                <% let profAff = affectations.filter(a => a.enseignant_id === prof.id);
                                    if(profAff.length > 0) {
                                        profAff.forEach(aff => { %>
                                             <div class="tag-classe">
@@ -213,7 +230,17 @@
                             </div>
                         </td>
                         <td>
-                            <a href="/admin/enseignants/supprimer/<%= prof.id %>" class="btn btn-danger" onclick="return confirm('حذف المعلم نهائياً؟')">حذف</a>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="btn" style="background: var(--warning-orange); color: white; border:none; border-radius: 6px; padding: 6px 12px; cursor:pointer;"
+                                        onclick="openEditModal('<%= prof.id %>', '<%= prof.nom %>', '<%= prof.matiere %>', '<%= prof.phone_number %>')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <a href="/admin/enseignants/supprimer/<%= prof.id %>" class="btn btn-danger" 
+                                   style="background: var(--danger-red); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none;"
+                                   onclick="return confirm('حذف المعلم نهائياً؟')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     <% }) %>
@@ -223,8 +250,78 @@
     </section>
 </div>
 
+<div id="editModal" class="modal-overlay hidden">
+    <div class="card" style="width: 400px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">تعديل بيانات المعلم</h3>
+        <form action="/admin/enseignants/modifier" method="POST">
+            <input type="hidden" name="id" id="edit_id">
+            <div class="input-group">
+                <label>الاسم الكامل</label>
+                <input type="text" name="nom" id="edit_nom" required>
+            </div>
+            <div class="input-group" style="margin-top: 15px;">
+                <label>المادة</label>
+                <select name="matiere" id="edit_matiere">
+                    <% subjects.forEach(sub => { %><option value="<%= sub.name %>"><%= sub.name %></option><% }) %>
+                </select>
+            </div>
+            <div class="input-group" style="margin-top: 15px;">
+                <label>الهاتف</label>
+                <input type="text" name="phone_number" id="edit_phone">
+            </div>
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-save" style="flex: 1;">حفظ التغييرات</button>
+                <button type="button" onclick="closeEditModal()" class="btn" style="background: #999; flex: 1; border:none; color:white; border-radius:6px; cursor:pointer;">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    // Sidebar Toggle
+    // --- Toast System ---
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = 'fa-check-circle';
+        if(type === 'error') icon = 'fa-exclamation-triangle';
+        if(type === 'info') icon = 'fa-info-circle';
+
+        toast.innerHTML = `
+            <i class="fas ${icon}"></i>
+            <span>${message}</span>
+        `;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-20px)';
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }
+
+    // Handle URL Parameters for feedback
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+        const msg = urlParams.get('success');
+        if(msg === 'updated') showToast("تم تحديث بيانات المعلم بنجاح");
+        else if(msg === 'assigned') showToast("تم إسناد الفصول بنجاح");
+        else if(msg === 'deassigned') showToast("تم إلغاء إسناد الفصل");
+        else showToast("تمت العملية بنجاح");
+    } 
+    if (urlParams.has('error')) {
+        const errorType = urlParams.get('error');
+        if(errorType === 'conflict') {
+            const name = urlParams.get('name');
+            const sub = urlParams.get('subject');
+            showToast(`تضارب: الأستاذ ${name} يدرس مادة ${sub} لهذا الفصل بالفعل`, 'error');
+        } else {
+            showToast("حدث خطأ أثناء تنفيذ العملية", "error");
+        }
+    }
+
+    // --- Sidebar Toggle ---
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.getElementById('mainContent');
@@ -233,7 +330,7 @@
         else { sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('expanded'); }
     });
 
-    // Queue System
+    // --- Queue System for Assignments ---
     let queue = [];
     function addToQueue() {
         const profId = document.getElementById('profSelector').value;
@@ -241,8 +338,14 @@
         const classVal = classSelect.value;
         const classText = classSelect.options[classSelect.selectedIndex].text;
 
-        if (!profId) return alert("يرجى اختيار معلم أولاً");
-        if (queue.find(item => item.value === classVal)) return alert("الفصل مضاف مسبقاً");
+        if (!profId) {
+            showToast("يرجى اختيار معلم أولاً", "info");
+            return;
+        }
+        if (queue.find(item => item.value === classVal)) {
+            showToast("هذا الفصل مضاف بالفعل للقائمة", "info");
+            return;
+        }
 
         queue.push({ value: classVal, text: classText });
         renderQueue();
@@ -274,7 +377,36 @@
         document.getElementById('finalClassesData').value = JSON.stringify(queue.map(i => i.value));
     }
 
-    document.getElementById('profSelector').addEventListener('change', () => { queue = []; renderQueue(); });
+    document.getElementById('profSelector').addEventListener('change', () => { 
+        if(queue.length > 0) {
+            queue = []; 
+            renderQueue();
+            showToast("تم تغيير المعلم، يرجى إعادة تحديد الفصول", "info");
+        }
+    });
+
+    // --- Search Filter ---
+    document.getElementById('teacherSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.teacher-row');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(term) ? "" : "none";
+        });
+    });
+
+    // --- Modal Management ---
+    function openEditModal(id, nom, matiere, phone) {
+        document.getElementById('edit_id').value = id;
+        document.getElementById('edit_nom').value = nom;
+        document.getElementById('edit_matiere').value = matiere;
+        document.getElementById('edit_phone').value = phone;
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+    }
 </script>
 </body>
 </html>

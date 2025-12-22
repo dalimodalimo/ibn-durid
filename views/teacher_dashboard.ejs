@@ -108,6 +108,30 @@
             <small id="current-status-text" style="font-size: 0.6rem; opacity: 0.8;">جاري فحص الجدول...</small>
         </div>
     </header>
+    <% if (typeof evalRequests !== 'undefined' && evalRequests.length > 0) { %>
+    <div id="eval-requests-container" style="margin-bottom: 20px;">
+        <% evalRequests.forEach(req => { %>
+            <div class="admin-notif-bar" style="background: #fdf2f8; border-right: 6px solid #db2777; display: flex; align-items: center; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); gap: 15px;">
+                <i class="fas fa-star" style="color: #db2777; font-size: 1.2rem;"></i>
+                
+                <div style="flex:1; font-size: 0.85rem;">
+                    <div style="font-weight: 800; color: #9d174d; margin-bottom: 3px;">طلب تقييم أكاديمي</div>
+                    <div style="color: #4b5563;">
+                        يرجى تقييم مستوى الطالب: <strong><%= req.student_name %></strong> 
+                        <span style="background: #fae8f0; padding: 2px 8px; border-radius: 4px; margin-right: 5px;">
+                            <%= req.classe %>
+                        </span>
+                    </div>
+                </div>
+
+                <a href="/teacher/evaluate/<%= req.id %>/<%= req.eleve_id %>" 
+                   style="background: #db2777; color: white; text-decoration: none; padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; transition: 0.3s; white-space: nowrap;">
+                    <i class="fas fa-edit"></i> تقييم الآن
+                </a>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
 
 <div class="container">
     
@@ -133,33 +157,31 @@
         </div>
     <% } %>
 <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
-        <div id="admin-announcements-container">
-            <% announcements.forEach(ann => { %>
-                <div class="admin-notif-bar" id="ann-box-<%= ann.id %>" style="align-items: flex-start;">
-                    <i class="fas fa-bullhorn" style="margin-top: 5px;"></i>
-                    <div style="flex:1; font-size: 0.85rem;">
-                        <div style="font-weight: 800; color: var(--primary); margin-bottom: 3px;">
-                            <%= ann.title %> 
-                        </div>
-                        <div style="opacity: 0.9; line-height: 1.4;">
-                            <%= ann.content %>
-                        </div>
-                        <small style="display: block; margin-top: 5px; opacity: 0.6; font-size: 0.7rem;">
-                            <%= ann.date %>
-                        </small>
+    <div id="admin-announcements-container">
+        <% announcements.forEach(ann => { %>
+            <div class="admin-notif-bar" id="ann-box-<%= ann.id %>" style="align-items: flex-start;">
+                <i class="fas fa-bullhorn" style="margin-top: 5px;"></i>
+                <div style="flex:1; font-size: 0.85rem;">
+                    <div style="font-weight: 800; color: var(--primary); margin-bottom: 3px;">
+                        <%= ann.title %> 
                     </div>
-                    <button onclick="
-                        document.getElementById('ann-box-<%= ann.id %>').remove();
-                        let hidden = JSON.parse(localStorage.getItem('dismissed_ann') || '[]');
-                        hidden.push('<%= ann.id %>');
-                        localStorage.setItem('dismissed_ann', JSON.stringify(hidden));
-                    " style="background:none; border:none; color:var(--accent); padding:5px; cursor:pointer;">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <div style="opacity: 0.9; line-height: 1.4;">
+                        <%= ann.content %>
+                    </div>
+                    <small style="display: block; margin-top: 5px; opacity: 0.6; font-size: 0.7rem;">
+                        <%= ann.date %>
+                    </small>
                 </div>
-            <% }) %>
-        </div>
-    <% } %>
+                
+                <button onclick="dismissNotification('<%= ann.id %>', '<%= prof.id %>')" 
+                        style="background:none; border:none; color:var(--accent); padding:5px; cursor:pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
+
 
     <div class="stats-grid">
         <div class="stat-card">
@@ -348,6 +370,34 @@
             this.classList.add('active');
         });
     });
+
+    function dismissNotification(annId, profId) {
+    // إخفاء العنصر من الواجهة فوراً
+    const element = document.getElementById('ann-box-' + annId);
+    if (element) element.remove();
+
+    // التخزين المحلي باستخدام مفتاح فريد لكل معلم
+    // Key example: dismissed_ann_teacher_123
+    const storageKey = 'dismissed_ann_prof_' + profId;
+    
+    let dismissed = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (!dismissed.includes(annId)) {
+        dismissed.push(annId);
+        localStorage.setItem(storageKey, JSON.stringify(dismissed));
+    }
+}
+
+// تعديل وظيفة التحقق عند تحميل الصفحة لتستخدم نفس المفتاح الفريد
+function applyHiddenAnnouncements() {
+    const profId = '<%= prof.id %>'; // الحصول على ID المعلم من EJS
+    const storageKey = 'dismissed_ann_prof_' + profId;
+    
+    const hidden = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    hidden.forEach(id => {
+        const el = document.getElementById('ann-box-' + id);
+        if (el) el.remove();
+    });
+}
 
     setInterval(updateApp, 1000);
     setInterval(() => { location.reload(); }, 60000);

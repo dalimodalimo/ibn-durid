@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقييم طالب - مدرسة ابن دريد</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e3a8a;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background: var(--light-bg); 
+            padding: 20px; 
+            direction: rtl; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .eval-card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            max-width: 500px;
+            width: 100%;
+        }
+        .student-info { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            border-bottom: 2px solid var(--light-bg); 
+            padding-bottom: 20px; 
+        }
+        .student-info h2 { color: var(--primary-blue); margin: 10px 0 5px 0; }
+        .student-info p { font-size: 1.2rem; font-weight: bold; margin: 0; color: #334155; }
+        .student-info .badge { 
+            background: #dbeafe; 
+            color: var(--primary-blue); 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 0.85rem; 
+            display: inline-block;
+            margin-top: 5px;
+        }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #475569; margin-top: 15px; }
+        select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 2px solid var(--border-color); 
+            margin-bottom: 10px; 
+            font-family: 'Cairo'; 
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        select:focus, textarea:focus { border-color: var(--primary-blue); outline: none; }
+        .btn-send { 
+            background: var(--primary-blue); 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            margin-top: 20px;
+            transition: transform 0.2s, background 0.3s;
+        }
+        .btn-send:hover { background: #1e40af; transform: translateY(-2px); }
+        .btn-cancel { 
+            display: block; 
+            text-align: center; 
+            margin-top: 15px; 
+            color: #64748b; 
+            text-decoration: none; 
+            font-size: 0.9rem; 
+        }
+        .btn-cancel:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="eval-card">
+        <div class="student-info">
+            <i class="fas fa-user-graduate" style="font-size: 3rem; color: var(--primary-blue);"></i>
+            <h2>تقييم أكاديمي</h2>
+            <p><%= student.nom %></p>
+            <span class="badge">الصف: <%= student.classe %> - الشعبة: <%= student.section %></span>
+        </div>
+
+        <form action="/teacher/evaluate/submit" method="POST">
+            <input type="hidden" name="student_id" value="<%= student.id %>">
+            <input type="hidden" name="request_id" value="<%= requestId %>">
+            <input type="hidden" name="teacher_id" value="<%= teacher_id %>">
+
+            <label><i class="fas fa-chart-line"></i> المستوى الأكاديمي الحالي:</label>
+            <select name="level" required>
+                <option value="" disabled selected>اختر المستوى...</option>
+                <option value="Excellent">ممتاز (Excellent)</option>
+                <option value="Very Good">جيد جداً (Very Good)</option>
+                <option value="Good">جيد (Good)</option>
+                <option value="Medium">متوسط (Medium)</option>
+                <option value="Weak">ضعيف (Weak)</option>
+            </select>
+
+            <label><i class="fas fa-comment-dots"></i> ملاحظات تربوية وتوصيات:</label>
+            <textarea name="remark" rows="5" placeholder="اكتب ملاحظاتك عن نقاط القوة، نقاط الضعف، أو أي توصيات لولي الأمر..."></textarea>
+
+            <button type="submit" class="btn-send">
+                <i class="fas fa-paper-plane"></i> اعتماد وإرسال التقييم
+            </button>
+            
+            <a href="/teacher/dashboard/<%= teacher_id %>" class="btn-cancel">إلغاء والعودة للرئيسية</a>
+        </form>
+    </div>
+</body>
+</html>

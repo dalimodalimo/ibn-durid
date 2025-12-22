@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير الطالب - مدرسة ابن دريد</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1e3a8a; --border: #cbd5e1; }
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            padding: 20px; 
+            color: #333; 
+            line-height: 1.4; 
+            font-size: 12px; /* تصغير الخط العام لضمان سعة الصفحة */
+            margin: 0;
+        }
+        .report-header { 
+            text-align: center; 
+            border-bottom: 2px solid var(--primary); 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
+        }
+        .report-header h1 { font-size: 18px; margin: 0; color: var(--primary); }
+        .report-header h2 { font-size: 14px; margin: 5px 0; }
+        
+        .student-info { 
+            display: flex; 
+            justify-content: space-around; 
+            background: #f8fafc; 
+            padding: 8px; 
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .section { margin-bottom: 15px; }
+        .section-title { 
+            background: #f1f5f9; 
+            padding: 5px 10px; 
+            border-right: 4px solid var(--primary); 
+            font-weight: bold; 
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { 
+            border: 1px solid var(--border); 
+            padding: 6px 10px; 
+            text-align: right; 
+            font-size: 12px; 
+        }
+        th { background: #f8fafc; color: var(--primary); }
+
+        .level-badge { 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            background: #dcfce7; 
+            color: #166534;
+            font-size: 11px;
+        }
+
+        .footer-sigs { 
+            margin-top: 25px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-weight: bold;
+        }
+
+        /* تنسيقات الأزرار */
+        .no-print { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            background: #fff; 
+            padding: 10px; 
+            border-bottom: 1px solid #eee;
+        }
+        .btn { 
+            padding: 8px 15px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-family: 'Cairo'; 
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .btn-print { background: var(--primary); color: white; }
+        .btn-exit { background: #64748b; color: white; }
+
+        @media print {
+            .no-print { display: none; }
+            body { padding: 0; font-size: 12px; }
+            .section { margin-bottom: 10px; }
+            @page { size: A4; margin: 1cm; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <button onclick="window.print()" class="btn btn-print">
+            <i class="fas fa-print"></i> طباعة التقرير / حفظ PDF
+        </button>
+        <a href="/admin/dashboard" class="btn btn-exit">الخروج من التقرير</a>
+    </div>
+
+    <div class="report-header">
+        <h1>مدرسة ابن دريد للتعليم الأساسي (5-8)</h1>
+        <h2>تقرير الطالب الأكاديمي والتربوي الشامل</h2>
+    </div>
+
+    <div class="student-info">
+        <span>اسم الطالب: <strong><%= student.nom %></strong></span>
+        <span>الفصل: <strong><%= student.classe %> / <%= student.section %></strong></span>
+        <span>تاريخ التقرير: <strong><%= new Date().toLocaleDateString('ar-EG') %></strong></span>
+    </div>
+
+    <div class="section">
+        <div class="section-title">أولاً: تقييمات المواد الدراسية (المعلمين)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">المادة / المعلم</th>
+                    <th style="width: 20%;">المستوى الأكاديمي</th>
+                    <th>ملاحظات وتوصيات المعلم</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if(evaluations.length > 0) { %>
+                    <% evaluations.forEach(e => { %>
+                        <tr>
+                            <td>أ/ <%= e.teacher_name %></td>
+                            <td style="text-align: center;"><span class="level-badge"><%= e.level %></span></td>
+                            <td><%= e.remark || 'لا توجد ملاحظات إضافية' %></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="3" style="text-align: center;">لا توجد تقييمات مسجلة بعد.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="section">
+            <div class="section-title">ثانياً: ملخص الحضور والغياب</div>
+            <p style="margin-bottom: 5px;">إجمالي أيام الغياب: <strong><%= absences.length %> أيام</strong></p>
+            <table style="font-size: 11px;">
+                <tr><th>التاريخ</th><th>ملاحظات</th></tr>
+                <% absences.slice(0, 5).forEach(a => { %>
+                    <tr><td><%= a.date %></td><td>غياب بدون عذر</td></tr>
+                <% }) %>
+                <% if(absences.length > 5) { %>
+                    <tr><td colspan="2" style="text-align: center; color: #666;">... (+<%= absences.length - 5 %> أيام أخرى)</td></tr>
+                <% } %>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">ثالثاً: السلوك والانضباط</div>
+            <% if(behaviors.length > 0) { %>
+                <table>
+                    <tr><th>التاريخ</th><th>الحدث</th></tr>
+                    <% behaviors.slice(0, 5).forEach(b => { %>
+                        <tr><td><%= b.created_at %></td><td><%= b.event_text %></td></tr>
+                    <% }) %>
+                </table>
+            <% } else { %><p>السلوك منضبط بشكل عام.</p><% } %>
+        </div>
+    </div>
+
+    <div class="footer-sigs">
+        <div style="text-align: center;">
+            <p>يعتمد،،</p>
+            <p>مدير المدرسة</p>
+            <div style="margin-top: 10px; border-bottom: 1px dotted #000; width: 150px;"></div>
+        </div>
+        <div style="text-align: center;">
+            <p>ختم المدرسة الرسمي</p>
+            <div style="margin-top: 15px; border: 1px solid #ddd; width: 80px; height: 80px; margin: auto; border-radius: 50%;"></div>
+        </div>
+    </div>
+
+</body>
+</html>

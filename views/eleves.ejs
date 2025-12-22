@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة الطلاب - مدرسة ابن دريد</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; direction: rtl; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+        /* زر طلب التقييم */
+        .btn-request { 
+            background: #8e44ad; color: white; border: none; padding: 8px 15px; 
+            border-radius: 8px; cursor: pointer; transition: 0.3s; font-family: inherit;
+        }
+        .btn-request:hover { background: #7d3c98; transform: scale(1.05); }
+        .success-msg { background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👨‍🎓 إدارة الطلاب</h1>
+        
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="success-msg">تم إرسال طلبات التقييم لجميع المعلمين بنجاح!</div>
+        <% } %>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>اسم الطالب</th>
+                    <th>الفصل</th>
+                    <th>الشعبة</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% eleves.forEach(eleve => { %>
+                <tr>
+                    <td><strong><%= eleve.nom %></strong></td>
+                    <td><%= eleve.classe %></td>
+                    <td><%= eleve.section %></td>
+                    <td>
+                        <form action="/admin/students/request-evaluation" method="POST" style="display:inline;">
+                            <input type="hidden" name="student_id" value="<%= eleve.id %>">
+                            <button type="submit" class="btn-request">
+                                <i class="fas fa-paper-plane"></i> طلب تقييم
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <br>
+        <a href="/admin/dashboard" style="text-decoration: none; color: #666;">← العودة للوحة الإدارة</a>
+    </div>
+</body>
+</html>

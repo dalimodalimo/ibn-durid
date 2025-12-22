@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); // أضف هذا السطر إذا لم يكن موجوداً في الأعلى
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
@@ -7,13 +7,15 @@ const cookieParser = require('cookie-parser');
 /**
  * إعدادات التطبيق الأساسية
  */
-const app = express();
+const app = express(); // تم نقل التعريف إلى هنا (قبل أي استخدام لـ app.use)
+
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = "admin123"; 
 
+// الإعدادات (Middleware)
 app.use(cookieParser());
 app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // هذا السطر الآن يعمل بشكل صحيح
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -137,6 +139,30 @@ async function initializeDatabase() {
                 start_time TEXT, 
                 end_time TEXT
             );
+            /* جدول طلبات التقييم المرسلة من الإدارة */
+CREATE TABLE IF NOT EXISTS evaluation_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eleve_id INTEGER NOT NULL,
+    enseignant_id INTEGER NOT NULL, 
+    date_request TEXT NOT NULL,
+    status TEXT DEFAULT 'pending', -- 'pending' أو 'completed'
+    FOREIGN KEY(eleve_id) REFERENCES eleves(id) ON DELETE CASCADE,
+    FOREIGN KEY(enseignant_id) REFERENCES enseignants(id) ON DELETE CASCADE
+);
+
+/* جدول نتائج التقييم الأكاديمي التفصيلي */
+CREATE TABLE IF NOT EXISTS academic_evaluations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eleve_id INTEGER NOT NULL,
+    enseignant_id INTEGER NOT NULL,
+    level TEXT NOT NULL, -- ممتاز، جيد جداً، الخ
+    remark TEXT,
+    date_submission TEXT NOT NULL,
+    FOREIGN KEY(eleve_id) REFERENCES eleves(id) ON DELETE CASCADE,
+    FOREIGN KEY(enseignant_id) REFERENCES enseignants(id) ON DELETE CASCADE
+);
+
+            
         `);
 
       const columnsToAdd = [
@@ -185,6 +211,120 @@ function isAdmin(req, res, next) {
  * تشغيل الخادم
  */
 initializeDatabase().then(() => {
+
+
+
+    // --- [ نظام التقييم الأكاديمي ] ---
+
+// 1. عرض صفحة التقييم للمعلم
+app.get('/teacher/evaluate/:requestId/:studentId', async (req, res) => {
+    try {
+        const { requestId, studentId } = req.params;
+
+        // 1. جلب معرف المعلم من الجلسة (Session) - الطريقة الأكثر أماناً
+        // إذا كنت تستخدم نظام تسجيل دخول، المعرف موجود في req.session.user.id
+        // أو يمكنك جلبه من جدول الطلبات نفسه بما أننا نملك requestId
+        
+        const requestData = await db.get("SELECT enseignant_id FROM evaluation_requests WHERE id = ?", [requestId]);
+        
+        if (!requestData) {
+            return res.status(404).send("طلب التقييم هذا غير موجود");
+        }
+
+        const teacher_id = requestData.enseignant_id;
+
+        // 2. جلب بيانات الطالب
+        const student = await db.get("SELECT * FROM eleves WHERE id = ?", [parseInt(studentId)]);
+        
+        if (!student) return res.status(404).send("الطالب غير موجود");
+
+        // 3. إرسال البيانات للـ EJS (تأكد من إرسال teacher_id)
+        res.render('teacher_evaluation', { 
+            student, 
+            requestId, 
+            teacher_id, // الآن المتغير معرف ولن يظهر الخطأ
+            titre: "تقييم المستوى الأكاديمي" 
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ في تحميل الصفحة");
+    }
+});
+
+// 2. استقبال التقييم وحفظه
+app.post('/teacher/evaluate/submit', async (req, res) => {
+    try {
+        const { student_id, level, remark, request_id, teacher_id } = req.body;
+        const date_now = new Date().toISOString().split('T')[0];
+
+        // حفظ التقييم في جدول academic_evaluations
+        await db.run(`
+            INSERT INTO academic_evaluations (eleve_id, enseignant_id, level, remark, date_submission) 
+            VALUES (?, ?, ?, ?, ?)`, 
+            [student_id, teacher_id, level, remark, date_now]
+        );
+
+        // تحديث حالة الطلب في جدول evaluation_requests لكي يختفي من لوحة المعلم
+        await db.run("UPDATE evaluation_requests SET status = 'completed' WHERE id = ?", [request_id]);
+
+        // إعادة التوجيه للوحة التحكم مع رسالة نجاح
+        res.redirect(`/teacher/dashboard/${teacher_id}?success=evaluated`);
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ أثناء حفظ التقييم");
+    }
+});
+
+// 3. مسار إرسال طلب التقييم (من الأدمن لجميع مدرسي طالب معين)
+app.post('/admin/students/request-evaluation', async (req, res) => {
+    try {
+        // 1. طباعة البيانات المستلمة للتأكد من وصول ID الطالب
+        console.log("--- بداية عملية طلب التقييم ---");
+        console.log("البيانات المستلمة من الـ Form:", req.body);
+
+        const { student_id } = req.body;
+
+        if (!student_id) {
+            console.error("خطأ: لم يتم إرسال student_id في الطلب!");
+            return res.status(400).send("لم يتم اختيار طالب");
+        }
+
+        // 2. البحث عن الطالب (مع التأكد من تحويل النوع إلى رقم)
+        const student = await db.get("SELECT * FROM eleves WHERE id = ?", [parseInt(student_id)]);
+        
+        if (!student) {
+            console.error(`خطأ: الطالب الذي يحمل الرقم (${student_id}) غير موجود في جدول eleves`);
+            // لنتأكد من وجود طلاب، اطبع أول 3 طلاب في الجدول للتجربة
+            const sample = await db.all("SELECT id, nom FROM eleves LIMIT 3");
+            console.log("أمثلة لطلاب موجودين في القاعدة:", sample);
+            
+            return res.status(404).send("عذراً، الطالب غير موجود في قاعدة البيانات");
+        }
+
+        // 3. جلب المدرسين المرتبطين (تأكد من اسم جدول التوزيع لديك)
+        const teachers = await db.all("SELECT enseignant_id FROM affectations WHERE classe = ? AND section = ?", 
+            [student.classe, student.section]);
+
+        console.log(`تم العثور على ${teachers.length} مدرسين لهذا الطالب`);
+
+        const date_request = new Date().toISOString().split('T')[0];
+
+        // 4. تسجيل الطلبات
+        for (const t of teachers) {
+            await db.run(
+                "INSERT INTO evaluation_requests (eleve_id, enseignant_id, date_request, status) VALUES (?, ?, ?, 'pending')", 
+                [student.id, t.enseignant_id, date_request]
+            );
+        }
+
+        console.log("تم إرسال الطلبات بنجاح");
+        res.redirect('/admin/student-reports-list?success=1');
+
+    } catch (e) {
+        console.error("خطأ تقني فادح:", e);
+        res.status(500).send("حدث خطأ أثناء معالجة طلبك");
+    }
+});
 
     // --- [ 1. بوابات الدخول (يجب أن تسبق الـ Middleware) ] ---
 
@@ -695,17 +835,22 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
         if (!prof) return res.redirect('/teacher/login');
 
         const now = new Date();
-const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-let todayName = days[now.getDay()];
-
-// فحص يدوي: إذا كانت قاعدة البيانات تستخدم "الاثنين" بدون همزة، فقم بإزالتها برمجياً
-// أو الأفضل: اجعل الاستعلام يبحث عن الكلمتين
+        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        let todayName = days[now.getDay()];
         const todayDate = now.toISOString().split('T')[0];
 
-        // 1. جلب البيانات الأساسية (أوقات، إعلانات، طلاب)
+        // 1. جلب البيانات الأساسية
         const periods = await db.all("SELECT * FROM school_periods ORDER BY id ASC") || [];
         const announcements = await db.all("SELECT * FROM announcements ORDER BY id DESC LIMIT 5") || [];
         const students = await db.all("SELECT * FROM eleves") || [];
+
+        // --- التعديل الجديد: جلب طلبات التقييم الأكاديمي المعلقة لهذا المعلم ---
+        const evalRequests = await db.all(`
+            SELECT er.id, er.eleve_id, e.nom as student_name, e.classe, e.section 
+            FROM evaluation_requests er
+            JOIN eleves e ON er.eleve_id = e.id
+            WHERE er.enseignant_id = ? AND er.status = 'pending'
+        `, [teacher_id]) || [];
 
         // 2. جلب الحصص العادية
         const sessions = await db.all(`
@@ -724,26 +869,25 @@ let todayName = days[now.getDay()];
         `, [todayDate, teacher_id, todayName]) || [];
 
         // 3. جلب حصص الاحتياط
-       // 3. جلب حصص الاحتياط (تأكد من استبدال هذا الجزء بالكامل)
-const substitutions = await db.all(`
-    SELECT sl.*, e_abs.nom as absent_name,
-    (SELECT COUNT(*) FROM student_absences 
-     WHERE date = sl.date AND periode = sl.periode 
-     AND EXISTS (
-         SELECT 1 FROM eleves e 
-         WHERE e.id = student_absences.eleve_id 
-         AND e.classe = sl.classe 
-         AND e.section = sl.section
-     )
-    ) > 0 as is_marked
-    FROM substitute_logs sl 
-    JOIN enseignants e_abs ON sl.absent_id = e_abs.id
-    WHERE sl.substitute_id = ? 
-    AND sl.date = ?
-    AND (sl.status = 'pending' OR sl.status = 'accepted') -- جلب المعلق والمقبول فقط
-`, [teacher_id, todayDate]) || [];
+        const substitutions = await db.all(`
+            SELECT sl.*, e_abs.nom as absent_name,
+            (SELECT COUNT(*) FROM student_absences 
+             WHERE date = sl.date AND periode = sl.periode 
+             AND EXISTS (
+                 SELECT 1 FROM eleves e 
+                 WHERE e.id = student_absences.eleve_id 
+                 AND e.classe = sl.classe 
+                 AND e.section = sl.section
+             )
+            ) > 0 as is_marked
+            FROM substitute_logs sl 
+            JOIN enseignants e_abs ON sl.absent_id = e_abs.id
+            WHERE sl.substitute_id = ? 
+            AND sl.date = ?
+            AND (sl.status = 'pending' OR sl.status = 'accepted')
+        `, [teacher_id, todayDate]) || [];
 
-        // 4. معالجة بيانات الاحتياط (Mapping) - يجب أن يكون هنا قبل الاستخدام
+        // 4. معالجة بيانات الاحتياط (Mapping)
         const mappedSubs = substitutions.map(s => ({
             id: s.id,
             periode: s.periode, 
@@ -756,18 +900,20 @@ const substitutions = await db.all(`
             is_marked: s.is_marked 
         }));
 
-       // 5. تصفية الحصص (المقبولة للجدول، والمعلقة للتنبيهات)
-const activeSessions = [
-    ...sessions, 
-    ...mappedSubs.filter(s => s.status === 'accepted') // الحصص المقبولة تذهب للجدول ورصد الغياب
-];
+        // 5. تصفية الحصص
+        const activeSessions = [
+            ...sessions, 
+            ...mappedSubs.filter(s => s.status === 'accepted')
+        ];
 
-const pendingRequests = mappedSubs.filter(s => s.status === 'pending'); // الحصص المعلقة تذهب للإشعارات فقط
-        // 6. إرسال كل البيانات للوحة التحكم مرة واحدة
+        const pendingRequests = mappedSubs.filter(s => s.status === 'pending');
+
+        // 6. إرسال كل البيانات للوحة التحكم (تأكد من إضافة evalRequests هنا)
         res.render('teacher_dashboard', { 
             prof, 
-            sessions: activeSessions, // تذهب للجدول ولرصد الغياب
-            pendingRequests,          // تذهب لصندوق التنبيهات العلوي
+            sessions: activeSessions,
+            pendingRequests,
+            evalRequests, // ممرر إلى EJS
             periods, 
             students, 
             today: todayDate, 
@@ -932,6 +1078,119 @@ app.post('/admin/enseignants/desaffecter', async (req, res) => {
         res.status(500).send("خطأ في إلغاء الإسناد");
     }
 });
+// --- [ نظام التقييم الأكاديمي ] ---
+
+// 1. عرض صفحة التقييم للمعلم
+// الترتيب الصحيح ليطابق الرابط في صفحة EJS
+app.get('/teacher/evaluate/:requestId/:studentId', async (req, res) => {
+    try {
+        const { requestId, studentId } = req.params;
+        const teacher_id = req.query.teacher_id; 
+
+        // تأكد من تحويل studentId إلى رقم
+        const student = await db.get("SELECT * FROM eleves WHERE id = ?", [parseInt(studentId)]);
+        
+        if (!student) {
+            console.error(`الطالب برقم ${studentId} غير موجود في القاعدة`);
+            return res.status(404).send("الطالب غير موجود");
+        }
+
+        res.render('teacher_evaluation', { 
+            student, 
+            requestId, 
+            teacher_id, 
+            titre: "تقييم المستوى الأكاديمي" 
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ في تحميل الصفحة");
+    }
+});
+
+// 2. استقبال التقييم وحفظه في قاعدة البيانات
+app.post('/teacher/evaluate/submit', async (req, res) => {
+    try {
+        const { student_id, level, remark, request_id, teacher_id } = req.body;
+        const date_now = new Date().toISOString().split('T')[0];
+
+        // حفظ التقييم في جدول academic_evaluations (الذي أنشأته أنت سابقاً)
+        await db.run(`
+            INSERT INTO academic_evaluations (eleve_id, enseignant_id, level, remark, date_submission) 
+            VALUES (?, ?, ?, ?, ?)`, 
+            [student_id, teacher_id, level, remark, date_now]
+        );
+
+        // تحديث حالة الطلب لكي يختفي من لوحة المعلم
+        await db.run("UPDATE evaluation_requests SET status = 'completed' WHERE id = ?", [request_id]);
+
+        res.redirect(`/teacher/dashboard/${teacher_id}?success=evaluated`);
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ أثناء حفظ التقييم");
+    }
+});
+// --- [ مسار توليد التقرير الشامل للطالب ] ---
+app.get('/admin/student/full-report/:id', async (req, res) => {
+    try {
+        const studentId = req.params.id;
+
+        const student = await db.get("SELECT * FROM eleves WHERE id = ?", [studentId]);
+        if (!student) return res.status(404).send("الطالب غير موجود");
+
+        const absences = await db.all("SELECT * FROM student_absences WHERE eleve_id = ?", [studentId]);
+
+        // تم التعديل هنا لتطابق مسميات ملفك القديم
+        const behaviors = await db.all(`
+            SELECT date AS created_at, event AS event_text 
+            FROM behavior_logs 
+            WHERE student_id = ?
+        `, [studentId]);
+
+        const evaluations = await db.all(`
+            SELECT ae.*, e.nom as teacher_name 
+            FROM academic_evaluations ae
+            JOIN enseignants e ON ae.enseignant_id = e.id
+            WHERE ae.eleve_id = ?
+        `, [studentId]);
+
+        res.render('student_report', { 
+            student, 
+            absences, 
+            behaviors, 
+            evaluations, 
+            titre: "تقرير الطالب الشامل" 
+        });
+
+    } catch (e) {
+        console.error("Report Error:", e);
+        res.status(500).send("خطأ أثناء استخراج التقرير: " + e.message);
+    }
+});
+// مسار عرض قائمة الطلاب الذين لديهم تقييمات (ليعمل زر لوحة التحكم)
+app.get('/admin/student-reports-list', async (req, res) => {
+    try {
+        // 1. جلب الطلاب الذين لديهم تقييمات مكتملة (لعرضهم في الجدول)
+        const studentsWithEvals = await db.all(`
+            SELECT DISTINCT e.id, e.nom, e.classe, e.section 
+            FROM eleves e
+            JOIN academic_evaluations ae ON e.id = ae.eleve_id
+        `);
+
+        // 2. جلب قائمة بجميع الطلاب (ليظهروا في النافذة المنبثقة عند طلب تقييم جديد)
+        const all_students = await db.all("SELECT id, nom, classe FROM eleves ORDER BY nom ASC");
+        
+        // 3. إرسال البيانات للملف
+        res.render('admin_evaluations_list', { 
+            students: studentsWithEvals, 
+            all_students: all_students, // هذا السطر هو الذي يمنع الخطأ في الصفحة
+            titre: "إدارة التقييمات الأكاديمية" 
+        });
+    } catch (e) {
+        console.error("Error loading evaluation list:", e);
+        res.status(500).send("خطأ في جلب قائمة التقييمات");
+    }
+});
+app.get('/admin/students', (req, res) => res.redirect('/admin/eleves'));
     app.listen(PORT, () => {
         console.log(`🚀 نظام مدرسة ابن دريد يعمل على: http://localhost:${PORT}`);
     });

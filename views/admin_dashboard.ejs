@@ -215,6 +215,7 @@
         <a href="/admin/absence-profs" class="nav-link"><i class="fas fa-user-clock"></i> <span>غياب المعلمين</span></a>
         <a href="/admin/rapport-absences-eleves" class="nav-link"><i class="fas fa-chart-line"></i> <span>تقارير غياب الطلاب</span></a>
         <a href="/admin/behavior-reports" class="nav-link"><i class="fas fa-clipboard-list"></i> <span>تقارير السلوك</span></a>
+        <a href="/admin/student-reports-list" class="nav-link"><i class="fas fa-file-signature"></i> <span>التقييمات الأكاديمية</span></a>
         <hr>
         <a href="/admin/settings" class="nav-link"><i class="fas fa-cog"></i> <span>إعدادات النظام</span></a>
     </div>
@@ -269,6 +270,12 @@
             <div class="icon" style="color: var(--purple);">📑</div>
             <h3>تقارير السلوك</h3>
             <p>متابعة ملاحظات المعلمين حول سلوك الطلاب</p>
+        </div>
+
+        <div class="card reports" style="border-bottom-color: var(--info);" onclick="location.href='/admin/student-reports-list'">
+             <div class="icon" style="color: var(--info);">📝</div>
+             <h3>نتائج التقييمات</h3>
+              <p>مراجعة تقييمات المعلمين للمستوى الأكاديمي للطلاب</p>
         </div>
 
         <div class="card settings" onclick="location.href='/admin/settings'">

@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دخول المعلمين - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="/css/teacher_login.css">
+    <style>
+        /* إخفاء خيارات المعلمين افتراضياً */
+        .teacher-option { display: none; }
+        .error { color: red; background: #fee; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+    </style>
 </head>
 <body>
 
@@ -16,11 +21,21 @@
     <% } %>
     
     <form action="/teacher/login" method="POST">
+        <label for="subject_filter">المادة الدراسية:</label>
+        <select id="subject_filter" onchange="filterTeachers()" required>
+            <option value="" disabled selected>-- اختر المادة --</option>
+            <% matieres.forEach(matiere => { %>
+                <option value="<%= matiere.name %>"><%= matiere.name %></option>
+            <% }) %>
+        </select>
+
         <label for="teacher_id">اسم المعلم:</label>
-        <select name="teacher_id" id="teacher_id" required>
-            <option value="" disabled selected>-- اختر اسمك من القائمة --</option>
+        <select name="teacher_id" id="teacher_id" required disabled>
+            <option value="" disabled selected id="default_teacher_opt">-- اختر اسمك من القائمة --</option>
             <% enseignants.forEach(prof => { %>
-                <option value="<%= prof.id %>"><%= prof.nom %></option>
+                <option value="<%= prof.id %>" class="teacher-option" data-subject="<%= prof.matiere %>">
+                    <%= prof.nom %>
+                </option>
             <% }) %>
         </select>
 
@@ -34,6 +49,42 @@
         <a href="/admin/dashboard">دخول الإدارة (أدمن)</a>
     </div>
 </div>
+
+<script>
+function filterTeachers() {
+    // 1. جلب المادة المختارة وتنظيفها من المسافات الزائدة
+    const selectedSubject = document.getElementById('subject_filter').value.trim();
+    const teacherSelect = document.getElementById('teacher_id');
+    const options = document.querySelectorAll('.teacher-option');
+    const defaultOpt = document.getElementById('default_teacher_opt');
+
+    // 2. إعادة ضبط القائمة الثانية
+    teacherSelect.value = "";
+    let hasTeachers = false;
+
+    // 3. التكرار على المعلمين للبحث عن مطابقة
+    options.forEach(opt => {
+        const teacherSubject = opt.getAttribute('data-subject') ? opt.getAttribute('data-subject').trim() : "";
+
+        // التحقق من المطابقة (مع تجاهل فروق المسافات)
+        if (teacherSubject === selectedSubject && selectedSubject !== "") {
+            opt.style.display = "block";
+            hasTeachers = true;
+        } else {
+            opt.style.display = "none";
+        }
+    });
+
+    // 4. تحديث حالة القائمة بناءً على النتيجة
+    if (hasTeachers) {
+        teacherSelect.disabled = false;
+        defaultOpt.textContent = "-- اختر اسمك من القائمة --";
+    } else {
+        teacherSelect.disabled = true;
+        defaultOpt.textContent = "⚠️ لا يوجد معلمون مسجلون لهذه المادة";
+    }
+}
+</script>
 
 </body>
 </html>

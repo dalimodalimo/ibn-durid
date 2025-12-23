@@ -573,19 +573,20 @@ app.post('/admin/subjects/add', isAdmin, async (req, res) => {
 // 1. مسار عرض صفحة دخول المعلم
 app.get('/teacher/login', async (req, res) => {
     try {
-        // جلب أسماء المعلمين من Supabase لعرضهم في القائمة المنسدلة
-        const result = await pool.query("SELECT id, nom FROM enseignants ORDER BY nom ASC");
-        const enseignants = result.rows;
+        // جلب المواد من جدول school_subjects (الحقل هو name)
+        const subjectsResult = await pool.query("SELECT name FROM school_subjects ORDER BY name ASC");
         
-        // عرض صفحة login وإرسال قائمة المعلمين لها
+        // جلب المعلمين مع مادتهم (الحقل هو matiere)
+        const teachersResult = await pool.query("SELECT id, nom, matiere FROM enseignants ORDER BY nom ASC");
+
         res.render('teacher_login', { 
-            enseignants, 
-            error: null, 
-            titre: "دخول المعلمين" 
+            matieres: subjectsResult.rows, 
+            enseignants: teachersResult.rows, 
+            error: null 
         });
     } catch (e) {
-        console.error("Login Page Error:", e);
-        res.status(500).send("خطأ في تحميل صفحة الدخول");
+        console.error(e);
+        res.status(500).send("خطأ في جلب البيانات");
     }
 });
 // 2. مسار استقبال وإضافة مادة دراسية جديدة
@@ -731,7 +732,7 @@ app.post('/teacher/login', async (req, res) => {
     try {
         const { teacher_id, password } = req.body;
 
-        // التحقق من وجود المعلم وكلمة المرور في قاعدة البيانات
+        // التحقق من وجود المعلم وكلمة المرور
         const result = await pool.query(
             "SELECT * FROM enseignants WHERE id = $1 AND password = $2", 
             [teacher_id, password]
@@ -740,19 +741,21 @@ app.post('/teacher/login', async (req, res) => {
         const user = result.rows[0];
 
         if (user) {
-            // حفظ هوية المعلم في الكوكيز للوصول إليها في لوحة التحكم
+            // حفظ هوية المعلم في الكوكيز
             res.cookie('teacher_auth', user.id, { 
                 httpOnly: true, 
-                maxAge: 24 * 60 * 60 * 1000 // صالح لمدة يوم واحد
+                maxAge: 24 * 60 * 60 * 1000 
             });
             
-            // التوجيه إلى لوحة تحكم المعلم الخاصة به
             res.redirect(`/teacher/dashboard/${user.id}`);
         } else {
-            // في حال كانت البيانات خاطئة، نعيد تحميل صفحة الدخول مع رسالة خطأ
-            const enseignants = (await pool.query("SELECT id, nom FROM enseignants ORDER BY nom ASC")).rows;
+            // --- التعديل هنا: جلب المواد والمعلمين معاً لإعادة عرض الصفحة بشكل صحيح ---
+            const subjectsResult = await pool.query("SELECT name FROM school_subjects ORDER BY name ASC");
+            const teachersResult = await pool.query("SELECT id, nom, matiere FROM enseignants ORDER BY nom ASC");
+            
             res.render('teacher_login', { 
-                enseignants, 
+                matieres: subjectsResult.rows,     // أضفنا هذا السطر
+                enseignants: teachersResult.rows, // تأكدنا من جلب المادة هنا للتصفية
                 error: "كلمة المرور غير صحيحة، يرجى المحاولة مرة أخرى", 
                 titre: "دخول المعلمين" 
             });
@@ -762,77 +765,42 @@ app.post('/teacher/login', async (req, res) => {
         res.status(500).send("خطأ في عملية تسجيل الدخول");
     }
 });
+// يجب أن يكون المسار بهذا الشكل لاستقبال الـ ID
 app.get('/teacher/dashboard/:id', async (req, res) => {
-    const teacher_id = parseInt(req.params.id);
-    if (isNaN(teacher_id)) return res.redirect('/teacher/login');
-
     try {
-        const todayDate = new Date().toISOString().split('T')[0];
-        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const todayName = days[new Date().getDay()];
+        const teacherId = req.params.id;
 
-        const profRes = await pool.query("SELECT * FROM enseignants WHERE id = $1", [teacher_id]);
-        const prof = profRes.rows[0];
+        // 1. جلب بيانات المعلم (نسميه prof ليتوافق مع EJS)
+        const profResult = await pool.query("SELECT * FROM enseignants WHERE id = $1", [teacherId]);
+        const prof = profResult.rows[0];
+
         if (!prof) return res.status(404).send("المعلم غير موجود");
 
-        const fetchSafe = async (query, params = []) => {
-            try { return (await pool.query(query, params)).rows; } 
-            catch (e) { 
-                console.error("❌ فشل استعلام محدد:", e.message); 
-                return []; 
-            }
-        };
-
-        const periods = await fetchSafe("SELECT * FROM school_periods ORDER BY id ASC");
+        // 2. جلب الحصص (sessions) من جدول affectations
+        // أضفت حقل is_substitute و is_marked افتراضياً لكي لا يعطي الكود خطأ
+        const sessionsResult = await pool.query(`
+            SELECT *, 
+            false as is_marked, 
+            false as is_substitute 
+            FROM affectations 
+            WHERE enseignant_id = $1`, [teacherId]);
         
-        // --- تحديث: جلب الحصص العادية وحصص الاحتياط المقبولة معاً ---
-        const sessionsQuery = `
-            SELECT periode, classe, section, false as is_substitute 
-            FROM timetable 
-            WHERE enseignant_id = $1 AND (jour = $2 OR jour = REPLACE($2, 'إ', 'ا'))
-            
-            UNION ALL
-            
-            SELECT periode, classe, section, true as is_substitute 
-            FROM substitute_logs 
-            WHERE substitute_id = $1 AND date::date = $3::date AND status = 'accepted'
-            
-            ORDER BY periode ASC
-        `;
-        const sessions = await fetchSafe(sessionsQuery, [teacher_id, todayName, todayDate]);
-        // ---------------------------------------------------------
+        // 3. جلب أوقات الحصص (periods)
+        const periodsResult = await pool.query("SELECT * FROM school_periods ORDER BY id ASC");
         
-        const students = await fetchSafe("SELECT id, nom, classe, section FROM eleves ORDER BY nom ASC");
-        const announcements = await fetchSafe("SELECT * FROM announcements ORDER BY id DESC LIMIT 5");
-        
-        const evalRequests = await fetchSafe(`
-            SELECT er.*, e.nom as student_name FROM evaluation_requests er 
-            JOIN eleves e ON er.eleve_id = e.id 
-            WHERE er.enseignant_id = $1 AND er.status = 'pending'
-        `, [teacher_id]);
+        // 4. جلب الطلاب (students) لرصد الغياب
+        const studentsResult = await pool.query("SELECT * FROM students");
 
-        const pendingRequests = await fetchSafe(`
-            SELECT sl.*, e.nom as absent_name FROM substitute_logs sl 
-            JOIN enseignants e ON sl.absent_id = e.id 
-            WHERE sl.substitute_id = $1 AND sl.date::date = $2::date AND sl.status = 'pending'
-        `, [teacher_id, todayDate]);
-
-        res.render('teacher_dashboard', {
-            prof,
-            periods: periods.length > 0 ? periods : Array.from({length:8}, (_,i)=>({id:i+1, start_time:'00:00', end_time:'00:00'})),
-            sessions,
-            students,
-            announcements,
-            evalRequests,
-            pendingRequests,
-            todayDate,
-            todayName,
-            titre: "لوحة المعلم"
+        res.render('teacher_dashboard', { 
+            prof: prof, 
+            sessions: sessionsResult.rows, 
+            periods: periodsResult.rows,
+            students: studentsResult.rows,
+            titre: "لوحة التحكم"
         });
-
     } catch (e) {
-        console.error("Dashboard Error:", e.message);
-        res.status(500).send("خطأ في تحميل البيانات");
+        console.error(e);
+        res.status(500).send("خطأ في النظام");
     }
 });
 // 10. إضافة إعلان جديد من قبل الإدارة

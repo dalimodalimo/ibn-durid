@@ -28,6 +28,17 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 15px; display: flex; flex-direction: column; gap: 20px; }
         .hidden { display: none !important; }
 
+/* أضف هذا فقط */
+.period-card.sub-active {
+    background-color: #fef9c3 !important; /* لون أصفر */
+    border: 2px solid #facc15 !important; /* إطار أصفر غامق */
+}
+.sub-tag {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: #eab308; color: white; font-size: 0.55rem; padding: 2px 8px;
+    border-radius: 20px; font-weight: 900; white-space: nowrap;
+}
+
         /* --- Header الثابت الجديد مع زر الخروج --- */
         .main-header {
             background: var(--primary-gradient); color: white; padding: 20px; border-radius: 0 0 var(--radius-xl) var(--radius-xl);
@@ -147,10 +158,10 @@
                             <small>البديل لـ: <%= sub.absent_name %></small>
                         </div>
                     </div>
-                    <form action="/teacher/substitute/respond" method="POST">
-                        <input type="hidden" name="sub_id" value="<%= sub.id %>">
-                        <input type="hidden" name="action" value="accept">
-                        <button type="submit" class="btn-accept">قبول الحصة</button>
+                  <form action="/teacher/substitute/respond" method="POST">
+                    <input type="hidden" name="sub_id" value="<%= sub.id %>">
+                      <input type="hidden" name="teacher_id" value="<%= prof.id %>"> <input type="hidden" name="action" value="accept">
+                     <button type="submit" class="btn-accept">قبول الحصة</button>
                     </form>
                 </div>
             <% }) %>
@@ -198,34 +209,39 @@
     </div>
 
     <section id="section-schedule">
-        <h3 style="margin-bottom: 10px; color: var(--primary); font-size: 1rem;"><i class="fas fa-calendar-day"></i> جدول الحصص اليومي</h3>
-        <div class="banner-container">
-            <div class="banner-scroll" id="banner-scroll">
-                <% for(let i=1; i<=8; i++) { 
-                    let p = periods.find(x => x.id === i);
-                    let s = sessions.find(x => x.periode === i);
-                %>
-                    <div class="period-card <%= s && s.isSubstitute ? 'sub-session' : '' %>" id="period-<%= i %>">
-    <span style="font-size: 0.7rem; font-weight: bold; color: #64748b;">الحصة <%= i %></span>
-    
-    <div style="font-size: 1.1rem; font-weight: 900; color: var(--primary); margin: 8px 0;">
-        <% if (s) { %>
-            <%= s.classe %>-<%= s.section %>
-            <% if(s.isSubstitute) { %><br><small style="color:var(--accent); font-size:0.6rem;">(إحتياط)</small><% } %>
-        <% } else { %>
-            <div style="color: #8b4513; opacity: 0.5;">
-                <i class="fas fa-mug-hot" style="font-size: 1.4rem; display: block; margin-bottom: 2px;"></i>
-                <span style="font-size: 0.6rem; font-weight: 400;">استراحة</span>
-            </div>
-        <% } %>
-    </div>
-    
-    <span style="font-size: 0.7rem; color: #94a3b8;"><%= p ? p.start_time : '--:--' %></span>
-</div>
-                <% } %>
-            </div>
+    <h3 style="margin-bottom: 10px; color: var(--primary); font-size: 1rem;"><i class="fas fa-calendar-day"></i> جدول الحصص اليومي</h3>
+    <div class="banner-container">
+        <div class="banner-scroll" id="banner-scroll">
+            <% for(let i=1; i<=8; i++) { 
+                let p = periods.find(x => x.id === i);
+                let s = sessions.find(x => x.periode === i);
+                // التحقق من نوع الحصة
+                let isSub = s && s.is_substitute === true;
+            %>
+                <div class="period-card <%= isSub ? 'sub-active' : '' %>" id="period-<%= i %>">
+                    <% if (isSub) { %>
+                        <span class="sub-tag">إحتياط</span>
+                    <% } %>
+
+                    <span style="font-size: 0.7rem; font-weight: bold; color: #64748b;">الحصة <%= i %></span>
+                    
+                    <div style="font-size: 1.1rem; font-weight: 900; color: var(--primary); margin: 8px 0;">
+                        <% if (s) { %>
+                            <%= s.classe %>-<%= s.section %>
+                        <% } else { %>
+                            <div style="color: #8b4513; opacity: 0.3;">
+                                <i class="fas fa-mug-hot" style="font-size: 1.2rem; display: block; margin-bottom: 2px;"></i>
+                                <span style="font-size: 0.55rem; font-weight: 400;">استراحة</span>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <span style="font-size: 0.7rem; color: #94a3b8;"><%= p ? p.start_time : '--:--' %></span>
+                </div>
+            <% } %>
         </div>
-    </section>
+    </div>
+</section>
 
     <section id="section-attendance" class="panel">
         <div id="no-session-msg" class="hidden" style="text-align: center; color: #94a3b8; padding: 30px;">

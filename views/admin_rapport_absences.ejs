@@ -5,48 +5,193 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin_style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        .report-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 20px; }
-        .abs-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .abs-table th { background: #1a237e; color: white; padding: 12px; text-align: right; }
-        .abs-table td { padding: 12px; border-bottom: 1px solid #eee; }
-        .badge-count { background: #ef4444; color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
-        .safe { background: #10b981 !important; }
+        :root {
+            --primary: #1a237e;
+            --primary-light: #e8eaf6;
+            --accent: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --text-main: #1e293b;
+        }
+
+        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text-main); }
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* الهيدر الرئيسي */
+        .report-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        /* شريط الأدوات والفلاتر */
+        .toolbar {
+            background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px;
+            display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .search-box { position: relative; flex: 1; min-width: 250px; }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .search-box input { 
+            width: 100%; padding: 10px 40px 10px 15px; border: 1px solid #e2e8f0; 
+            border-radius: 8px; font-family: inherit; outline: none; transition: 0.3s;
+        }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1); }
+
+        .filter-group { display: flex; align-items: center; gap: 10px; }
+        select { 
+            padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; 
+            font-family: inherit; outline: none; cursor: pointer; background: white;
+        }
+
+        /* الجدول */
+        .report-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .abs-table { width: 100%; border-collapse: collapse; }
+        .abs-table th { background: #f8fafc; color: #64748b; padding: 15px; text-align: right; font-weight: 700; border-bottom: 2px solid #edf2f7; }
+        .abs-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .abs-table tr:last-child td { border-bottom: none; }
+        .abs-table tr:hover { background-color: #f1f5f9; transition: 0.2s; }
+
+        /* التنسيقات النوعية */
+        .student-info { display: flex; align-items: center; gap: 12px; }
+        .avatar-circle { 
+            width: 35px; height: 35px; background: var(--primary-light); color: var(--primary);
+            display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 900;
+        }
+        
+        .badge-count { 
+            padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;
+            background: #fee2e2; color: var(--accent);
+        }
+        .badge-count.safe { background: #dcfce7; color: var(--success); }
+
+        .status-pill { 
+            padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+
+        /* الأزرار */
+        .btn { 
+            padding: 10px 20px; border-radius: 8px; text-decoration: none; 
+            font-weight: 600; cursor: pointer; transition: 0.3s; border: none; font-family: inherit;
+        }
+        .btn-print { background: var(--primary); color: white; }
+        .btn-back { background: #f1f5f9; color: #475569; }
+
+        /* إحصائيات سريعة */
+        .stats-bar { display: flex; gap: 20px; margin-bottom: 20px; }
+        .stat-item { 
+            background: white; padding: 15px; border-radius: 12px; flex: 1; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); border-right: 4px solid var(--primary);
+        }
+
+        @media print {
+            .toolbar, .btn, .no-print, .header-actions { display: none !important; }
+            body { padding: 0; background: white; }
+            .report-card { box-shadow: none; border: 1px solid #eee; }
+            .container { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <header class="main-header">
-            <h1><i class="fas fa-chart-line"></i> تقرير غياب الطلاب</h1>
-            <a href="/admin/dashboard" class="btn-back">العودة للوحة التحكم</a>
-        </header>
+        <div class="report-header">
+            <div>
+                <h1 style="margin: 0; color: var(--primary); font-size: 1.5rem;">تقرير الانضباط والغياب</h1>
+                <p style="margin: 5px 0 0; color: #64748b; font-size: 0.85rem;">
+                    <i class="far fa-calendar-alt"></i> تاريخ الاستخراج: <%= new Date().toLocaleDateString('ar-EG') %>
+                </p>
+            </div>
+            <div class="header-actions">
+                <button onclick="window.print()" class="btn btn-print"><i class="fas fa-print"></i> طباعة</button>
+                <a href="/admin/dashboard" class="btn btn-back">رجوع</a>
+            </div>
+        </div>
+
+        <div class="stats-bar no-print">
+            <div class="stat-item">
+                <div style="font-size: 0.75rem; color: #64748b;">إجمالي الطلاب</div>
+                <div style="font-size: 1.2rem; font-weight: 900;"><%= rapports.length %></div>
+            </div>
+            <div class="stat-item" style="border-right-color: var(--accent);">
+                <div style="font-size: 0.75rem; color: #64748b;">طلاب بحاجة لإنذار (5+ أيام)</div>
+                <div style="font-size: 1.2rem; font-weight: 900; color: var(--accent);">
+                    <%= rapports.filter(r => r.total_absences_days >= 5).length %>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar no-print">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="nameSearch" placeholder="ابحث عن اسم الطالب..." onkeyup="filterTable()">
+            </div>
+            <div class="filter-group">
+                <span>تصفية الصف:</span>
+                <select id="classFilter" onchange="filterTable()">
+                    <option value="">كل الصفوف</option>
+                    <% [...new Set(rapports.map(r => r.classe))].sort().forEach(c => { %>
+                        <option value="<%= c %>"><%= c %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span>الحالة:</span>
+                <select id="statusFilter" onchange="filterTable()">
+                    <option value="">كل الحالات</option>
+                    <option value="فصل">فصل نهائي</option>
+                    <option value="إنذار">إنذارات</option>
+                    <option value="مستقر">مستقر</option>
+                </select>
+            </div>
+        </div>
 
         <div class="report-card">
-            <table class="abs-table">
+            <table class="abs-table" id="attendanceTable">
                 <thead>
                     <tr>
                         <th>اسم الطالب</th>
                         <th>الصف / القسم</th>
-                        <th>عدد حصص الغياب</th>
-                        <th>الحالة</th>
+                        <th>أيام الغياب</th>
+                        <th>الحالة القانونية</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% rapports.forEach(student => { %>
-                        <tr>
-                            <td><%= student.nom %></td>
-                            <td><%= student.classe %> - <%= student.section %></td>
-                            <td><span class="badge-count <%= student.total_absences < 5 ? 'safe' : '' %>"><%= student.total_absences %> حصة</span></td>
+                        <tr class="student-row">
                             <td>
-                                <% if(student.total_absences >= 15) { %>
-                                    <strong style="color: #d32f2f;">فصل نهائي</strong>
-                                <% } else if(student.total_absences >= 10) { %>
-                                    <strong style="color: #f57c00;">إنذار ثاني</strong>
-                                <% } else if(student.total_absences >= 5) { %>
-                                    <strong style="color: #fbc02d;">إنذار أول</strong>
+                                <div class="student-info">
+                                    <div class="avatar-circle"><%= student.nom.charAt(0) %></div>
+                                    <span class="student-name" style="font-weight: 700;"><%= student.nom %></span>
+                                </div>
+                            </td>
+                            <td class="student-class"><%= student.classe %> - <%= student.section %></td>
+                            <td>
+                                <span class="badge-count <%= student.total_absences_days < 5 ? 'safe' : '' %>">
+                                    <%= student.total_absences_days %> يوم
+                                </span>
+                            </td>
+                            <td class="student-status">
+                                <% if(student.total_absences_days >= 15) { %>
+                                    <span class="status-pill" style="color: #ef4444; background: #fee2e2;">
+                                        <i class="fas fa-gavel"></i> فصل نهائي
+                                    </span>
+                                <% } else if(student.total_absences_days >= 10) { %>
+                                    <span class="status-pill" style="color: #f97316; background: #ffedd5;">
+                                        <i class="fas fa-exclamation-triangle"></i> إنذار ثاني
+                                    </span>
+                                <% } else if(student.total_absences_days >= 5) { %>
+                                    <span class="status-pill" style="color: #eab308; background: #fefce8;">
+                                        <i class="fas fa-exclamation-circle"></i> إنذار أول
+                                    </span>
                                 <% } else { %>
-                                    <span style="color: #388e3c;">مستقر</span>
+                                    <span class="status-pill" style="color: #10b981; background: #dcfce7;">
+                                        <i class="fas fa-check-circle"></i> مستقر
+                                    </span>
                                 <% } %>
                             </td>
                         </tr>
@@ -55,5 +200,30 @@
             </table>
         </div>
     </div>
+
+    <script>
+        function filterTable() {
+            const nameInput = document.getElementById('nameSearch').value.toLowerCase();
+            const classInput = document.getElementById('classFilter').value;
+            const statusInput = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('.student-row');
+
+            rows.forEach(row => {
+                const name = row.querySelector('.student-name').innerText.toLowerCase();
+                const className = row.querySelector('.student-class').innerText;
+                const status = row.querySelector('.student-status').innerText;
+
+                const nameMatch = name.includes(nameInput);
+                const classMatch = classInput === "" || className.includes(classInput);
+                const statusMatch = statusInput === "" || status.includes(statusInput);
+
+                if (nameMatch && classMatch && statusMatch) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+    </script>
 </body>
 </html>

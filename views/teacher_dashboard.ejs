@@ -110,15 +110,20 @@
 <body id="top">
 
     <header class="main-header">
-        <div class="header-user">
-            <h1>أهلاً أ/ <%= prof.nom %></h1>
-            <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+    <div class="header-user">
+        <h1>أهلاً أ/ <%= prof.nom %></h1>
+        <div style="background: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 4px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; border: 1px solid rgba(255, 215, 0, 0.3); font-size: 0.85rem; font-weight: 700;">
+            <i class="fas fa-star"></i>
+            <span><%= prof.stars_count || 0 %> نجمة</span>
         </div>
-        <div class="live-clock-box">
-            <span id="live-clock">00:00:00</span>
-            <small id="current-status-text" style="font-size: 0.6rem; opacity: 0.8;">جاري فحص الجدول...</small>
-        </div>
-    </header>
+        <br>
+        <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+    </div>
+    <div class="live-clock-box">
+        <span id="live-clock">00:00:00</span>
+        <small id="current-status-text" style="font-size: 0.6rem; opacity: 0.8;">جاري فحص الجدول...</small>
+    </div>
+</header>
     <% if (typeof evalRequests !== 'undefined' && evalRequests.length > 0) { %>
     <div id="eval-requests-container" style="margin-bottom: 20px;">
         <% evalRequests.forEach(req => { %>
@@ -197,14 +202,45 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-tasks"></i></div>
-            <div><h3 id="todo-count" style="font-size: 1.1rem;">0</h3><p style="font-size: 0.7rem;">مهام</p></div>
+            <div>
+                <h3 id="todo-count" style="font-size: 1.1rem;">0</h3>
+                <p style="font-size: 0.7rem;">مهام معلقة</p>
+            </div>
         </div>
+
         <div class="stat-card">
             <div class="stat-icon" style="color: var(--success);"><i class="fas fa-check-double"></i></div>
             <div>
                 <h3 id="marked-sessions" style="font-size: 1.1rem;"><%= sessions.filter(s => s.is_marked).length %></h3>
                 <p style="font-size: 0.7rem;">حصص مرصودة</p>
             </div>
+        </div>
+
+        <div class="stat-card" style="grid-column: span 2; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border-bottom: 4px solid #ffd700; position: relative; overflow: hidden;">
+            <div class="stat-icon" style="background: rgba(255,215,0,0.1); color: #ffd700;">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
+                <div>
+                    <h3 style="font-size: 1.4rem; color: #ffd700; font-weight: 900;">
+                        <%= prof.stars_count || 0 %> 
+                        <i class="fas fa-star" style="font-size: 0.9rem;"></i>
+                    </h3>
+                    <p style="font-size: 0.75rem; opacity: 0.9;">رصيد نجوم التميز</p>
+                </div>
+                <div style="text-align: left;">
+                    <span style="font-size: 0.7rem; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); font-weight: 700; color: #ffd700;">
+                        <% if((prof.stars_count || 0) >= 100) { %> 
+                            <i class="fas fa-crown"></i> معلم قدير
+                        <% } else if((prof.stars_count || 0) >= 50) { %> 
+                            <i class="fas fa-award"></i> معلم متميز
+                        <% } else { %> 
+                            <i class="fas fa-seedling"></i> معلم مبادر 
+                        <% } %>
+                    </span>
+                </div>
+            </div>
+            <i class="fas fa-star" style="position: absolute; left: -10px; bottom: -10px; font-size: 4rem; color: rgba(255,215,0,0.05); transform: rotate(-15deg);"></i>
         </div>
     </div>
 

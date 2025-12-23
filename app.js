@@ -496,17 +496,31 @@ app.post('/teacher/substitute/respond', async (req, res) => {
         const { sub_id, action, teacher_id } = req.body; 
 
         if (action === 'accept') {
+            // 1. تحديث حالة الحصة في جدول substitute_logs
             await pool.query(
                 "UPDATE substitute_logs SET status = 'accepted' WHERE id = $1",
                 [sub_id]
             );
+
+            // 2. منح المعلم 3 نجوم تلقائياً
+            await pool.query(
+                "UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + 3 WHERE id = $1",
+                [teacher_id]
+            );
+
+            // 3. توثيق العملية في سجل النجوم للشفافية
+            await pool.query(
+                "INSERT INTO stars_log (teacher_id, points, reason) VALUES ($1, 3, $2)",
+                [teacher_id, 'قبول حصة احتياط وتعويض غياب زميل']
+            );
+
+            console.log(`⭐ تم منح 3 نجوم للمعلم ID: ${teacher_id}`);
         }
 
-        // بدلاً من 'back'، نوجه المعلم إلى لوحة تحكمه مباشرة باستخدام معرفه
+        // توجيه المعلم بناءً على معرفه كما في الكود الخاص بك
         if (teacher_id) {
             res.redirect(`/teacher/dashboard/${teacher_id}`);
         } else {
-            // في حال عدم وجود معرف، نعود للصفحة الرئيسية للمعلمين
             res.redirect('/teacher/login');
         }
     } catch (e) {
@@ -1018,7 +1032,55 @@ app.post('/admin/behavior/delete/:id', async (req, res) => {
         res.status(500).send("فشل في حذف الملاحظة");
     }
 });
+app.get('/admin/stars-management', async (req, res) => {
+    try {
+        const query = `
+            SELECT id, nom, stars_count, 
+            CASE 
+                WHEN stars_count >= 100 THEN 'معلم قدير'
+                WHEN stars_count >= 50 THEN 'معلم متميز'
+                ELSE 'معلم مبادر'
+            END as rank_name
+            FROM enseignants 
+            ORDER BY stars_count DESC
+        `;
+        const result = await pool.query(query);
+        
+        res.render('admin_stars', { 
+            teachers: result.rows, 
+            titre: "لوحة شرف معلمين ابن دريد" 
+        });
+    } catch (e) {
+        res.status(500).send("خطأ في جلب بيانات النجوم");
+    }
+});
 
+// ب. مسار إضافة نقاط يدوية من الأدمن
+app.post('/admin/stars/award', async (req, res) => {
+    const { teacher_id, points, reason } = req.body;
+    try {
+        await pool.query("UPDATE enseignants SET stars_count = stars_count + $1 WHERE id = $2", [points, teacher_id]);
+        await pool.query("INSERT INTO stars_log (teacher_id, points, reason) VALUES ($1, $2, $3)", [teacher_id, points, reason]);
+        res.redirect('/admin/stars-management');
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+
+app.post('/admin/stars/reset-all', async (req, res) => {
+    try {
+        // 1. تصفير النقاط لجميع المعلمين
+        await pool.query("UPDATE enseignants SET stars_count = 0");
+        
+        // 2. تسجيل عملية التصفير في السجل العام (اختياري)
+        await pool.query("INSERT INTO stars_log (teacher_id, points, reason) VALUES (NULL, 0, 'إعادة ضبط شاملة للنجوم لبدء دورة جديدة')");
+        
+        console.log("🔄 تم تصفير جميع نجوم المعلمين بنجاح");
+        res.redirect('/admin/stars-management');
+    } catch (e) {
+        console.error("خطأ في تصفير النجوم:", e.message);
+        res.status(500).send("فشل في إعادة ضبط النجوم");
+    }
+});
     // --- [ تشغيل الخادم ] ---
     app.listen(PORT, () => {
         console.log(`🚀 نظام مدرسة ابن دريد يعمل على: http://localhost:${PORT}`);

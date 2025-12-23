@@ -1081,6 +1081,45 @@ app.post('/admin/stars/reset-all', async (req, res) => {
         res.status(500).send("فشل في إعادة ضبط النجوم");
     }
 });
+app.get('/admin/enseignants/supprimer/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query("DELETE FROM enseignants WHERE id = $1", [id]);
+        res.redirect('/admin/enseignants');
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("خطأ في حذف المعلم");
+    }
+});
+
+app.get('/admin/eleves/supprimer/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // 1. حذف غياب الطالب (تأكد هل العمود student_id أم eleve_id)
+        // سنستخدم الاسم الأكثر شيوعاً في جداولك وهو student_id أو eleve_id
+        await pool.query("DELETE FROM student_absences WHERE student_id = $1", [id]).catch(() => {});
+        
+        // 2. حذف سجلات السلوك
+        await pool.query("DELETE FROM behavior_logs WHERE student_id = $1", [id]).catch(() => {});
+        
+        // 3. حذف التقييمات (هنا الجدول بالفرنسية، غالباً العمود eleve_id)
+        await pool.query("DELETE FROM academic_evaluations WHERE student_id = $1", [id]).catch(async () => {
+             await pool.query("DELETE FROM academic_evaluations WHERE eleve_id = $1", [id]);
+        });
+
+        await pool.query("DELETE FROM evaluation_requests WHERE eleve_id = $1", [id]).catch(() => {});
+
+        // 4. حذف الطالب من جدول eleves (المفتاح الأساسي هو id)
+        await pool.query("DELETE FROM eleves WHERE id = $1", [id]);
+
+        console.log(`✅ تم حذف الطالب بنجاح`);
+        res.redirect('/admin/eleves');
+
+    } catch (e) {
+        console.error("❌ خطأ أثناء الحذف:", e.message);
+        res.status(500).send("حدث خطأ أثناء الحذف: " + e.message);
+    }
+});
     // --- [ تشغيل الخادم ] ---
     app.listen(PORT, () => {
         console.log(`🚀 نظام مدرسة ابن دريد يعمل على: http://localhost:${PORT}`);

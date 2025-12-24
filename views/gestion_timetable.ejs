@@ -95,35 +95,7 @@
 <div class="main-content" id="main-content">
     <header class="page-header"><h1>إدارة الجدول الأسبوعي</h1></header>
 
-    <div class="card" id="section-filter">
-        <h3><i class="fas fa-filter"></i> تصفية عرض البيانات</h3>
-        <form action="/admin/timetable" method="GET" class="filter-grid-row">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                <div class="input-group">
-                    <label>حسب المعلم:</label>
-                    <select name="teacher_filter" onchange="this.form.submit()">
-                        <option value="">-- كل المعلمين --</option>
-                        <% enseignants.forEach(p => { %>
-                            <option value="<%= p.id %>" <%= teacher_filter == p.id ? 'selected' : '' %>><%= p.nom %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>حسب الصف:</label>
-                    <select name="class_filter" onchange="this.form.submit()">
-                        <option value="">-- كل الصفوف --</option>
-                        <% unique_classes.forEach(c => { %>
-                            <% let val = c.classe + "-" + c.section; %>
-                            <option value="<%= val %>" <%= class_filter == val ? 'selected' : '' %>>الصف <%= c.classe %> / <%= c.section %></option>
-                        <% }) %>
-                    </select>
-                </div>
-            </div>
-            <div style="margin-top: 15px;">
-                <a href="/admin/timetable" class="btn" style="background: #94a3b8; color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 0.9rem;">إعادة تعيين الفلتر</a>
-            </div>
-        </form>
-    </div>
+    
 
     <section class="card" id="section-add" style="margin-top: 20px;">
         <h3><i class="fas fa-plus-circle"></i> إضافة حصة جديدة</h3>
@@ -162,6 +134,35 @@
             </button>
         </form>
     </section>
+    <div class="card" id="section-filter">
+        <h3><i class="fas fa-filter"></i> تصفية عرض البيانات</h3>
+        <form action="/admin/timetable" method="GET" class="filter-grid-row">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="input-group">
+                    <label>حسب المعلم:</label>
+                    <select name="teacher_filter" onchange="this.form.submit()">
+                        <option value="">-- كل المعلمين --</option>
+                        <% enseignants.forEach(p => { %>
+                            <option value="<%= p.id %>" <%= teacher_filter == p.id ? 'selected' : '' %>><%= p.nom %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>حسب الصف:</label>
+                    <select name="class_filter" onchange="this.form.submit()">
+                        <option value="">-- كل الصفوف --</option>
+                        <% unique_classes.forEach(c => { %>
+                            <% let val = c.classe + "-" + c.section; %>
+                            <option value="<%= val %>" <%= class_filter == val ? 'selected' : '' %>>الصف <%= c.classe %> / <%= c.section %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <a href="/admin/timetable" class="btn" style="background: #94a3b8; color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 0.9rem;">إعادة تعيين الفلتر</a>
+            </div>
+        </form>
+    </div>
 
     <div class="card" id="section-table" style="margin-top: 20px;">
         <h2 class="table-title">

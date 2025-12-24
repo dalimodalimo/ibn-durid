@@ -298,6 +298,34 @@
             </div>
         </div>
     </div>
+   <section class="star-history-panel" style="margin-top: 20px;">
+    <h3 onclick="toggleStarHistory()" style="font-size: 0.9rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #f1f5f9; padding: 10px; border-radius: 12px;">
+        <i class="fas fa-history"></i> 
+        سجل مكافآت النجوم
+        <i id="history-chevron" class="fas fa-chevron-down" style="margin-right: auto; transition: 0.3s;"></i>
+    </h3>
+
+    <div id="star-history-content" style="background: white; border-radius: 15px; padding: 10px; box-shadow: var(--shadow); display: none; overflow: hidden;">
+        <% if (typeof starHistory !== 'undefined' && starHistory.length > 0) { %>
+            <% starHistory.forEach(log => { %>
+                <div class="star-history-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px dashed #eee;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 30px; height: 30px; background: #fff9db; color: #fab005; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 700;"><%= log.reason %></div>
+                            <small style="color: #94a3b8; font-size: 0.7rem;"><%= log.date %></small>
+                        </div>
+                    </div>
+                    <span style="color: #40c057; font-weight: 900; font-size: 0.9rem;"><%= log.points %></span>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 10px;">ابدأ بإتمام المهام للحصول على النجوم!</p>
+        <% } %>
+    </div>
+</section>
 
     <section id="section-schedule">
     <h3 style="margin-bottom: 10px; color: var(--primary); font-size: 1rem;">
@@ -567,7 +595,84 @@
             const el = document.getElementById('ann-box-' + id);
             if (el) el.remove();
         });
+
+       // فحص إذا كان المعلم عائداً من عملية تقييم ناجحة
+const urlParams = new URLSearchParams(window.location.search);
+
+if (urlParams.get('success') === 'evaluated') {
+    
+    // 1. تشغيل تأثير النجوم (الكونفيتي)
+    runConfetti();
+
+    // 2. إظهار رسالة الشكر (Toast)
+    showSuccessToast();
+
+    // 3. الخطوة الأهم: مسح الـ URL فوراً دون إعادة تحميل الصفحة
+    // هذا يمنع تكرار التأثير عند عمل Refresh
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+function runConfetti() {
+    var duration = 3 * 1000;
+    var end = Date.now() + duration;
+
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#ffd700', '#1e3a8a']
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#ffd700', '#1e3a8a']
+      });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    }());
+}
+
+function showSuccessToast() {
+    const toast = document.createElement('div');
+    toast.className = 'success-toast-animation'; // سنضيف لها تنسيق بسيط
+    toast.innerHTML = `
+        <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+                    background: #1e3a8a; color: white; padding: 15px 25px; 
+                    border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+                    z-index: 9999; display: flex; align-items: center; gap: 10px;
+                    border: 2px solid #ffd700; animation: slideDown 0.5s ease;">
+            <i class="fas fa-star" style="color: #ffd700;"></i>
+            <span>شكراً لك! تم منحك <strong>نجمة ذهبية</strong></span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 4000);
+} 
+
+
     };
+
+    function toggleStarHistory() {
+    const content = document.getElementById('star-history-content');
+    const chevron = document.getElementById('history-chevron');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        chevron.style.transform = 'rotate(180deg)'; // La flèche pointe vers le haut
+        
+        // Optionnel : Petit effet d'animation pour les items
+        const items = content.querySelectorAll('.star-history-item');
+        items.forEach((item, index) => {
+            item.style.animation = `slideInRight 0.3s ease forwards ${index * 0.1}s`;
+        });
+    } else {
+        content.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)'; // La flèche revient vers le bas
+    }
+}
 </script>
 
 <script>
@@ -616,5 +721,6 @@
         if (resultsList && e.target !== searchInput) resultsList.style.display = 'none';
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </body>
 </html>

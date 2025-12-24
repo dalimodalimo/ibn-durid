@@ -842,7 +842,22 @@ app.post('/teacher/login', async (req, res) => {
 // app.js
 app.get('/teacher/dashboard/:id', async (req, res) => {
     try {
+        // 1. استخراج المعرف أولاً لاستخدامه في الاستعلامات
         const teacherId = req.params.id;
+
+        // 2. استعلام سجل النجوم (تم وضعه هنا لضمان عمل teacherId)
+      const starHistoryRes = await pool.query(`
+    SELECT * FROM (
+        (SELECT 'تقييم طالب' as reason, date_submission as date, '1+' as points, id FROM academic_evaluations WHERE enseignant_id = $1)
+        UNION ALL
+        (SELECT DISTINCT ON (date, periode) 'رصد غياب حصة' as reason, date as date, '1+' as points, MAX(id) as id 
+         FROM student_absences WHERE enseignant_id = $1 GROUP BY date, periode)
+        UNION ALL
+        (SELECT reason, date, points, id FROM star_logs WHERE enseignant_id = $1)
+    ) AS combined_history
+    ORDER BY date DESC, id DESC 
+    LIMIT 5
+`, [teacherId]);
 
         // التأكد من التاريخ بتوقيت عمان (Asia/Muscat)
         const today = new Intl.DateTimeFormat('en-CA', {
@@ -857,17 +872,17 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
         const periodsRes = await pool.query("SELECT * FROM school_periods ORDER BY id ASC");
         const elevesRes = await pool.query("SELECT * FROM students ORDER BY nom ASC");
         const annRes = await pool.query("SELECT * FROM announcements ORDER BY id DESC");
+        
         const evalRes = await pool.query(`
-    SELECT 
-        er.*, 
-        s.nom AS student_name, 
-        s.classe 
-    FROM evaluation_requests er
-    JOIN students s ON er.eleve_id = s.id
-    WHERE er.enseignant_id = $1 AND er.status = 'pending'
-`, [teacherId]);
-        // --- التعديل الجوهري: جلب أقفال الصفوف لكل المعلمين لليوم الحالي ---
-        // نربط الغياب مع جدول الطلاب والمعلمين لجلب (الصف، القسم، واسم المعلم)
+            SELECT 
+                er.*, 
+                s.nom AS student_name, 
+                s.classe 
+            FROM evaluation_requests er
+            JOIN students s ON er.eleve_id = s.id
+            WHERE er.enseignant_id = $1 AND er.status = 'pending'
+        `, [teacherId]);
+
         const locksRes = await pool.query(`
             SELECT DISTINCT 
                 s.classe, 
@@ -881,7 +896,6 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
             WHERE sa.date = $1
         `, [today]);
 
-        // تحويل الحصص التي رصدها "هذا المعلم فقط" لمصفوفة (للإحصائيات)
         const markedPeriods = locksRes.rows
             .filter(l => l.enseignant_id == teacherId)
             .map(l => l.periode);
@@ -891,7 +905,7 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
             [teacherId, today]
         );
 
-        // إرسال كافة البيانات المطلوبة للـ EJS
+        // 3. إرسال كافة البيانات المطلوبة للـ EJS مع إضافة starHistory
         res.render('teacher_dashboard', {
             titre: "لوحة التحكم",
             prof: prof,
@@ -902,7 +916,8 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
             evaluation_requests: evalRes.rows,
             substitute_logs: subRes.rows,
             markedPeriods: markedPeriods,
-            classLocks: locksRes.rows // <<< ضروري جداً لعمل JavaScript في المتصفح
+            classLocks: locksRes.rows,
+            starHistory: starHistoryRes.rows // <<< القيمة الجديدة المضافة للـ EJS
         });
 
     } catch (e) {
@@ -1120,6 +1135,33 @@ app.post('/admin/behavior/delete/:id', async (req, res) => {
         res.status(500).send("فشل في حذف الملاحظة");
     }
 });
+app.post('/admin/stars-management/update', async (req, res) => {
+    try {
+        const { teacher_id, stars_to_add, reason } = req.body;
+        const today = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Muscat',
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+
+        // 1. زيادة النجوم في جدول المعلمين
+        await pool.query(
+            "UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + $1 WHERE id = $2",
+            [parseInt(stars_to_add), teacher_id]
+        );
+
+        // 2. تسجيل العملية في جدول السجل ليراها المعلم
+        await pool.query(
+            "INSERT INTO star_logs (enseignant_id, reason, points, date) VALUES ($1, $2, $3, $4)",
+            [teacher_id, reason || 'مكافأة إدارية', `+${stars_to_add}`, today]
+        );
+
+        res.json({ success: true, message: "تمت إضافة النجوم بنجاح" });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+// مسار عرض الصفحة (الذي يفتحه المتصفح)
 app.get('/admin/stars-management', async (req, res) => {
     try {
         const query = `
@@ -1139,18 +1181,43 @@ app.get('/admin/stars-management', async (req, res) => {
             titre: "لوحة شرف معلمين ابن دريد" 
         });
     } catch (e) {
-        res.status(500).send("خطأ في جلب بيانات النجوم");
+        console.error(e);
+        res.status(500).send("خطأ في عرض لوحة النجوم");
     }
 });
+
 
 // ب. مسار إضافة نقاط يدوية من الأدمن
 app.post('/admin/stars/award', async (req, res) => {
     const { teacher_id, points, reason } = req.body;
+    
+    // الحصول على التاريخ الحالي بتوقيت عمان لضمان دقة السجل
+    const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Muscat',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date());
+
     try {
-        await pool.query("UPDATE enseignants SET stars_count = stars_count + $1 WHERE id = $2", [points, teacher_id]);
-        await pool.query("INSERT INTO stars_log (teacher_id, points, reason) VALUES ($1, $2, $3)", [teacher_id, points, reason]);
-        res.redirect('/admin/stars-management');
-    } catch (e) { res.status(500).send(e.message); }
+        // 1. تحديث رصيد المعلم مع استخدام COALESCE لتجنب مشاكل القيم الفارغة
+        await pool.query(
+            "UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + $1 WHERE id = $2", 
+            [parseInt(points), teacher_id]
+        );
+
+        // 2. تسجيل العملية في جدول السجل (stars_log) مع إضافة التاريخ والتنسيق
+        // أضفنا علامة + قبل النقاط إذا كانت موجبة لتبدو أجمل في السجل
+        const pointLabel = parseInt(points) > 0 ? `+${points}` : points;
+        
+        await pool.query(
+            "INSERT INTO star_logs (enseignant_id, points, reason, date) VALUES ($1, $2, $3, $4)", 
+            [teacher_id, pointLabel, reason, today]
+        );
+
+        res.redirect('/admin/stars-management?success=awarded');
+    } catch (e) { 
+        console.error(e);
+        res.status(500).send("خطأ في قاعدة البيانات: " + e.message); 
+    }
 });
 
 

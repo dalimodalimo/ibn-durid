@@ -248,6 +248,9 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
 
     // --- [ 5. إدارة الجدول الزمني ] ---
 
+    /*
+    
+    
     app.get('/admin/timetable', async (req, res) => {
         try {
             const t_filter = req.query.teacher_filter || ""; 
@@ -272,8 +275,9 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
             res.render('gestion_timetable', { enseignants, schedule, classes, all_affectations, teacher_filter: t_filter, class_filter: c_filter, unique_classes, titre: "الجدول المدرسي" });
         } catch (e) { res.status(500).send("خطأ في تحميل الجدول"); }
     });
-
-    app.post('/admin/timetable/ajouter', async (req, res) => {
+    */ 
+/*
+ app.post('/admin/timetable/ajouter', async (req, res) => {
         try {
             const { enseignant_id, class_info, jour, periode } = req.body;
             const [classe, section] = class_info.split('|');
@@ -290,6 +294,8 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
             res.redirect('/admin/timetable?success=added');
         } catch (e) { res.redirect('/admin/timetable?error=server'); }
     });
+*/ 
+   
 
     // --- [ 6. إدارة غياب المعلمين والاحتياط ] ---
 
@@ -511,6 +517,174 @@ app.post('/teacher/absences/mark', async (req, res) => {
         }
     });
 
+// --- [ Timetable Routes ] ---
+
+// 1. الصفحة الرئيسية للجدول (تحميل الواجهة فقط)
+app.get('/admin/timetable', isAdmin, async (req, res) => {
+    try {
+        const enseignants = await pool.query("SELECT * FROM enseignants ORDER BY nom");
+        const classes = await pool.query("SELECT DISTINCT classe, section FROM affectations ORDER BY classe");
+        const affectations = await pool.query(`
+            SELECT a.*, e.nom as prof_nom, e.matiere 
+            FROM affectations a 
+            JOIN enseignants e ON a.enseignant_id = e.id
+        `);
+        const schedule = await pool.query(`
+            SELECT t.*, e.nom as prof_nom, e.matiere 
+            FROM timetable t 
+            JOIN enseignants e ON t.enseignant_id = e.id
+        `);
+
+        // التعديل هنا: حذف 'admin/' لأن الملف في مجلد views مباشرة
+        res.render('gestion_timetable', {
+            titre: "إدارة الجدول",
+            enseignants: enseignants.rows,
+            unique_classes: classes.rows,
+            all_affectations: affectations.rows,
+            schedule: schedule.rows,
+            teacher_filter: null,
+            class_filter: null
+        });
+    } catch (error) {
+        console.error("خطأ في جلب بيانات الجدول:", error);
+        res.status(500).send("حدث خطأ في السيرفر");
+    }
+});
+
+// 2. مسار جلب البيانات المحدثة (API)
+app.get('/admin/timetable/data', isAdmin, async (req, res) => {
+    try {
+        const schedule = await pool.query(`
+            SELECT t.*, e.nom as prof_nom, e.matiere 
+            FROM timetable t 
+            JOIN enseignants e ON t.enseignant_id = e.id
+        `);
+        res.json({ schedule: schedule.rows });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch data" });
+    }
+});
+
+// 3. مسار الإضافة (Drag & Drop API)
+app.post('/admin/timetable/ajouter-json', isAdmin, async (req, res) => {
+    try {
+        const { enseignant_id, class_info, jour, periode } = req.body;
+        
+        // فك ضغط بيانات الصف (مثلاً: "1|A" تصبح classe=1 و section=A)
+        const [classe, section] = class_info.split('|');
+
+        // التحقق من تعارض المعلم
+        const checkTeacher = await pool.query(
+            "SELECT * FROM timetable WHERE enseignant_id = $1 AND jour = $2 AND periode = $3",
+            [enseignant_id, jour, periode]
+        );
+        if (checkTeacher.rows.length > 0) {
+            return res.json({ success: false, message: "⚠️ المعلم مشغول في هذا الوقت!" });
+        }
+
+        // التحقق من تعارض الصف
+        const checkClass = await pool.query(
+            "SELECT * FROM timetable WHERE classe = $1 AND section = $2 AND jour = $3 AND periode = $4",
+            [classe, section, jour, periode]
+        );
+        if (checkClass.rows.length > 0) {
+            return res.json({ success: false, message: "⚠️ هذا الصف لديه حصة أخرى بالفعل!" });
+        }
+
+        // الإضافة الفعلية
+        await pool.query(
+            "INSERT INTO timetable (enseignant_id, classe, section, jour, periode) VALUES ($1, $2, $3, $4, $5)",
+            [enseignant_id, classe, section, jour, periode]
+        );
+
+        // أهم سطر لإلغاء حالة "جاري الحفظ"
+        res.json({ success: true, message: "✅ تم حفظ الحصة بنجاح" });
+
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: "حدث خطأ في السيرفر" });
+    }
+});
+
+
+// مسار حذف حصة عبر AJAX (JSON)
+app.delete('/admin/timetable/supprimer-json/:id', isAdmin, async (req, res) => {
+    try {
+        const sessionId = req.params.id;
+
+        // 1. تنفيذ عملية الحذف في قاعدة البيانات
+        const result = await pool.query("DELETE FROM timetable WHERE id = $1", [sessionId]);
+
+        // 2. التحقق مما إذا تم الحذف فعلاً (في حال كانت الحصة محذوفة مسبقاً)
+        if (result.rowCount > 0) {
+            return res.json({ 
+                success: true, 
+                message: "🗑️ تم حذف الحصة وتفريغ الوقت بنجاح" 
+            });
+        } else {
+            return res.json({ 
+                success: false, 
+                message: "⚠️ لم يتم العثور على الحصة، ربما تم حذفها بالفعل" 
+            });
+        }
+
+    } catch (error) {
+        console.error("Error deleting session:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "❗ حدث خطأ فني أثناء محاولة الحذف" 
+        });
+    }
+});
+app.post('/admin/timetable/ajouter-json', isAdmin, async (req, res) => {
+    try {
+        const { enseignant_id, class_info, jour, periode } = req.body;
+        
+        if (!enseignant_id || !class_info || !jour || !periode) {
+            return res.json({ success: false, message: "⚠️ بيانات غير مكتملة" });
+        }
+
+        const [classe, section] = class_info.split('|');
+
+        // (بقيت التحققات كما هي دون تغيير...)
+
+        // التعديل هنا: أضفنا RETURNING id للحصول على المعرف الذي تم إنشاؤه تلقائياً
+        const insertResult = await pool.query(
+            "INSERT INTO timetable (enseignant_id, classe, section, jour, periode) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+            [enseignant_id, classe, section, jour, periode]
+        );
+
+        // أرسل الـ id مع الرد
+        res.json({ 
+            success: true, 
+            message: "✅ تم تثبيت الحصة في الجدول بنجاح",
+            id: insertResult.rows[0].id // هذا هو السطر المفتاحي
+        });
+
+    } catch (error) {
+        console.error("Timetable Error:", error);
+        res.status(500).json({ success: false, message: "❗ خطأ فني في قاعدة البيانات" });
+    }
+});
+
+app.delete('/admin/timetable/supprimer-json/:id', isAdmin, async (req, res) => {
+    try {
+        const result = await pool.query("DELETE FROM timetable WHERE id = $1", [req.params.id]);
+        
+        if (result.rowCount > 0) {
+            res.json({ success: true, message: "🗑️ تم حذف الحصة وتفريغ الوقت بنجاح" });
+        } else {
+            res.json({ success: false, message: "⚠️ لم يتم العثور على الحصة المراد حذفها" });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: "❗ حدث خطأ أثناء محاولة الحذف" });
+    }
+});
+
+
+
+
+    /*
     app.get('/admin/timetable/supprimer/:id', async (req, res) => {
         try {
             await pool.query("DELETE FROM timetable WHERE id = $1", [req.params.id]);
@@ -519,6 +693,8 @@ app.post('/teacher/absences/mark', async (req, res) => {
             res.redirect('/admin/timetable?error=delete_failed');
         }
     });
+    */
+    
 
     // --- [ التقارير الشاملة ] ---
 

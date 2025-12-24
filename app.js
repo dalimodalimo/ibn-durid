@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
  */
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = "admin123"; 
+const ADMIN_PASSWORD = "dalimo"; 
 
 // إعداد الاتصال بـ Supabase
 const pool = new Pool({
@@ -34,7 +34,7 @@ async function initializeDatabase() {
         // إنشاء الجداول بنظام PostgreSQL (استخدام SERIAL بدلاً من AUTOINCREMENT)
         await client.query(`
             CREATE TABLE IF NOT EXISTS announcements (id SERIAL PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL, date TEXT NOT NULL, priority TEXT DEFAULT 'normal');
-            CREATE TABLE IF NOT EXISTS enseignants (id SERIAL PRIMARY KEY, nom TEXT NOT NULL, matiere TEXT, phone_number TEXT, password TEXT DEFAULT '123456', rank TEXT DEFAULT 'معلم', is_admin_duty INTEGER DEFAULT 0, weekly_load INTEGER DEFAULT 0, last_login TEXT);
+            CREATE TABLE IF NOT EXISTS enseignants (id SERIAL PRIMARY KEY, nom TEXT NOT NULL, matiere TEXT, phone_number TEXT, password TEXT DEFAULT '0000', rank TEXT DEFAULT 'معلم', is_admin_duty INTEGER DEFAULT 0, weekly_load INTEGER DEFAULT 0, last_login TEXT);
             CREATE TABLE IF NOT EXISTS school_classes (id SERIAL PRIMARY KEY, class_name TEXT UNIQUE, num_sections INTEGER);
             CREATE TABLE IF NOT EXISTS affectations (id SERIAL PRIMARY KEY, enseignant_id INTEGER REFERENCES enseignants(id) ON DELETE CASCADE, classe TEXT, section TEXT);
             CREATE TABLE IF NOT EXISTS timetable (id SERIAL PRIMARY KEY, enseignant_id INTEGER REFERENCES enseignants(id) ON DELETE CASCADE, classe TEXT, section TEXT, jour TEXT, periode INTEGER, matiere TEXT);
@@ -81,7 +81,7 @@ app.get('/teacher/evaluate/:requestId/:studentId', async (req, res) => {
         if (!requestData) return res.status(404).send("طلب التقييم هذا غير موجود");
 
         const teacher_id = requestData.enseignant_id;
-        const student = (await pool.query("SELECT * FROM eleves WHERE id = $1", [parseInt(studentId)])).rows[0];
+        const student = (await pool.query("SELECT * FROM students WHERE id = $1", [parseInt(studentId)])).rows[0];
         
         if (!student) return res.status(404).send("الطالب غير موجود");
 
@@ -113,7 +113,7 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
         const { student_id } = req.body;
         if (!student_id) return res.status(400).send("لم يتم اختيار طالب");
 
-        const student = (await pool.query("SELECT * FROM eleves WHERE id = $1", [parseInt(student_id)])).rows[0];
+        const student = (await pool.query("SELECT * FROM students WHERE id = $1", [parseInt(student_id)])).rows[0];
         if (!student) return res.status(404).send("عذراً، الطالب غير موجود");
 
         const teachers = (await pool.query("SELECT enseignant_id FROM affectations WHERE classe = $1 AND section = $2", [student.classe, student.section])).rows;
@@ -153,7 +153,7 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
     app.get('/admin/dashboard', async (req, res) => {
         try {
             const teachersCount = (await pool.query("SELECT COUNT(*) as c FROM enseignants")).rows[0].c;
-            const studentsCount = (await pool.query("SELECT COUNT(*) as c FROM eleves")).rows[0].c;
+            const studentsCount = (await pool.query("SELECT COUNT(*) as c FROM students")).rows[0].c;
             const absenceCount = (await pool.query("SELECT COUNT(*) as c FROM absences WHERE date = CURRENT_DATE::text")).rows[0].c;
             
             res.render('admin_dashboard', { 
@@ -285,35 +285,74 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
 
     // --- [ 6. إدارة غياب المعلمين والاحتياط ] ---
 
-    app.get('/admin/absence-profs', async (req, res) => {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-            const todayName = days[new Date().getDay()];
+   app.get('/admin/absence-profs', async (req, res) => {
+    try {
+        // 1. ضبط التاريخ المحلي الصحيح (عمان/الخليج/الجزائر حسب منطقتك)
+        // 'en-CA' تعطي تنسيق YYYY-MM-DD
+        const options = { timeZone: 'Asia/Muscat', year: 'numeric', month: '2-digit', day: '2-digit' };
+        // استخدم هذا السطر لضمان التاريخ المحلي الصحيح عند الحفظ
+const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Muscat', // أو توقيت بلدك
+    year: 'numeric', month: '2-digit', day: '2-digit'
+}).format(new Date());
+        // 2. الحصول على اسم اليوم المحلي الصحيح
+        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const localDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Muscat"}));
+        const todayName = days[localDate.getDay()];
 
-            const enseignants = (await pool.query("SELECT * FROM enseignants ORDER BY nom ASC")).rows;
-            const ghaibeen = (await pool.query(`
-                SELECT DISTINCT e.id as teacher_id, e.nom, e.matiere, t.periode, t.classe, t.section
-                FROM absences a JOIN enseignants e ON a.enseignant_id = e.id JOIN timetable t ON e.id = t.enseignant_id
-                WHERE a.date = $1 AND (t.jour = $2 OR t.jour = REPLACE($2, 'إ', 'ا'))
-                AND NOT EXISTS (
-                    SELECT 1 FROM substitute_logs sl WHERE sl.absent_id = e.id AND sl.date = a.date 
-                    AND sl.periode = t.periode AND sl.status IN ('accepted', 'pending')
-                ) ORDER BY t.periode ASC`, [today, todayName])).rows;
+        // جلب قائمة المعلمين بالكامل
+        const enseignants = (await pool.query("SELECT * FROM enseignants ORDER BY nom ASC")).rows;
 
-            const suggestions = (await pool.query(`
-                SELECT e.*, (SELECT COUNT(*) FROM substitute_logs WHERE substitute_id = e.id AND EXTRACT(MONTH FROM TO_DATE(date, 'YYYY-MM-DD')) = EXTRACT(MONTH FROM CURRENT_DATE)) as reserve_this_month
-                FROM enseignants e WHERE e.id NOT IN (SELECT enseignant_id FROM absences WHERE date = $1)
-                ORDER BY reserve_this_month ASC, weekly_load ASC`, [today])).rows;
+        // جلب الحصص التي تحتاج بدلاء (لم يتم تعيينها بعد)
+        const ghaibeen = (await pool.query(`
+            SELECT DISTINCT e.id as teacher_id, e.nom, e.matiere, t.periode, t.classe, t.section
+            FROM absences a 
+            JOIN enseignants e ON a.enseignant_id = e.id 
+            JOIN timetable t ON e.id = t.enseignant_id
+            WHERE a.date = $1 
+            AND (t.jour = $2 OR t.jour = REPLACE($2, 'إ', 'ا'))
+            AND NOT EXISTS (
+                SELECT 1 FROM substitute_logs sl 
+                WHERE sl.absent_id = e.id 
+                AND sl.date = a.date 
+                AND sl.periode = t.periode 
+                AND sl.status IN ('accepted', 'pending')
+            ) 
+            ORDER BY t.periode ASC`, [today, todayName])).rows;
 
-            const recapSubstitutions = (await pool.query(`
-                SELECT sl.*, sub.nom as substitute_name, abs_p.nom as absent_name 
-                FROM substitute_logs sl LEFT JOIN enseignants sub ON sl.substitute_id = sub.id LEFT JOIN enseignants abs_p ON sl.absent_id = abs_p.id
-                WHERE sl.date = $1 ORDER BY sl.periode ASC`, [today])).rows;
+        // اقتراح المعلمين البدلاء (الأقل حصص احتياط هذا الشهر والأقل نصاب أسبوعي)
+        const suggestions = (await pool.query(`
+            SELECT e.*, 
+            (SELECT COUNT(*) FROM substitute_logs 
+             WHERE substitute_id = e.id 
+             AND EXTRACT(MONTH FROM TO_DATE(date, 'YYYY-MM-DD')) = EXTRACT(MONTH FROM CURRENT_DATE)) as reserve_this_month
+            FROM enseignants e 
+            WHERE e.id NOT IN (SELECT enseignant_id FROM absences WHERE date = $1)
+            ORDER BY reserve_this_month ASC, weekly_load ASC`, [today])).rows;
 
-            res.render('gestion_absences', { enseignants, ghaibeen, suggestions, today, recapSubstitutions, titre: "توزيع حصص الاحتياط" });
-        } catch (e) { res.status(500).send("خطأ في نظام الاحتياط: " + e.message); }
-    });
+        // ملخص الحصص التي تم تغطيتها اليوم فعلياً
+        const recapSubstitutions = (await pool.query(`
+            SELECT sl.*, sub.nom as substitute_name, abs_p.nom as absent_name 
+            FROM substitute_logs sl 
+            LEFT JOIN enseignants sub ON sl.substitute_id = sub.id 
+            LEFT JOIN enseignants abs_p ON sl.absent_id = abs_p.id
+            WHERE sl.date = $1 
+            ORDER BY sl.periode ASC`, [today])).rows;
+
+        res.render('gestion_absences', { 
+            enseignants, 
+            ghaibeen, 
+            suggestions, 
+            today, 
+            recapSubstitutions, 
+            titre: "توزيع حصص الاحتياط" 
+        });
+
+    } catch (e) { 
+        console.error(e);
+        res.status(500).send("خطأ في نظام الاحتياط: " + e.message); 
+    }
+});
 
     app.post('/admin/absences/ajouter', async (req, res) => {
         try {
@@ -330,7 +369,7 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
 
     app.get('/admin/eleves', async (req, res) => {
         try {
-            const eleves = (await pool.query("SELECT * FROM eleves ORDER BY classe, section, nom")).rows;
+            const eleves = (await pool.query("SELECT * FROM students ORDER BY classe, section, nom")).rows;
             const classes = (await pool.query("SELECT * FROM school_classes")).rows;
             res.render('gestion_eleves', { eleves, classes, titre: "إدارة سجلات الطلاب" });
         } catch (e) { res.status(500).send("خطأ في تحميل سجل الطلاب"); }
@@ -446,7 +485,7 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
     app.get('/admin/student/full-report/:id', async (req, res) => {
         try {
             const studentId = req.params.id;
-            const student = (await pool.query("SELECT * FROM eleves WHERE id = $1", [studentId])).rows[0];
+            const student = (await pool.query("SELECT * FROM students WHERE id = $1", [studentId])).rows[0];
             if (!student) return res.status(404).send("الطالب غير موجود");
 
             const absences = (await pool.query("SELECT * FROM student_absences WHERE eleve_id = $1", [studentId])).rows;
@@ -467,8 +506,8 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
         try {
             const studentsWithEvals = (await pool.query(`
                 SELECT DISTINCT e.id, e.nom, e.classe, e.section 
-                FROM eleves e JOIN academic_evaluations ae ON e.id = ae.eleve_id`)).rows;
-            const all_students = (await pool.query("SELECT id, nom, classe FROM eleves ORDER BY nom ASC")).rows;
+                FROM students e JOIN academic_evaluations ae ON e.id = ae.eleve_id`)).rows;
+            const all_students = (await pool.query("SELECT id, nom, classe FROM students ORDER BY nom ASC")).rows;
             
             res.render('admin_evaluations_list', { 
                 students: studentsWithEvals, 
@@ -493,39 +532,33 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
 // مسار قبول أو رفض حصة الاحتياط من قبل المعلم
 app.post('/teacher/substitute/respond', async (req, res) => {
     try {
-        const { sub_id, action, teacher_id } = req.body; 
+        const { sub_id, action, teacher_id } = req.body;
 
-        if (action === 'accept') {
-            // 1. تحديث حالة الحصة في جدول substitute_logs
-            await pool.query(
-                "UPDATE substitute_logs SET status = 'accepted' WHERE id = $1",
-                [sub_id]
-            );
+        // إذا لم يصل المعرف من النموذج، نحاول أخذه من الجلسة
+        const finalTeacherId = teacher_id || req.session.teacherId;
 
-            // 2. منح المعلم 3 نجوم تلقائياً
-            await pool.query(
-                "UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + 3 WHERE id = $1",
-                [teacher_id]
-            );
-
-            // 3. توثيق العملية في سجل النجوم للشفافية
-            await pool.query(
-                "INSERT INTO stars_log (teacher_id, points, reason) VALUES ($1, 3, $2)",
-                [teacher_id, 'قبول حصة احتياط وتعويض غياب زميل']
-            );
-
-            console.log(`⭐ تم منح 3 نجوم للمعلم ID: ${teacher_id}`);
+        if (!finalTeacherId || finalTeacherId === 'undefined') {
+            console.error("لم يتم العثور على معرف المعلم");
+            // بدلاً من /login، نعود لآخر صفحة كان فيها المعلم
+            return res.status(400).send("خطأ: لم يتم التعرف على هوية المعلم. يرجى تحديث الصفحة.");
         }
 
-        // توجيه المعلم بناءً على معرفه كما في الكود الخاص بك
-        if (teacher_id) {
-            res.redirect(`/teacher/dashboard/${teacher_id}`);
-        } else {
-            res.redirect('/teacher/login');
-        }
+        const newStatus = (action === 'accept') ? 'accepted' : 'rejected';
+        
+        // تحديث قاعدة البيانات
+        await pool.query(
+            "UPDATE substitute_logs SET status = $1 WHERE id = $2",
+            [newStatus, sub_id]
+        );
+
+        console.log(`تم تحديث الحصة ${sub_id} إلى ${newStatus} للمعلم ${finalTeacherId}`);
+
+        // العودة للوحة التحكم
+        res.redirect(`/teacher/dashboard/${finalTeacherId}`);
+
     } catch (e) {
-        console.error("Error in respond path:", e);
-        res.status(500).send("خطأ في معالجة الطلب");
+        console.error("خطأ في السيرفر:", e);
+        res.status(500).send("حدث خطأ داخلي");
     }
 });
 // --- [ إضافة مسارات الإعدادات الكاملة ] ---
@@ -766,60 +799,91 @@ app.post('/teacher/login', async (req, res) => {
     }
 });
 // يجب أن يكون المسار بهذا الشكل لاستقبال الـ ID
+// app.js
 app.get('/teacher/dashboard/:id', async (req, res) => {
     try {
         const teacherId = req.params.id;
 
-        // 1. جلب بيانات المعلم (نسميه prof ليتوافق مع EJS)
-        const profResult = await pool.query("SELECT * FROM enseignants WHERE id = $1", [teacherId]);
-        const prof = profResult.rows[0];
+        // 1. تحديد التاريخ المحلي الصحيح (YYYY-MM-DD) لضمان التطابق مع المدير
+        const today = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Muscat', // تأكد من مطابقة نفس التوقيت في صفحة المدير
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
 
-        if (!prof) return res.status(404).send("المعلم غير موجود");
+        // 2. جلب بيانات المعلم
+        const profRes = await pool.query("SELECT * FROM enseignants WHERE id = $1", [teacherId]);
+        const prof = profRes.rows[0];
 
-        // 2. جلب الحصص (sessions) من جدول affectations
-        // أضفت حقل is_substitute و is_marked افتراضياً لكي لا يعطي الكود خطأ
-        const sessionsResult = await pool.query(`
-            SELECT *, 
-            false as is_marked, 
-            false as is_substitute 
-            FROM affectations 
-            WHERE enseignant_id = $1`, [teacherId]);
+        // 3. جلب جدول الحصص الخاص بهذا المعلم
+        const timetableRes = await pool.query("SELECT * FROM timetable WHERE enseignant_id = $1", [teacherId]);
         
-        // 3. جلب أوقات الحصص (periods)
-        const periodsResult = await pool.query("SELECT * FROM school_periods ORDER BY id ASC");
-        
-        // 4. جلب الطلاب (students) لرصد الغياب
-        const studentsResult = await pool.query("SELECT * FROM students");
+        // 4. جلب أوقات الحصص
+        const periodsRes = await pool.query("SELECT * FROM school_periods ORDER BY id ASC");
 
-        res.render('teacher_dashboard', { 
-            prof: prof, 
-            sessions: sessionsResult.rows, 
-            periods: periodsResult.rows,
-            students: studentsResult.rows,
-            titre: "لوحة التحكم"
+        // 5. جلب الطلاب
+       // التعديل: نسحب البيانات من الجدول المليء بالبيانات (students)
+const elevesRes = await pool.query("SELECT * FROM students ORDER BY nom ASC");
+
+// سطر للفحص (انظر إلى الـ Terminal بعد تشغيل الكود)
+console.log("عدد الطلاب في جدول students هو:", elevesRes.rows.length);
+        // 6. جلب الإعلانات
+        const annRes = await pool.query("SELECT * FROM announcements ORDER BY id DESC");
+
+        // 7. جلب طلبات التقييم
+        const evalRes = await pool.query("SELECT * FROM evaluation_requests WHERE enseignant_id = $1 AND status = 'pending'", [teacherId]);
+
+        // 8. جلب حصص الاحتياط (هذا هو الجزء الذي كان ناقصاً)
+        // نجلب الحصص الموجهة لهذا المعلم (substitute_id) وتاريخها هو اليوم
+       // جلب حصص الاحتياط مع طباعة البيانات للتأكد
+       // جلب حصص الاحتياط (تأكدنا أن العمود هو substitute_id)
+console.log(`فحص الاحتياط للمعلم ID: ${teacherId} في تاريخ: ${today}`);
+
+// فحص شامل: جلب آخر 5 عمليات احتياط في الجدول كله لنرى التواريخ والـ IDs
+        const debugRes = await pool.query("SELECT * FROM substitute_logs ORDER BY id DESC LIMIT 5");
+        console.log("آخر 5 سجلات في القاعدة:", debugRes.rows);
+
+        const subRes = await pool.query(
+            "SELECT * FROM substitute_logs WHERE substitute_id = $1 AND date = $2",
+            [teacherId, today]
+        );
+
+console.log("الحصص الموجودة فعلياً:", subRes.rows);
+        // إرسال البيانات إلى EJS
+        res.render('teacher_dashboard', {
+            titre: "لوحة التحكم",
+            prof: prof,
+            timetable: timetableRes.rows,
+            school_periods: periodsRes.rows,
+            eleves: elevesRes.rows,
+            announcements: annRes.rows,
+            evaluation_requests: evalRes.rows,
+            substitute_logs: subRes.rows // الآن نرسل البيانات الحقيقية بدل المصفوفة الفارغة
         });
+
     } catch (e) {
-        console.error(e);
-        res.status(500).send("خطأ في النظام");
+        console.error("خطأ في السيرفر:", e);
+        res.status(500).send("خطأ في تحميل لوحة التحكم: " + e.message);
     }
 });
 // 10. إضافة إعلان جديد من قبل الإدارة
 app.post('/admin/announcements/add', isAdmin, async (req, res) => {
     try {
-        const { title, content } = req.body;
+        // أضفنا priority هنا لأنها موجودة في جدولك
+        const { title, content, priority } = req.body; 
+        
+        // ملاحظة: الـ Schema الخاص بك يحدد النوع text للعمود date
         const date = new Date().toLocaleDateString('ar-EG');
 
         if (!title || !content) {
             return res.status(400).send("العنوان والمحتوى مطلوبان");
         }
 
-        // إدخال الإعلان في جدول announcements
+        // التصحيح: إضافة عمود priority في الاستعلام والقيم
         await pool.query(
-            "INSERT INTO announcements (title, content, date) VALUES ($1, $2, $3)",
-            [title, content, date]
+            "INSERT INTO announcements (title, content, date, priority) VALUES ($1, $2, $3, $4)",
+            [title, content, date, priority || 'normal'] // 'normal' كقيمة افتراضية إذا لم تُرسل
         );
 
-        // العودة للوحة تحكم الإدارة مع رسالة نجاح
         res.redirect('/admin/dashboard?success=announcement_posted');
     } catch (e) {
         console.error("Error adding announcement:", e);
@@ -830,11 +894,20 @@ app.post('/admin/announcements/add', isAdmin, async (req, res) => {
 app.post('/admin/substitute/assign-session', isAdmin, async (req, res) => {
     try {
         let { absent_id, substitute_id, periode, classe, section } = req.body;
-        const todayDate = new Date().toISOString().split('T')[0];
-        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const todayName = days[new Date().getDay()];
+
+        // 1. إصلاح التاريخ ليكون بتوقيتك المحلي (Asia/Muscat)
+        const todayDate = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Muscat',
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+
+        // 2. إصلاح اسم اليوم ليكون مطابقاً للتوقيت المحلي
+        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const localDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Muscat"}));
+        const todayName = days[localDate.getDay()];
 
         if (!substitute_id) {
+            // البحث التلقائي باستخدام اليوم الصحيح
             const autoRes = await pool.query(`
                 SELECT id FROM enseignants 
                 WHERE id NOT IN (
@@ -842,16 +915,17 @@ app.post('/admin/substitute/assign-session', isAdmin, async (req, res) => {
                     WHERE periode = $1 AND (jour = $2 OR jour = REPLACE($2, 'إ', 'ا'))
                 )
                 AND id != $3
+                AND id NOT IN (SELECT enseignant_id FROM absences WHERE date = $4)
                 ORDER BY monthly_reserve ASC, weekly_load ASC 
-                LIMIT 1`, [periode, todayName, absent_id]);
+                LIMIT 1`, [periode, todayName, absent_id, todayDate]);
             
             if (autoRes.rows.length === 0) {
-                // بدلاً من res.send، نعود للخلف مع رسالة خطأ
-                return res.redirect('/admin/substitute?error=no_teacher');
+                return res.redirect('/admin/absence-profs?error=no_teacher');
             }
             substitute_id = autoRes.rows[0].id;
         }
 
+        // 3. إدخال السجل بالتاريخ المحلي الصحيح
         await pool.query(
             `INSERT INTO substitute_logs (absent_id, substitute_id, periode, classe, section, date, status) 
              VALUES ($1, $2, $3, $4, $5, $6, 'pending')`,
@@ -860,10 +934,10 @@ app.post('/admin/substitute/assign-session', isAdmin, async (req, res) => {
 
         await pool.query("UPDATE enseignants SET monthly_reserve = COALESCE(monthly_reserve, 0) + 1 WHERE id = $1", [substitute_id]);
 
-        res.redirect('/admin/substitute?success=assigned');
+        res.redirect('/admin/absence-profs?success=assigned');
     } catch (e) {
-        console.error(e);
-        res.redirect('/admin/substitute?error=db_error');
+        console.error("خطأ في التوزيع:", e);
+        res.redirect('/admin/absence-profs?error=db_error');
     }
 });
 
@@ -942,7 +1016,7 @@ app.get('/admin/rapport-absences-eleves', async (req, res) => {
                 e.classe, 
                 e.section, 
                 COUNT(DISTINCT a.date::date) as total_absences_days -- حساب الأيام الفريدة فقط
-            FROM eleves e
+            FROM students e
             LEFT JOIN absences a ON e.id = a.eleve_id
             GROUP BY e.id, e.nom, e.classe, e.section
             ORDER BY total_absences_days DESC;
@@ -1078,7 +1152,7 @@ app.get('/admin/eleves/supprimer/:id', async (req, res) => {
         await pool.query("DELETE FROM evaluation_requests WHERE eleve_id = $1", [id]).catch(() => {});
 
         // 4. حذف الطالب من جدول eleves (المفتاح الأساسي هو id)
-        await pool.query("DELETE FROM eleves WHERE id = $1", [id]);
+        await pool.query("DELETE FROM students WHERE id = $1", [id]);
 
         console.log(`✅ تم حذف الطالب بنجاح`);
         res.redirect('/admin/eleves');

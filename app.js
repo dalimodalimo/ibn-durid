@@ -97,13 +97,21 @@ app.post('/teacher/evaluate/submit', async (req, res) => {
         const { student_id, level, remark, request_id, teacher_id } = req.body;
         const date_now = new Date().toISOString().split('T')[0];
 
+        // 1. إدخال التقييم
         await pool.query(`INSERT INTO academic_evaluations (eleve_id, enseignant_id, level, remark, date_submission) VALUES ($1, $2, $3, $4, $5)`, 
             [student_id, teacher_id, level, remark, date_now]);
 
+        // 2. تحديث حالة الطلب إلى مكتمل
         await pool.query("UPDATE evaluation_requests SET status = 'completed' WHERE id = $1", [request_id]);
+
+        // 3. إضافة النجمة (الجزء الجديد)
+        // نستخدم COALESCE لضمان أنه إذا كانت القيمة NULL تبدأ من 0
+        await pool.query("UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + 1 WHERE id = $1", [teacher_id]);
+
+        // 4. إعادة التوجيه
         res.redirect(`/teacher/dashboard/${teacher_id}?success=evaluated`);
     } catch (e) {
-        console.error(e);
+        console.error("Error in evaluation submission:", e);
         res.status(500).send("خطأ أثناء حفظ التقييم");
     }
 });
@@ -395,25 +403,57 @@ const today = new Intl.DateTimeFormat('en-CA', {
 //222222222222
    // --- [ 11. رصد غياب الطلاب والسلوك (من جهة المعلم) ] ---
 
-    app.post('/teacher/absences/mark', async (req, res) => {
-        const { teacher_id, date, periode, student_ids } = req.body;
-        try {
-            // حذف السجلات القديمة لنفس الحصة لتجنب التكرار
-            await pool.query("DELETE FROM student_absences WHERE enseignant_id = $1 AND date = $2 AND periode = $3", [teacher_id, date, periode]);
-            
-            if (student_ids) {
-                const ids = Array.isArray(student_ids) ? student_ids : [student_ids];
-                // في PostgreSQL نستخدم الـ Loop لإدخال القيم
-                for (let id of ids) {
-                    await pool.query("INSERT INTO student_absences (eleve_id, enseignant_id, date, periode) VALUES ($1, $2, $3, $4)", 
-                        [id, teacher_id, date, periode]);
-                }
-            }
-            res.redirect(`/teacher/dashboard/${teacher_id}?success=attendance_saved`);
-        } catch (e) {
-            res.status(500).send("فشل رصد الغياب");
+app.post('/teacher/absences/mark', async (req, res) => {
+    const { enseignant_id, date, periode, eleve_ids } = req.body;
+
+    try {
+        if (!enseignant_id || enseignant_id === 'undefined') {
+            return res.status(400).send("معرف المعلم مفقود");
         }
-    });
+
+        const teacherIdInt = parseInt(enseignant_id);
+
+        // 1. حذف السجلات القديمة لهذه الحصة (لإتاحة إعادة الرصد إذا لزم الأمر)
+        await pool.query(
+            `DELETE FROM student_absences 
+             WHERE date = $1 AND periode = $2 
+             AND eleve_id IN (
+                 SELECT id FROM students 
+                 WHERE classe = (SELECT classe FROM timetable WHERE enseignant_id=$3 AND periode=$4 LIMIT 1)
+                 AND section = (SELECT section FROM timetable WHERE enseignant_id=$3 AND periode=$4 LIMIT 1)
+             )`, 
+            [date, periode, teacherIdInt, periode]
+        );
+        
+        // 2. معالجة حالة الغياب
+        if (eleve_ids && eleve_ids.length > 0) {
+            const ids = Array.isArray(eleve_ids) ? eleve_ids : [eleve_ids];
+            for (let id of ids) {
+                await pool.query(
+                    "INSERT INTO student_absences (eleve_id, enseignant_id, date, periode) VALUES ($1, $2, $3, $4)", 
+                    [id, teacherIdInt, date, periode]
+                );
+            }
+        } 
+        // ملاحظة: إذا كان الكل حضوراً، سيبقى جدول student_absences فارغاً لهذه الحصة، 
+        // ولكننا سنعتمد على "النجوم" أو "Redirect success" لإبلاغ الواجهة بالنجاح.
+
+        // 3. --- تحديث النجوم بنجاح ---
+        const starUpdate = await pool.query(
+            "UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + 1 WHERE id = $1 RETURNING stars_count",
+            [teacherIdInt]
+        );
+        
+        console.log(`✅ تم الرصد بنجاح. رصيد النجوم الجديد للمعلم ${teacherIdInt} هو: ${starUpdate.rows[0].stars_count}`);
+
+        // 4. التوجيه مع رسالة نجاح (هذه الرسالة هي التي ستفعل القفل في المتصفح)
+        res.redirect(`/teacher/dashboard/${teacherIdInt}?success=attendance_saved&p=${periode}`);
+        
+    } catch (e) {
+        console.error("خطأ أثناء الحفظ:", e);
+        res.status(500).send("فشل حفظ الغياب: " + e.message);
+    }
+});
 
     app.post('/teacher/behavior/add', async (req, res) => {
         const { student_id, teacher_id, event_text } = req.body;
@@ -804,51 +844,54 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
     try {
         const teacherId = req.params.id;
 
-        // 1. تحديد التاريخ المحلي الصحيح (YYYY-MM-DD) لضمان التطابق مع المدير
+        // التأكد من التاريخ بتوقيت عمان (Asia/Muscat)
         const today = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Asia/Muscat', // تأكد من مطابقة نفس التوقيت في صفحة المدير
+            timeZone: 'Asia/Muscat',
             year: 'numeric', month: '2-digit', day: '2-digit'
         }).format(new Date());
 
-        // 2. جلب بيانات المعلم
         const profRes = await pool.query("SELECT * FROM enseignants WHERE id = $1", [teacherId]);
         const prof = profRes.rows[0];
 
-        // 3. جلب جدول الحصص الخاص بهذا المعلم
         const timetableRes = await pool.query("SELECT * FROM timetable WHERE enseignant_id = $1", [teacherId]);
-        
-        // 4. جلب أوقات الحصص
         const periodsRes = await pool.query("SELECT * FROM school_periods ORDER BY id ASC");
-
-        // 5. جلب الطلاب
-       // التعديل: نسحب البيانات من الجدول المليء بالبيانات (students)
-const elevesRes = await pool.query("SELECT * FROM students ORDER BY nom ASC");
-
-// سطر للفحص (انظر إلى الـ Terminal بعد تشغيل الكود)
-console.log("عدد الطلاب في جدول students هو:", elevesRes.rows.length);
-        // 6. جلب الإعلانات
+        const elevesRes = await pool.query("SELECT * FROM students ORDER BY nom ASC");
         const annRes = await pool.query("SELECT * FROM announcements ORDER BY id DESC");
+        const evalRes = await pool.query(`
+    SELECT 
+        er.*, 
+        s.nom AS student_name, 
+        s.classe 
+    FROM evaluation_requests er
+    JOIN students s ON er.eleve_id = s.id
+    WHERE er.enseignant_id = $1 AND er.status = 'pending'
+`, [teacherId]);
+        // --- التعديل الجوهري: جلب أقفال الصفوف لكل المعلمين لليوم الحالي ---
+        // نربط الغياب مع جدول الطلاب والمعلمين لجلب (الصف، القسم، واسم المعلم)
+        const locksRes = await pool.query(`
+            SELECT DISTINCT 
+                s.classe, 
+                s.section, 
+                e.nom as teacher_name, 
+                sa.enseignant_id,
+                sa.periode
+            FROM student_absences sa
+            JOIN students s ON sa.eleve_id = s.id
+            JOIN enseignants e ON sa.enseignant_id = e.id
+            WHERE sa.date = $1
+        `, [today]);
 
-        // 7. جلب طلبات التقييم
-        const evalRes = await pool.query("SELECT * FROM evaluation_requests WHERE enseignant_id = $1 AND status = 'pending'", [teacherId]);
-
-        // 8. جلب حصص الاحتياط (هذا هو الجزء الذي كان ناقصاً)
-        // نجلب الحصص الموجهة لهذا المعلم (substitute_id) وتاريخها هو اليوم
-       // جلب حصص الاحتياط مع طباعة البيانات للتأكد
-       // جلب حصص الاحتياط (تأكدنا أن العمود هو substitute_id)
-console.log(`فحص الاحتياط للمعلم ID: ${teacherId} في تاريخ: ${today}`);
-
-// فحص شامل: جلب آخر 5 عمليات احتياط في الجدول كله لنرى التواريخ والـ IDs
-        const debugRes = await pool.query("SELECT * FROM substitute_logs ORDER BY id DESC LIMIT 5");
-        console.log("آخر 5 سجلات في القاعدة:", debugRes.rows);
+        // تحويل الحصص التي رصدها "هذا المعلم فقط" لمصفوفة (للإحصائيات)
+        const markedPeriods = locksRes.rows
+            .filter(l => l.enseignant_id == teacherId)
+            .map(l => l.periode);
 
         const subRes = await pool.query(
             "SELECT * FROM substitute_logs WHERE substitute_id = $1 AND date = $2",
             [teacherId, today]
         );
 
-console.log("الحصص الموجودة فعلياً:", subRes.rows);
-        // إرسال البيانات إلى EJS
+        // إرسال كافة البيانات المطلوبة للـ EJS
         res.render('teacher_dashboard', {
             titre: "لوحة التحكم",
             prof: prof,
@@ -857,7 +900,9 @@ console.log("الحصص الموجودة فعلياً:", subRes.rows);
             eleves: elevesRes.rows,
             announcements: annRes.rows,
             evaluation_requests: evalRes.rows,
-            substitute_logs: subRes.rows // الآن نرسل البيانات الحقيقية بدل المصفوفة الفارغة
+            substitute_logs: subRes.rows,
+            markedPeriods: markedPeriods,
+            classLocks: locksRes.rows // <<< ضروري جداً لعمل JavaScript في المتصفح
         });
 
     } catch (e) {
@@ -1015,11 +1060,12 @@ app.get('/admin/rapport-absences-eleves', async (req, res) => {
                 e.nom, 
                 e.classe, 
                 e.section, 
-                COUNT(DISTINCT a.date::date) as total_absences_days -- حساب الأيام الفريدة فقط
+                COUNT(DISTINCT a.date) as total_absences_days 
             FROM students e
-            LEFT JOIN absences a ON e.id = a.eleve_id
+            -- التغيير هنا: استخدمنا اسم الجدول الصحيح الذي يرسل له المعلم البيانات
+            LEFT JOIN student_absences a ON e.id = a.eleve_id
             GROUP BY e.id, e.nom, e.classe, e.section
-            ORDER BY total_absences_days DESC;
+            ORDER BY total_absences_days DESC, e.classe ASC, e.nom ASC;
         `;
         
         const result = await pool.query(query);

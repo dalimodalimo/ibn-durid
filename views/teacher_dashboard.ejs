@@ -9,7 +9,48 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
     <style>
+/* تنسيق حاوية القفل */
+.lock-message {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(145deg, #ffffff, #f1f8e9);
+    border-radius: 20px;
+    border: 2px solid #a5d6a7;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    animation: fadeIn 0.5s ease-in-out;
+}
 
+.lock-message i {
+    font-size: 3rem;
+    color: #2e7d32;
+    background: #c8e6c9;
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+}
+
+/* حركة بسيطة عند ظهور الرسالة */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* تمييز الحصص التي تم رصدها في الجدول */
+.period-card.is-done {
+    border-right: 5px solid #4caf50 !important;
+    position: relative;
+}
+
+.period-card.is-done::after {
+    content: '✅';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 0.8rem;
+}
 
 
 
@@ -132,7 +173,32 @@
         @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse-icon { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-    </style>
+   
+   /* حل تعارض Grid في قسم الغياب */
+#student-grid-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+}
+
+/* تأكيد أن رسالة القفل تأخذ العرض الكامل وتغطي الشبكة */
+#student-grid-container .lock-message {
+    grid-column: 1 / -1; /* يمتد على كافة الأعمدة */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 10px 0;
+    z-index: 10;
+}
+
+/* إخفاء زر التأكيد تلقائياً عند وجود رسالة قفل لمنع التداخل الوظيفي */
+#attendance-active:has(.lock-message) .btn-submit {
+    display: none !important;
+}
+   </style>
 </head>
 <body id="top">
 
@@ -155,16 +221,16 @@
 <% if (typeof evaluation_requests !== 'undefined' && evaluation_requests.length > 0) { %>
     <div id="eval-requests-container" style="margin-bottom: 20px; padding: 0 15px;">
         <% evaluation_requests.forEach(req => { %>
-            <div class="admin-notif-bar" style="background: #fdf2f8; border-right: 6px solid #db2777;">
-                <i class="fas fa-star" style="color: #db2777;"></i>
+            <div class="admin-notif-bar" style="background: #fdf2f8; border-right: 6px solid #db2777; display: flex; align-items: center; padding: 15px; border-radius: 15px; margin-bottom: 10px;">
+                <i class="fas fa-star" style="color: #db2777; margin-left: 15px; font-size: 1.2rem;"></i>
                 <div style="flex:1; font-size: 0.85rem;">
                     <div style="font-weight: 800; color: #9d174d;">طلب تقييم أكاديمي</div>
                     <div style="color: #4b5563;">
-                        يرجى تقييم الطالب: <strong><%= req.student_name %></strong> 
-                        <span style="background: #fae8f0; padding: 2px 8px; border-radius: 4px;"><%= req.classe %></span>
+                        يرجى تقييم الطالب: <strong><%= req.student_name || 'جاري تحميل الاسم...' %></strong> 
+                        <span style="background: #fae8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px;"><%= req.classe %></span>
                     </div>
                 </div>
-                <a href="/teacher/evaluate/<%= req.id %>/<%= req.eleve_id %>" style="background: #db2777; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 0.8rem;">تقييم</a>
+                <a href="/teacher/evaluate/<%= req.id %>/<%= req.eleve_id %>" style="background: #db2777; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: bold;">تقييم الآن</a>
             </div>
         <% }) %>
     </div>
@@ -323,225 +389,220 @@
 </nav>
 
 <script>
-    // جلب البيانات من السيرفر
-    const TIMETABLE = <%- JSON.stringify(timetable) %>;
-    const PERIODS = <%- JSON.stringify(school_periods) %>;
-    const ELEVES = <%- JSON.stringify(eleves) %>;
+    // 1. Initialisation des données
+    const TIMETABLE = <%- JSON.stringify(timetable || []) %>;
+    const PERIODS = <%- JSON.stringify(school_periods || []) %>;
+    const ELEVES = <%- JSON.stringify(eleves || []) %>;
     const SUBSTITUTIONS = <%- JSON.stringify(substitute_logs || []) %>;
-    // مصفوفة الأيام المطابقة لما يتم إدخاله في قاعدة البيانات بالعربية
+    const classLocks = <%- JSON.stringify(classLocks || []) %>;
     const dayNamesAr = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
+    const cleanAr = (str) => str ? str.trim().replace(/[أإآ]/g, 'ا') : "";
+
+    // --- [FONCTION SUPPRESSION NOTIFICATION] ---
+    function dismissNotification(annId, profId) {
+        const element = document.getElementById('ann-box-' + annId);
+        if (element) {
+            element.style.opacity = '0';
+            setTimeout(() => element.remove(), 300);
+            
+            // Sauvegarde locale pour ne plus l'afficher
+            let dismissed = JSON.parse(localStorage.getItem('dismissed_ann_prof_' + profId) || '[]');
+            if (!dismissed.includes(annId)) {
+                dismissed.push(annId);
+                localStorage.setItem('dismissed_ann_prof_' + profId, JSON.stringify(dismissed));
+            }
+        }
+    }
+
     function updateApp() {
-    const now = new Date();
-    const currentDayIndex = now.getDay(); 
-    const currentDayNameAr = dayNamesAr[currentDayIndex];
+        try {
+            const now = new Date();
+            const currentDayNameAr = dayNamesAr[now.getDay()];
+            const todayStr = '<%= typeof todayDate !== "undefined" ? todayDate : "" %>';
+
+            if(document.getElementById('current-day-name')) 
+                document.getElementById('current-day-name').textContent = currentDayNameAr;
+            
+            if(document.getElementById('live-clock')) 
+                document.getElementById('live-clock').textContent = now.toLocaleTimeString('ar-EG', {hour12:false});
+
+            const mins = now.getHours() * 60 + now.getMinutes();
+            let activeP = null;
+
+            PERIODS.forEach(p => {
+                const card = document.getElementById(`period-${p.id}`);
+                const sessionContent = document.getElementById(`session-content-${p.id}`); 
+                if(!card || !sessionContent) return;
+
+                const normal = TIMETABLE.find(x => Number(x.periode) === Number(p.id) && cleanAr(x.jour) === cleanAr(currentDayNameAr));
+                const sub = SUBSTITUTIONS.find(x => Number(x.periode) === Number(p.id));
+
+                if (sub) {
+                    sessionContent.innerHTML = `<span class="sub-tag">احتياط</span> ${sub.classe}-${sub.section}`;
+                } else if (normal) {
+                    sessionContent.innerHTML = `${normal.classe}-${normal.section}`;
+                } else {
+                    sessionContent.innerHTML = '<span style="opacity:0.3">استراحة</span>';
+                }
+
+                const [hS, mS] = p.start_time.split(':').map(Number);
+                const [hE, mE] = p.end_time.split(':').map(Number);
+                const startMins = hS * 60 + mS;
+                const endMins = hE * 60 + mE;
+
+                if (mins >= startMins && mins < endMins) {
+                    card.classList.add('active-now');
+                    activeP = p;
+                } else {
+                    card.classList.remove('active-now');
+                }
+            });
+
+            manageAttendanceUI(activeP, currentDayNameAr, todayStr);
+        } catch (err) { console.error(err); }
+    }
+
+  function manageAttendanceUI(p, currentDayName, todayStr) {
+        const noMsg = document.getElementById('no-session-msg');
+        const activeArea = document.getElementById('attendance-active');
+        const gridContainer = document.getElementById('student-grid-container');
+        const submitBtn = document.querySelector('#attendance-active button[type="submit"]');
+
+        if (!p) {
+            if(noMsg) noMsg.classList.remove('hidden'); 
+            if(activeArea) activeArea.classList.add('hidden');
+            return;
+        }
+
+        const session = TIMETABLE.find(s => 
+            Number(s.periode) === Number(p.id) && 
+            cleanAr(s.jour) === cleanAr(currentDayName)
+        ) || SUBSTITUTIONS.find(x => Number(x.periode) === Number(p.id));
+
+        if (!session) {
+            if(noMsg) noMsg.classList.remove('hidden'); 
+            if(activeArea) activeArea.classList.add('hidden');
+        } else {
+            if(noMsg) noMsg.classList.add('hidden'); 
+            if(activeArea) activeArea.classList.remove('hidden');
+            
+            document.getElementById('active-class-title').textContent = `${session.classe}-${session.section}`;
+            document.getElementById('input-p').value = p.id;
+            document.getElementById('input-date').value = todayStr;
+
+            // 1. التحقق من القفل القادم من السيرفر
+            const serverLock = classLocks.find(l => 
+                String(l.classe) === String(session.classe) && 
+                String(l.section) === String(session.section) && 
+                Number(l.periode) === Number(p.id)
+            );
+
+            // 2. التحقق من "نجاح الحفظ" من رابط الـ URL (بعد Redirect مباشرة)
+            const urlParams = new URLSearchParams(window.location.search);
+            const justSaved = urlParams.get('success') === 'attendance_saved';
+
+            if (serverLock || (justSaved && document.getElementById('input-p').value == p.id)) {
+                gridContainer.innerHTML = `
+                    <div class="lock-message" style="background: #f0fdf4; border: 2px solid #22c55e; padding: 25px; border-radius: 20px; text-align: center;">
+                        <div style="background: #22c55e; color: white; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; margin: 0 auto 15px; font-size: 1.5rem;">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h4 style="color: #15803d; font-weight: 800;">تم رصد حضور الحصة</h4>
+                        <p style="color: #166534; font-size: 0.85rem; margin-top: 5px;">تم إرسال البيانات وتحديث رصيد نجومك</p>
+                    </div>`;
+                if(submitBtn) submitBtn.style.display = 'none';
+                gridContainer.dataset.currentClass = "LOCKED";
+            } else {
+                if(submitBtn) submitBtn.style.display = 'block';
+                renderStudents(session.classe, session.section);
+            }
+        }
+    }  
+     function renderStudents(classe, section) {
+    const container = document.getElementById('student-grid-container');
     
-    // 1. الحصول على تاريخ اليوم الحالي بنفس صيغة السيرفر (YYYY-MM-DD)
-    const todayStr = now.toISOString().split('T')[0];
+    // 1. بوابة الفحص: إذا كانت الرسالة الموجودة هي رسالة "نجاح الرصد"، توقف فوراً ولا تمسحها
+    if (container.querySelector('.lock-message')) {
+        return; 
+    }
 
-    const dayDisplay = document.getElementById('current-day-name');
-    if(dayDisplay) dayDisplay.textContent = currentDayNameAr;
+    // 2. إذا كنا نعرض نفس الفصل حالياً، لا تفعل شيئاً (لتحسين الأداء)
+    if (container.dataset.currentClass === `${classe}-${section}`) return;
 
-    document.getElementById('live-clock').textContent = now.toLocaleTimeString('ar-EG', {hour12:false});
-    document.getElementById('input-date').value = todayStr;
+    // 3. الآن فقط يمكننا المسح والرسم لأننا تأكدنا أن الصف غير مقفل
+    container.innerHTML = ""; 
+    container.dataset.currentClass = `${classe}-${section}`;
 
-    const mins = now.getHours() * 60 + now.getMinutes();
-    let activeP = null;
+    const filteredStudents = ELEVES.filter(e => 
+        String(e.classe) === String(classe) && 
+        String(e.section) === String(section)
+    );
 
-    PERIODS.forEach(p => {
-        const card = document.getElementById(`period-${p.id}`);
-        const sessionContent = document.getElementById(`session-content-${p.id}`); 
-        
-        // 2. التعديل هنا: البحث عن الاحتياط باستخدام (رقم الحصة + الحالة + تاريخ اليوم)
-        const sub = SUBSTITUTIONS.find(x => {
-            // استخراج التاريخ فقط من الحصة المخزنة (لأنها قد تأتي من السيرفر بصيغة ISO كاملة)
-            const subDate = new Date(x.date).toISOString().split('T')[0];
-            return x.periode === p.id && x.status === 'accepted' && subDate === todayStr;
-        });
-
-        // البحث في الجدول العادي
-        const normal = TIMETABLE.find(x => x.periode === p.id && x.jour === currentDayNameAr);
-
-        if (sub) {
-            sessionContent.innerHTML = `<span class="sub-tag">احتياط</span> ${sub.classe}-${sub.section}`;
-            card.classList.add('sub-active');
-            sessionContent.style.opacity = "1";
-        } else if (normal) {
-            sessionContent.innerHTML = `${normal.classe}-${normal.section}`;
-            card.classList.remove('sub-active');
-            sessionContent.style.opacity = "1";
-        } else {
-            sessionContent.innerHTML = "استراحة";
-            card.classList.remove('sub-active');
-            sessionContent.style.opacity = "0.3";
-        }
-
-        const [hS, mS] = p.start_time.split(':').map(Number);
-        const [hE, mE] = p.end_time.split(':').map(Number);
-        if (mins >= (hS*60+mS) && mins <= (hE*60+mE)) {
-            card.classList.add('active-now'); 
-            activeP = p;
-        } else {
-            card.classList.remove('active-now');
-        }
-    });
-
-    manageAttendanceUI(activeP, currentDayNameAr, todayStr); // مرر التاريخ هنا أيضاً
-}  
-function manageAttendanceUI(p, currentDayName) {
-    const noMsg = document.getElementById('no-session-msg');
-    const activeArea = document.getElementById('attendance-active');
-    const statusText = document.getElementById('current-status-text');
-
-    // الحصول على تاريخ اليوم بنفس صيغة السيرفر للمقارنة
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    if (!p) {
-        noMsg.classList.remove('hidden'); 
-        activeArea.classList.add('hidden');
-        statusText.textContent = "خارج وقت العمل"; 
+    if (filteredStudents.length === 0) {
+        container.innerHTML = "<p style='text-align:center; padding:20px; color:#94a3b8;'>لا يوجد طلاب مسجلين في هذا الفصل</p>";
         return;
     }
 
-    // التعديل: البحث عن الاحتياط مع التحقق من التاريخ
-    const sub = SUBSTITUTIONS.find(x => {
-        const subDate = new Date(x.date).toISOString().split('T')[0];
-        return x.periode === p.id && x.status === 'accepted' && subDate === todayStr;
+    filteredStudents.forEach(el => {
+        container.innerHTML += `
+            <div class="student-card">
+                <span>${el.nom}</span>
+                <label class="switch">
+                    <input type="checkbox" name="eleve_ids[]" value="${el.id}">
+                    <span class="slider"></span>
+                </label>
+            </div>`;
     });
-
-    const normal = TIMETABLE.find(s => s.periode === p.id && s.jour === currentDayName);
-    const session = sub || normal;
-
-    if (!session) {
-        noMsg.classList.remove('hidden'); 
-        activeArea.classList.add('hidden');
-        statusText.textContent = "استراحة حالياً";
-    } else {
-        noMsg.classList.add('hidden'); 
-        activeArea.classList.remove('hidden');
-        
-        // تحديث النص ليعرف المعلم نوع الحصة
-        statusText.textContent = sub ? `حصة احتياط جارية (بدل غائب)` : `حصة رقم ${p.id} جارية`;
-        
-        document.getElementById('active-class-title').textContent = `${session.classe}-${session.section}`;
-        document.getElementById('input-p').value = p.id;
-        
-        // رصد الطلاب للفصل الصحيح
-        renderStudents(session.classe, session.section);
-    }
 }
-    function renderStudents(classe, section) {
-        const container = document.getElementById('student-grid-container');
-        if (container.dataset.currentClass === `${classe}-${section}`) return;
+    // Initialisation au chargement
+    window.onload = () => {
+        updateApp();
+        setInterval(updateApp, 5000);
         
-        container.innerHTML = ""; 
-        container.dataset.currentClass = `${classe}-${section}`;
-        
-        const list = ELEVES.filter(e => e.classe == classe && e.section == section);
-        list.forEach(el => {
-            container.innerHTML += `
-                <div class="student-card">
-                    <span>${el.nom}</span>
-                    <label class="switch">
-                        <input type="checkbox" name="eleve_ids[]" value="${el.id}">
-                        <span class="slider"></span>
-                    </label>
-                </div>`;
-        });
-    }
-
-    // --- نظام المهام (To-Do List) ---
-    let todos = JSON.parse(localStorage.getItem('teacher_todos')) || [];
-    function saveTodos() { localStorage.setItem('teacher_todos', JSON.stringify(todos)); displayTodos(); }
-    function addTodo() {
-        const input = document.getElementById('todo-input');
-        if (!input.value.trim()) return;
-        todos.push({ id: Date.now(), text: input.value, completed: false });
-        input.value = ""; saveTodos();
-    }
-    function toggleTodo(id) { todos = todos.map(t => t.id === id ? {...t, completed: !t.completed} : t); saveTodos(); }
-    function deleteTodo(id) { todos = todos.filter(t => t.id !== id); saveTodos(); }
-    function displayTodos() {
-        const list = document.getElementById('todo-list');
-        list.innerHTML = "";
-        let count = 0;
-        todos.forEach(t => {
-            if(!t.completed) count++;
-            list.innerHTML += `
-                <li style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
-                    <span onclick="toggleTodo(${t.id})" style="cursor:pointer; ${t.completed ? 'text-decoration:line-through; opacity:0.5' : ''}">${t.text}</span>
-                    <i class="fas fa-trash" onclick="deleteTodo(${t.id})" style="color:var(--accent); cursor:pointer;"></i>
-                </li>`;
-        });
-        document.getElementById('todo-count').textContent = count;
-    }
-
-    // --- نظام الإشعارات ---
-    function dismissNotification(annId, profId) {
-        const element = document.getElementById('ann-box-' + annId);
-        if (element) element.remove();
-        const storageKey = 'dismissed_ann_prof_' + profId;
-        let dismissed = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        if (!dismissed.includes(annId)) { dismissed.push(annId); localStorage.setItem(storageKey, JSON.stringify(dismissed)); }
-    }
-
-    function applyHiddenAnnouncements() {
+        // Cacher les notifications déjà supprimées
         const profId = '<%= prof.id %>';
-        const storageKey = 'dismissed_ann_prof_' + profId;
-        const hidden = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        hidden.forEach(id => { const el = document.getElementById('ann-box-' + id); if (el) el.remove(); });
-    }
-
-    // تشغيل التحديثات كل ثانية لضمان دقة الساعة والتبديل بين الحصص
-    setInterval(updateApp, 1000);
-    window.onload = () => { 
-        updateApp(); 
-        displayTodos(); 
-        applyHiddenAnnouncements(); 
+        const dismissed = JSON.parse(localStorage.getItem('dismissed_ann_prof_' + profId) || '[]');
+        dismissed.forEach(id => {
+            const el = document.getElementById('ann-box-' + id);
+            if (el) el.remove();
+        });
     };
 </script>
+
 <script>
-    // تحويل قائمة الطلاب من EJS إلى JavaScript
+    // --- نظام البحث السلوكي الذكي - كما هو ---
     const studentsData = <%- JSON.stringify(eleves) %>;
-    
     const searchInput = document.getElementById('studentSearchInput');
     const resultsList = document.getElementById('searchResultsList');
     const hiddenIdInput = document.getElementById('hiddenStudentId');
     const badge = document.getElementById('selectedStudentBadge');
     const badgeName = document.getElementById('selectedStudentName');
 
-    searchInput.addEventListener('input', function() {
-        const term = this.value.trim().toLowerCase();
-        resultsList.innerHTML = '';
-        
-        if (term.length < 2) {
-            resultsList.style.display = 'none';
-            return;
-        }
-
-        const matches = studentsData.filter(s => s.nom.toLowerCase().includes(term));
-
-        if (matches.length > 0) {
-            matches.forEach(s => {
-                const item = document.createElement('div');
-                item.className = 'search-item';
-                item.innerHTML = `<strong>${s.nom}</strong> <br> <span>الصف: ${s.classe} - ${s.section}</span>`;
-                item.onclick = function() {
-                    selectStudent(s.id, s.nom);
-                };
-                resultsList.appendChild(item);
-            });
-            resultsList.style.display = 'block';
-        } else {
-            resultsList.style.display = 'none';
-        }
-    });
+    if(searchInput) {
+        searchInput.addEventListener('input', function() {
+            const term = this.value.trim().toLowerCase();
+            resultsList.innerHTML = '';
+            if (term.length < 2) { resultsList.style.display = 'none'; return; }
+            const matches = studentsData.filter(s => s.nom.toLowerCase().includes(term));
+            if (matches.length > 0) {
+                matches.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'search-item';
+                    item.innerHTML = `<strong>${s.nom}</strong> <br> <span>الصف: ${s.classe} - ${s.section}</span>`;
+                    item.onclick = function() { selectStudent(s.id, s.nom); };
+                    resultsList.appendChild(item);
+                });
+                resultsList.style.display = 'block';
+            } else { resultsList.style.display = 'none'; }
+        });
+    }
 
     function selectStudent(id, name) {
         hiddenIdInput.value = id;
         badgeName.innerText = name;
         badge.style.display = 'block';
-        searchInput.value = ''; // مسح خانة البحث
+        searchInput.value = '';
         resultsList.style.display = 'none';
     }
 
@@ -551,9 +612,8 @@ function manageAttendanceUI(p, currentDayName) {
         searchInput.value = '';
     }
 
-    // إغلاق النتائج عند الضغط خارجها
     document.addEventListener('click', function(e) {
-        if (e.target !== searchInput) resultsList.style.display = 'none';
+        if (resultsList && e.target !== searchInput) resultsList.style.display = 'none';
     });
 </script>
 </body>

@@ -770,6 +770,25 @@ app.post('/admin/settings/password/update', isAdmin, async (req, res) => {
         res.status(500).send("خطأ في تحديث كلمة المرور");
     }
 });
+// مسار خاص بالمعلم لتغيير كلمته بنفسه
+app.post('/teacher/update-my-password', async (req, res) => {
+    try {
+        const teacher_id = req.cookies.teacher_auth; // استخراج المعرف من الكوكيز
+        const { new_password } = req.body;
+
+        if (!teacher_id) return res.status(401).send("غير مصرح لك");
+        if (!new_password) return res.status(400).send("كلمة المرور مطلوبة");
+
+        await pool.query(
+            "UPDATE enseignants SET password = $1 WHERE id = $2",
+            [new_password, teacher_id]
+        );
+
+        res.send("<script>alert('تم تحديث كلمتك بنجاح'); window.location.href='/teacher/dashboard/" + teacher_id + "';</script>");
+    } catch (e) {
+        res.status(500).send("خطأ في التحديث");
+    }
+});
 
 // 7. تحديث توقيت الحصص المدرسية
 app.post('/admin/settings/periods/update', isAdmin, async (req, res) => {
@@ -802,40 +821,32 @@ app.post('/admin/settings/periods/update', isAdmin, async (req, res) => {
 });
 // 8. التحقق من بيانات دخول المعلم
 app.post('/teacher/login', async (req, res) => {
+    const { teacher_id, password } = req.body;
+    
     try {
-        const { teacher_id, password } = req.body;
+        const result = await pool.query("SELECT * FROM enseignants WHERE id = $1", [teacher_id]);
+        const teacher = result.rows[0];
 
-        // التحقق من وجود المعلم وكلمة المرور
-        const result = await pool.query(
-            "SELECT * FROM enseignants WHERE id = $1 AND password = $2", 
-            [teacher_id, password]
-        );
+        if (teacher && teacher.password === password) {
+            // تحديث وقت آخر دخول (اختياري حسب جدولك)
+            const now = new Date().toLocaleString('ar-OM');
+            await pool.query("UPDATE enseignants SET last_login = $1 WHERE id = $2", [now, teacher.id]);
 
-        const user = result.rows[0];
-
-        if (user) {
-            // حفظ هوية المعلم في الكوكيز
-            res.cookie('teacher_auth', user.id, { 
-                httpOnly: true, 
-                maxAge: 24 * 60 * 60 * 1000 
-            });
-            
-            res.redirect(`/teacher/dashboard/${user.id}`);
+            // إنشاء الكوكيز للجلسة
+            res.cookie('teacher_auth', teacher.id, { httpOnly: true });
+            return res.redirect(`/teacher/dashboard/${teacher.id}`);
         } else {
-            // --- التعديل هنا: جلب المواد والمعلمين معاً لإعادة عرض الصفحة بشكل صحيح ---
-            const subjectsResult = await pool.query("SELECT name FROM school_subjects ORDER BY name ASC");
-            const teachersResult = await pool.query("SELECT id, nom, matiere FROM enseignants ORDER BY nom ASC");
-            
-            res.render('teacher_login', { 
-                matieres: subjectsResult.rows,     // أضفنا هذا السطر
-                enseignants: teachersResult.rows, // تأكدنا من جلب المادة هنا للتصفية
-                error: "كلمة المرور غير صحيحة، يرجى المحاولة مرة أخرى", 
-                titre: "دخول المعلمين" 
+            // إعادة عرض الصفحة مع رسالة خطأ
+            const allTeachers = await pool.query("SELECT * FROM enseignants ORDER BY nom ASC");
+            return res.render('teacher_login', { 
+                error: "كلمة المرور غير صحيحة أو المعلم غير موجود", 
+                enseignants: allTeachers.rows,
+                titre: "دخول المعلمين"
             });
         }
     } catch (e) {
-        console.error("Login Post Error:", e);
-        res.status(500).send("خطأ في عملية تسجيل الدخول");
+        console.error(e);
+        res.status(500).send("خطأ داخلي في النظام");
     }
 });
 // يجب أن يكون المسار بهذا الشكل لاستقبال الـ ID

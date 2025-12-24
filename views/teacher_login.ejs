@@ -4,84 +4,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دخول المعلمين - مدرسة ابن دريد</title>
-    <link rel="stylesheet" href="/css/teacher_login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        /* إخفاء خيارات المعلمين افتراضياً */
-        .teacher-option { display: none; }
-        .error { color: red; background: #fee; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        :root {
+            --primary-blue: #1e3a8a;
+            --secondary-blue: #1e40af;
+            --admin-red: #c0392b;
+            --bg-slate: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background: var(--bg-slate); 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+
+        .login-card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 100%; 
+            max-width: 420px; 
+            transition: transform 0.3s ease;
+        }
+
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header i { font-size: 3rem; color: var(--primary-blue); margin-bottom: 15px; }
+        .login-header h1 { color: var(--text-main); font-size: 1.75rem; font-weight: 800; margin: 0; }
+        .login-header p { color: var(--text-muted); margin-top: 5px; font-size: 0.95rem; }
+
+        .input-group { margin-bottom: 24px; position: relative; }
+        label { display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
+        
+        input { 
+            width: 100%; 
+            padding: 14px 18px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 14px; 
+            box-sizing: border-box; 
+            font-family: inherit; 
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: #f8fafc;
+        }
+
+        input:focus { 
+            border-color: var(--primary-blue); 
+            background: white;
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); 
+        }
+
+        .main-btn { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--primary-blue); 
+            color: white; 
+            border: none; 
+            border-radius: 14px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.2);
+        }
+
+        .main-btn:hover { 
+            background: var(--secondary-blue); 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3);
+        }
+
+        /* تنسيق قسم دخول الإدارة */
+        .admin-footer {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px dashed #e2e8f0;
+            text-align: center;
+        }
+
+        .admin-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--admin-red);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .admin-link:hover {
+            background: #fdf2f2;
+            transform: scale(1.05);
+        }
+
+        .error { 
+            background: #fee2e2; 
+            color: #dc2626; 
+            padding: 12px; 
+            border-radius: 12px; 
+            text-align: center; 
+            margin-bottom: 20px; 
+            font-size: 0.9rem;
+            border: 1px solid #fecaca;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <h1>دخول المعلمين</h1>
-    
-    <% if (error) { %> 
-        <div class="error"><%= error %></div> 
+    <div class="login-header">
+        <i class="fas fa-school"></i>
+        <h1>دخول المعلمين</h1>
+        <p>نظام التميز الأكاديمي - مدرسة ابن دريد</p>
+    </div>
+
+    <% if (error) { %>
+        <div class="error"><i class="fas fa-exclamation-triangle"></i> <%= error %></div>
     <% } %>
-    
-    <form action="/teacher/login" method="POST">
-        <label for="subject_filter">المادة الدراسية:</label>
-        <select id="subject_filter" onchange="filterTeachers()" required>
-            <option value="" disabled selected>-- اختر المادة --</option>
-            <% matieres.forEach(matiere => { %>
-                <option value="<%= matiere.name %>"><%= matiere.name %></option>
-            <% }) %>
-        </select>
 
-        <label for="teacher_id">اسم المعلم:</label>
-        <select name="teacher_id" id="teacher_id" required disabled>
-            <option value="" disabled selected id="default_teacher_opt">-- اختر اسمك من القائمة --</option>
-            <% enseignants.forEach(prof => { %>
-                <option value="<%= prof.id %>" class="teacher-option" data-subject="<%= prof.matiere %>">
-                    <%= prof.nom %>
-                </option>
-            <% }) %>
-        </select>
+    <form action="/teacher/login" method="POST" onsubmit="return prepareLogin()">
+        <div class="input-group">
+            <label><i class="fas fa-user-edit"></i> اسم المعلم:</label>
+            <input list="teachersList" id="teacherNameInput" placeholder="اكتب اسمك للبحث..." required autocomplete="off">
+            <datalist id="teachersList">
+                <% enseignants.forEach(prof => { %>
+                    <option value="<%= prof.nom %>" data-id="<%= prof.id %>">
+                <% }) %>
+            </datalist>
+            <input type="hidden" name="teacher_id" id="hiddenTeacherId">
+        </div>
 
-        <label for="password">كلمة المرور:</label>
-        <input type="password" name="password" id="password" placeholder="أدخل كلمة المرور" required>
+        <div class="input-group">
+            <label><i class="fas fa-key"></i> كلمة المرور:</label>
+            <input type="password" name="password" placeholder="أدخل رمز الدخول" required>
+        </div>
 
-        <button type="submit">فتح الجلسة 🔓</button>
+        <button type="submit" class="main-btn">
+            فتح الجلسة <i class="fas fa-arrow-left"></i>
+        </button>
     </form>
 
-    <div class="footer-links">
-        <a href="/admin/dashboard">دخول الإدارة (أدمن)</a>
+    <div class="admin-footer">
+        <a href="/admin/login" class="admin-link">
+            <i class="fas fa-lock-open"></i>
+            مدير النظام (Admin)
+        </a>
     </div>
 </div>
 
 <script>
-function filterTeachers() {
-    // 1. جلب المادة المختارة وتنظيفها من المسافات الزائدة
-    const selectedSubject = document.getElementById('subject_filter').value.trim();
-    const teacherSelect = document.getElementById('teacher_id');
-    const options = document.querySelectorAll('.teacher-option');
-    const defaultOpt = document.getElementById('default_teacher_opt');
-
-    // 2. إعادة ضبط القائمة الثانية
-    teacherSelect.value = "";
-    let hasTeachers = false;
-
-    // 3. التكرار على المعلمين للبحث عن مطابقة
-    options.forEach(opt => {
-        const teacherSubject = opt.getAttribute('data-subject') ? opt.getAttribute('data-subject').trim() : "";
-
-        // التحقق من المطابقة (مع تجاهل فروق المسافات)
-        if (teacherSubject === selectedSubject && selectedSubject !== "") {
-            opt.style.display = "block";
-            hasTeachers = true;
-        } else {
-            opt.style.display = "none";
-        }
-    });
-
-    // 4. تحديث حالة القائمة بناءً على النتيجة
-    if (hasTeachers) {
-        teacherSelect.disabled = false;
-        defaultOpt.textContent = "-- اختر اسمك من القائمة --";
+function prepareLogin() {
+    const nameInput = document.getElementById('teacherNameInput').value;
+    const datalist = document.getElementById('teachersList');
+    const hiddenInput = document.getElementById('hiddenTeacherId');
+    
+    const option = Array.from(datalist.options).find(opt => opt.value === nameInput);
+    
+    if (option) {
+        hiddenInput.value = option.getAttribute('data-id');
+        return true; 
     } else {
-        teacherSelect.disabled = true;
-        defaultOpt.textContent = "⚠️ لا يوجد معلمون مسجلون لهذه المادة";
+        alert("يرجى اختيار اسمك بشكل صحيح من قائمة الاقتراحات المتاحة.");
+        return false;
     }
 }
 </script>

@@ -272,35 +272,100 @@
         </form>
     </div>
 
-    <div class="card" id="section-accounts">
-        <h3><i class="fas fa-key"></i> إدارة كلمات مرور المعلمين</h3>
-        <div class="scroll-area">
-            <table>
-                <thead>
-                    <tr>
-                        <th>المعلم</th>
-                        <th>كلمة المرور</th>
-                        <th>تحديث</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% teachers.forEach(t => { %>
-                    <tr>
-                        <td><%= t.nom %></td>
-                        <td><code style="background: #f1f5f9; padding: 4px 8px; border-radius: 5px; color: #ef4444;"><%= t.password %></code></td>
-                        <td>
-                            <form action="/admin/settings/password/update" method="POST" style="display: flex; gap: 5px;">
-                                <input type="hidden" name="teacher_id" value="<%= t.id %>">
-                                <input type="text" name="new_password" placeholder="جديدة" required style="width: 70px; padding: 5px;">
-                                <button type="submit" style="background:var(--warning); color:white; border:none; padding: 5px 10px; border-radius: 5px;"><i class="fas fa-sync"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+   <div class="card" id="section-accounts">
+    <h3><i class="fas fa-key"></i> إدارة حسابات المعلمين</h3>
+    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">معاينة كلمات المرور الحالية أو تعيين رموز دخول جديدة.</p>
+    
+    <div class="scroll-area">
+        <table>
+            <thead>
+                <tr>
+                    <th>المعلم</th>
+                    <th>كلمة المرور الحالية</th>
+                    <th>تحديث بكلمة جديدة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% teachers.forEach(t => { %>
+                <tr>
+                    <td style="font-weight: 600;"><%= t.nom %></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 5px 10px; border-radius: 8px; border: 1px solid #e2e8f0; width: fit-content;">
+                            <input type="password" value="<%= t.password %>" id="p-<%= t.id %>" readonly 
+                                   style="background: none; border: none; width: 65px; color: #ef4444; font-family: monospace; font-weight: bold; outline: none;">
+                            
+                            <button type="button" onclick="toggleView('<%= t.id %>')" style="background: none; border: none; color: #94a3b8; cursor: pointer;" title="إظهار/إخفاء">
+                                <i class="fas fa-eye" id="i-<%= t.id %>"></i>
+                            </button>
+
+                            <button type="button" onclick="copyPass('<%= t.id %>')" style="background: none; border: none; color: #94a3b8; cursor: pointer;" title="نسخ">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <form action="/admin/settings/password/update" method="POST" style="display: flex; gap: 8px;">
+                            <input type="hidden" name="teacher_id" value="<%= t.id %>">
+                            <input type="text" name="new_password" placeholder="الرمز الجديد" required 
+                                   style="width: 100px; padding: 6px 10px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            
+                            <button type="submit" class="btn-save-sm" style="background: var(--warning); border-radius: 6px;" title="حفظ">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
     </div>
+</div>
+
+<script>
+// وظيفة إظهار وإخفاء كلمة المرور
+function toggleView(id) {
+    const input = document.getElementById('p-' + id);
+    const icon = document.getElementById('i-' + id);
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = "password";
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// وظيفة نسخ كلمة المرور إلى الحافظة
+function copyPass(id) {
+    const input = document.getElementById('p-' + id);
+    const originalType = input.type;
+    
+    // يجب تحويلها لنص مؤقتاً ليتمكن المتصفح من نسخها
+    input.type = "text";
+    input.select();
+    document.execCommand("copy");
+    input.type = originalType;
+    
+    alert("تم نسخ كلمة المرور للحافظة ✅");
+}
+</script>
+
+<script>
+function togglePasswordDisplay(id) {
+    const input = document.getElementById('pass-field-' + id);
+    const icon = document.getElementById('eye-icon-' + id);
+    
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = "password";
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
 </div>
 
 <script>

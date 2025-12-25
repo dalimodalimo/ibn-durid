@@ -409,50 +409,119 @@ const today = new Intl.DateTimeFormat('en-CA', {
 //222222222222
    // --- [ 11. رصد غياب الطلاب والسلوك (من جهة المعلم) ] ---
 
+app.get('/teacher/absences/check-status', async (req, res) => {
+    const { classe, section, date } = req.query;
+    const check = await pool.query(
+        `SELECT sa.id FROM student_absences sa
+         JOIN students s ON sa.eleve_id = s.id
+         WHERE s.classe = $1 AND s.section = $2 AND sa.date = $3 LIMIT 1`,
+        [classe, section, date]
+    );
+    res.json({ alreadyMarked: check.rows.length > 0 });
+});
+
+
+
 app.post('/teacher/absences/mark', async (req, res) => {
-    const { enseignant_id, date, periode, eleve_ids } = req.body;
+    // استخدمنا let لأننا قد نعدل قيمة date إذا كانت فارغة
+    let { enseignant_id, date, periode, eleve_ids } = req.body;
 
     try {
+        // 1. التحقق من وجود معرف المعلم
         if (!enseignant_id || enseignant_id === 'undefined') {
             return res.status(400).send("معرف المعلم مفقود");
         }
-
         const teacherIdInt = parseInt(enseignant_id);
 
-        // 1. حذف السجلات القديمة لهذه الحصة (لإتاحة إعادة الرصد إذا لزم الأمر)
+        // 2. معالجة التاريخ الفارغ (الحماية من خطأ "" للمتغير date)
+        if (!date || date.trim() === "") {
+            date = new Date().toISOString().split('T')[0]; // استخدام تاريخ اليوم كافتراضي
+        }
+
+        // 3. الحصول على بيانات الحصة النشطة (مع تصحيح TRIM و cast للتاريخ)
+      // 1. الحصول على بيانات الحصة مع ترجمة اليوم للعربية برمجياً داخل SQL
+const sessionInfo = await pool.query(
+    `SELECT classe, section 
+     FROM timetable 
+     WHERE enseignant_id = $1 
+     AND jour = (
+        SELECT CASE TRIM(to_char($2::date, 'Day'))
+            WHEN 'Sunday'    THEN 'الأحد'
+            WHEN 'Monday'    THEN 'الإثنين'
+            WHEN 'Tuesday'   THEN 'الثلاثاء'
+            WHEN 'Wednesday' THEN 'الأربعاء'
+            WHEN 'Thursday'  THEN 'الخميس'
+            WHEN 'Friday'    THEN 'الجمعة'
+            WHEN 'Saturday'  THEN 'السبت'
+        END
+     )
+     AND periode = $3 
+     LIMIT 1`,
+    [teacherIdInt, date, periode]
+);
+
+        if (sessionInfo.rows.length === 0) {
+            return res.status(400).send("عذراً، لم يتم العثور على حصة مسجلة لك في هذا الوقت.");
+        }
+
+        const { classe, section } = sessionInfo.rows[0];
+
+        // 4. القفل الذهبي: هل رصد أي معلم آخر غياب هذا الفصل اليوم؟
+      // 2. القفل الذهبي المحدث: التحقق بناءً على الصف والقسم معاً
+const alreadyMarked = await pool.query(
+    `SELECT sa.id 
+     FROM student_absences sa
+     JOIN students s ON sa.eleve_id = s.id
+     WHERE s.classe = $1 
+     AND s.section = $2 
+     AND sa.date = $3
+     LIMIT 1`,
+    [classe, section, date]
+);
+
+if (alreadyMarked.rows.length > 0) {
+    // نتحقق إذا كان المعلم الحالي هو من رصد هذا الغياب وفي نفس الحصة (للسماح له بالتعديل)
+    const isSameSession = await pool.query(
+        `SELECT id FROM student_absences 
+         WHERE date = $1 
+         AND periode = $2 
+         AND enseignant_id = $3 
+         LIMIT 1`,
+        [date, periode, teacherIdInt]
+    );
+
+    if (isSameSession.rows.length === 0) {
+        // إذا وجدنا غياباً للفصل (8-2 مثلاً) ولكن ليس من هذا المعلم في هذه الحصة
+        return res.status(403).send(`❌ عذراً، تم رصد غياب فصل ${classe}-${section} مسبقاً اليوم من قبل معلم آخر.`);
+    }
+}
+
+        // 5. مسح السجلات القديمة لهذه الحصة فقط تمهيداً للإضافة الجديدة
         await pool.query(
-            `DELETE FROM student_absences 
-             WHERE date = $1 AND periode = $2 
-             AND eleve_id IN (
-                 SELECT id FROM students 
-                 WHERE classe = (SELECT classe FROM timetable WHERE enseignant_id=$3 AND periode=$4 LIMIT 1)
-                 AND section = (SELECT section FROM timetable WHERE enseignant_id=$3 AND periode=$4 LIMIT 1)
-             )`, 
-            [date, periode, teacherIdInt, periode]
+            "DELETE FROM student_absences WHERE date = $1 AND periode = $2 AND enseignant_id = $3", 
+            [date, periode, teacherIdInt]
         );
         
-        // 2. معالجة حالة الغياب
+        // 6. إدخال الغياب الجديد (إذا وجد طلاب غائبون)
         if (eleve_ids && eleve_ids.length > 0) {
             const ids = Array.isArray(eleve_ids) ? eleve_ids : [eleve_ids];
             for (let id of ids) {
                 await pool.query(
                     "INSERT INTO student_absences (eleve_id, enseignant_id, date, periode) VALUES ($1, $2, $3, $4)", 
-                    [id, teacherIdInt, date, periode]
+                    [parseInt(id), teacherIdInt, date, periode]
                 );
             }
         } 
-        // ملاحظة: إذا كان الكل حضوراً، سيبقى جدول student_absences فارغاً لهذه الحصة، 
-        // ولكننا سنعتمد على "النجوم" أو "Redirect success" لإبلاغ الواجهة بالنجاح.
 
-        // 3. --- تحديث النجوم بنجاح ---
+        // 7. تحديث النجوم للمعلم
         const starUpdate = await pool.query(
             "UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + 1 WHERE id = $1 RETURNING stars_count",
             [teacherIdInt]
         );
         
-        console.log(`✅ تم الرصد بنجاح. رصيد النجوم الجديد للمعلم ${teacherIdInt} هو: ${starUpdate.rows[0].stars_count}`);
+        console.log(`✅ تم الحفظ بنجاح. رصيد نجوم المعلم ${teacherIdInt} هو: ${starUpdate.rows[0].stars_count}`);
 
-        // 4. التوجيه مع رسالة نجاح (هذه الرسالة هي التي ستفعل القفل في المتصفح)
+        // 8. إعادة التوجيه
         res.redirect(`/teacher/dashboard/${teacherIdInt}?success=attendance_saved&p=${periode}`);
         
     } catch (e) {

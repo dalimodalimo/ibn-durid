@@ -354,23 +354,33 @@
 </section>
 
     <section id="section-attendance" class="panel">
-        <div id="no-session-msg" class="hidden" style="text-align: center; color: #94a3b8; padding: 30px;">
-            <i class="fas fa-hourglass-start" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.3;"></i>
-            <h3>لا توجد حصة نشطة حالياً</h3>
+    <div id="no-session-msg" class="hidden" style="text-align: center; color: #94a3b8; padding: 30px;">
+        <i class="fas fa-hourglass-start" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.3;"></i>
+        <h3>لا توجد حصة نشطة حالياً</h3>
+    </div>
+
+    <div id="attendance-already-marked" class="hidden" style="text-align: center; color: var(--success); padding: 30px; border: 2px dashed var(--success); border-radius: 15px;">
+        <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+        <h3>تم رصد غياب هذا الفصل مسبقاً اليوم</h3>
+        <p>لا يمكن رصد الغياب أكثر من مرة واحدة للفصل في اليوم الواحد.</p>
+    </div>
+
+    <div id="attendance-active" class="hidden">
+        <div style="background: #eff6ff; padding: 12px; border-radius: 12px; border-right: 5px solid var(--primary); margin-bottom: 15px; font-size: 0.9rem;">
+            <strong> رصد غياب فصل: </strong> <span id="active-class-title">--</span>
         </div>
-        <div id="attendance-active" class="hidden">
-            <div style="background: #eff6ff; padding: 12px; border-radius: 12px; border-right: 5px solid var(--primary); margin-bottom: 15px; font-size: 0.9rem;">
-                <strong> رصد غياب فصل: </strong> <span id="active-class-title">--</span>
-            </div>
-            <form action="/teacher/absences/mark" method="POST">
-                <input type="hidden" name="enseignant_id" value="<%= prof.id %>">
-                <input type="hidden" name="date" id="input-date">
-                <input type="hidden" name="periode" id="input-p">
-                <div class="student-grid" id="student-grid-container"></div>
-                <button type="submit" class="btn-submit">تأكيد وحفظ الغياب</button>
-            </form>
-        </div>
-    </section>
+        <form action="/teacher/absences/mark" method="POST">
+            <input type="hidden" name="enseignant_id" value="<%= prof.id %>">
+            <input type="hidden" name="date" id="input-date">
+            <input type="hidden" name="periode" id="input-p">
+            <input type="hidden" name="classe" id="input-classe">
+            <input type="hidden" name="section" id="input-section">
+            
+            <div class="student-grid" id="student-grid-container"></div>
+            <button type="submit" class="btn-submit">تأكيد وحفظ الغياب</button>
+        </form>
+    </div>
+</section>
 
     <section id="section-todo" class="todo-section">
     <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 1rem;">
@@ -390,6 +400,66 @@
         </ul>
 </section>
 <script>
+
+    // أضف هذا الكود داخل سكريبت صفحة المعلم
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('input-date');
+    if (dateInput) {
+        // الحصول على تاريخ اليوم بتنسيق YYYY-MM-DD
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+});
+async function refreshAttendancePanel(classe, section, date) {
+    const res = await fetch(`/teacher/absences/check-status?classe=${classe}&section=${section}&date=${date}`);
+    const data = await res.json();
+
+    if (data.alreadyMarked) {
+        document.getElementById('attendance-active').classList.add('hidden');
+        document.getElementById('no-session-msg').classList.add('hidden');
+        
+        // إظهار رسالة تفيد بأن الغياب مكتمل
+        let msgArea = document.getElementById('attendance-completed-msg');
+        if(!msgArea) {
+            msgArea = document.createElement('div');
+            msgArea.id = 'attendance-completed-msg';
+            msgArea.innerHTML = `<div style="text-align:center; padding:20px; color:#059669; background:#ecfdf5; border-radius:12px;">
+                <i class="fas fa-check-double" style="font-size:2rem;"></i>
+                <p>تم رصد الغياب لهذا الفصل مسبقاً اليوم.</p>
+            </div>`;
+            document.getElementById('section-attendance').appendChild(msgArea);
+        }
+        msgArea.style.display = 'block';
+    } else {
+        // إظهار النموذج بشكل طبيعي
+        document.getElementById('attendance-active').classList.remove('hidden');
+        if(document.getElementById('attendance-completed-msg')) 
+            document.getElementById('attendance-completed-msg').style.display = 'none';
+    }
+}
+    
+
+    // دالة افتراضية لتحديث حالة الواجهة
+async function checkClassAttendance(classe, section) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    try {
+        const response = await fetch(`/teacher/absences/check?classe=${classe}&section=${section}&date=${today}`);
+        const data = await response.json();
+
+        if (data.alreadyMarked) {
+            // إذا تم الرصد مسبقاً: أخفِ النموذج وأظهر رسالة النجاح
+            document.getElementById('attendance-active').classList.add('hidden');
+            document.getElementById('attendance-already-marked').classList.remove('hidden');
+        } else {
+            // إذا لم يتم الرصد: أظهر النموذج بشكل طبيعي
+            document.getElementById('attendance-active').classList.remove('hidden');
+            document.getElementById('attendance-already-marked').classList.add('hidden');
+        }
+    } catch (error) {
+        console.error("Error checking attendance:", error);
+    }
+}
 // 1. وظيفة تحديث العداد العلوي
 function updateTodoCounter() {
     const list = document.getElementById('todo-list'); // قائمة المهام

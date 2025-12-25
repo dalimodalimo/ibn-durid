@@ -8,133 +8,244 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root {
-            --primary-blue: #1e3a8a;
-            --secondary-blue: #1e40af;
-            --admin-red: #c0392b;
-            --bg-slate: #f1f5f9;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-        }
+    /* --- المتغيرات العامة --- */
+    :root {
+        --primary-blue: #1e3a8a;
+        --accent-blue: #3b82f6;
+        --secondary-blue: #1e40af;
+        --admin-red: #c0392b;
+        --bg-dark: #0f172a;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+    }
 
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            background: var(--bg-slate); 
-            display: flex; 
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-        }
+    /* --- تنسيق شاشة التحميل (Preloader) --- */
+    #preloader {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        .login-card { 
-            background: white; 
-            padding: 40px; 
-            border-radius: 24px; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            width: 100%; 
-            max-width: 420px; 
-            transition: transform 0.3s ease;
-        }
+    .innovative-loader {
+        position: relative;
+        width: 250px;
+        height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        .login-header { text-align: center; margin-bottom: 30px; }
-        .login-header i { font-size: 3rem; color: var(--primary-blue); margin-bottom: 15px; }
-        .login-header h1 { color: var(--text-main); font-size: 1.75rem; font-weight: 800; margin: 0; }
-        .login-header p { color: var(--text-muted); margin-top: 5px; font-size: 0.95rem; }
+    .pulse-rings {
+        position: absolute;
+        border: 2px solid var(--accent-blue);
+        border-radius: 50%;
+        opacity: 0;
+        animation: ripple 3s infinite;
+    }
 
-        .input-group { margin-bottom: 24px; position: relative; }
-        label { display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
-        
-        input { 
-            width: 100%; 
-            padding: 14px 18px; 
-            border: 2px solid #e2e8f0; 
-            border-radius: 14px; 
-            box-sizing: border-box; 
-            font-family: inherit; 
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            background: #f8fafc;
-        }
+    .pulse-rings:nth-child(1) { animation-delay: 0s; }
+    .pulse-rings:nth-child(2) { animation-delay: 1s; }
+    .pulse-rings:nth-child(3) { animation-delay: 2s; }
 
-        input:focus { 
-            border-color: var(--primary-blue); 
-            background: white;
-            outline: none; 
-            box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); 
-        }
+    @keyframes ripple {
+        0% { width: 50px; height: 50px; opacity: 0.8; }
+        100% { width: 250px; height: 250px; opacity: 0; }
+    }
 
-        .main-btn { 
-            width: 100%; 
-            padding: 16px; 
-            background: var(--primary-blue); 
-            color: white; 
-            border: none; 
-            border-radius: 14px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            font-size: 1.1rem; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.2);
-        }
+    .user-identity {
+        text-align: center;
+        z-index: 10;
+        background: rgba(15, 23, 42, 0.8);
+        padding: 20px;
+        border-radius: 50%;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+    }
 
-        .main-btn:hover { 
-            background: var(--secondary-blue); 
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3);
-        }
+    .user-name {
+        display: block;
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        margin-bottom: 5px;
+        text-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+    }
 
-        /* تنسيق قسم دخول الإدارة */
-        .admin-footer {
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 1px dashed #e2e8f0;
-            text-align: center;
-        }
+    .user-phone {
+        display: block;
+        color: var(--accent-blue);
+        font-size: 0.85rem;
+        font-family: monospace;
+        font-weight: bold;
+    }
 
-        .admin-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--admin-red);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.9rem;
-            padding: 10px 20px;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
+    .scanning-bar {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+        top: 50%;
+        animation: scan 2s linear infinite;
+        opacity: 0.5;
+    }
 
-        .admin-link:hover {
-            background: #fdf2f2;
-            transform: scale(1.05);
-        }
+    @keyframes scan {
+        0% { transform: translateY(-80px); }
+        100% { transform: translateY(80px); }
+    }
 
-        .error { 
-            background: #fee2e2; 
-            color: #dc2626; 
-            padding: 12px; 
-            border-radius: 12px; 
-            text-align: center; 
-            margin-bottom: 20px; 
-            font-size: 0.9rem;
-            border: 1px solid #fecaca;
-            animation: shake 0.4s ease-in-out;
-        }
+    .loading-status {
+        margin-top: 30px;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        animation: fadeInOut 1.5s infinite;
+    }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-    </style>
+    @keyframes fadeInOut { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+    .hide-loader { opacity: 0; visibility: hidden; transform: scale(1.05); }
+
+    /* --- تنسيق الصفحة الرئيسي (Mobile-First) --- */
+    body { 
+        font-family: 'Cairo', sans-serif; 
+        background: var(--bg-dark); 
+        display: flex; 
+        flex-direction: column;
+        justify-content: center; 
+        align-items: center; 
+        min-height: 100vh; 
+        margin: 0; 
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    .login-card { 
+        background: #ffffff; 
+        padding: 35px 25px; 
+        border-radius: 28px; 
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        width: 100%; 
+        max-width: 400px; 
+        box-sizing: border-box;
+        transition: transform 0.3s ease;
+    }
+
+    .login-header { text-align: center; margin-bottom: 25px; }
+    .login-header i { font-size: 2.5rem; color: var(--primary-blue); margin-bottom: 10px; }
+    .login-header h1 { color: var(--text-main); font-size: 1.5rem; font-weight: 800; margin: 0; }
+    .login-header p { color: var(--text-muted); margin-top: 5px; font-size: 0.85rem; }
+
+    /* --- تنسيق المدخلات والأزرار --- */
+    .input-group { margin-bottom: 20px; position: relative; text-align: right; }
+    label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-main); font-size: 0.85rem; }
+    
+    input { 
+        width: 100%; 
+        padding: 16px; 
+        border: 2px solid #e2e8f0; 
+        border-radius: 16px; 
+        box-sizing: border-box; 
+        font-family: inherit; 
+        font-size: 16px !important; /* يمنع عمل Zoom في هواتف iPhone */
+        transition: all 0.2s ease;
+        background: #f8fafc;
+    }
+
+    input:focus { 
+        border-color: var(--primary-blue); 
+        background: white;
+        outline: none; 
+        box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); 
+    }
+
+    .main-btn { 
+        width: 100%; 
+        padding: 18px; 
+        background: var(--primary-blue); 
+        color: white; 
+        border: none; 
+        border-radius: 16px; 
+        font-weight: 700; 
+        cursor: pointer; 
+        font-size: 1.05rem; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* --- التذييل والحقوق --- */
+    .admin-footer {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px dashed #e2e8f0;
+        text-align: center;
+    }
+
+    .admin-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--admin-red);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+    }
+
+    .copyright-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .copyright-section p { margin: 0; font-size: 0.7rem; color: var(--text-muted); }
+
+    .dev-info {
+        margin-top: 6px;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .dev-name { color: var(--accent-blue); font-weight: 800; }
+    .dev-phone { margin-top: 3px; font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: bold; }
+
+    /* تحسين للهواتف الصغيرة جداً */
+    @media (max-width: 360px) {
+        .login-card { padding: 25px 15px; }
+        .login-header h1 { font-size: 1.3rem; }
+    }
+</style>
 </head>
 <body>
+
+<div id="preloader">
+    <div class="innovative-loader">
+        <div class="pulse-rings"></div>
+        <div class="pulse-rings"></div>
+        <div class="pulse-rings"></div>
+        <div class="user-identity">
+            <span class="user-name">MOHAMMED ALI</span>
+            <span class="user-phone">79737448</span>
+        </div>
+        <div class="scanning-bar"></div>
+    </div>
+    <p class="loading-status">جاري الاتصال بالنظام الذكي...</p>
+</div>
+   
 
 <div class="login-card">
     <div class="login-header">
@@ -169,14 +280,22 @@
         </button>
     </form>
 
-    <div class="admin-footer">
-        <a href="/admin/login" class="admin-link">
-            <i class="fas fa-lock-open"></i>
-            مدير النظام (Admin)
-        </a>
+   
+<div class="admin-footer">
+    <a href="/admin/login" class="admin-link">
+        <i class="fas fa-lock-open"></i>
+        مدير النظام (Admin)
+    </a>
+
+    <div class="copyright-section">
+        <p>© 2025 جميع الحقوق محفوظة</p>
+        <div class="dev-info">
+            <span>تم التطوير بواسطة</span>
+            <span class="dev-name">MOHAMMED ALI</span>
+        </div>
+        <div class="dev-phone"><i class="fas fa-phone-alt"></i> 79737448</div>
     </div>
 </div>
-
 <script>
 function prepareLogin() {
     const nameInput = document.getElementById('teacherNameInput').value;
@@ -193,6 +312,17 @@ function prepareLogin() {
         return false;
     }
 }
+
+
+
+
+window.addEventListener('load', function() {
+    const loader = document.getElementById('preloader');
+    // تأخير لمدة 2 ثانية ليعطي انطباعاً بفحص الهوية
+    setTimeout(() => {
+        loader.classList.add('hide-loader');
+    }, 2000); 
+});
 </script>
 
 </body>

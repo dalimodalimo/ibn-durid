@@ -5,195 +5,302 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         :root {
-            --primary: #1e3a8a;
-            --gold: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            --silver: linear-gradient(135deg, #71706e, #e7e7e7, #71706e);
-            --bronze: linear-gradient(135deg, #804a00, #ff8c00, #804a00);
-            --bg: #f8fafc;
+            --primary: #0f172a;
+            --accent: #3b82f6;
+            --gold: #fbbf24;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text-muted: #64748b;
         }
 
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 1000px; margin: 0 auto; }
-
-        /* الهيدر */
-        .header-section {
-            display: flex; justify-content: space-between; align-items: center;
-            background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
+        body { 
+            font-family: 'Cairo', sans-serif; background: var(--bg); 
+            margin: 0; padding: 10px; color: #1e293b; overflow: hidden;
         }
 
-        /* لوحة التحكم السريع */
-        .admin-actions-card {
-            background: white; padding: 20px; border-radius: 20px; margin-bottom: 25px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 12px;
+            height: calc(100vh - 20px);
         }
-        .award-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: flex-end; }
-        
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        select, input { padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; outline: none; }
-        
-        .btn { padding: 12px 20px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
-        .btn-award { background: var(--primary); color: white; }
-        .btn-reset { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
 
-        /* منصة التتويج */
-        .podium {
+        .glass-card {
+            background: var(--card); border-radius: 12px;
+            border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            padding: 12px; position: relative;
+        }
+
+        .section-title { font-size: 0.85rem; font-weight: 800; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+
+        /* Side Panel */
+        .side-panel { display: flex; flex-direction: column; gap: 12px; }
+        .stat-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat-mini-card { background: var(--bg); padding: 8px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        .stat-val { font-weight: 800; font-size: 1rem; color: var(--primary); display: block; }
+        .stat-lbl { font-size: 0.65rem; color: var(--text-muted); }
+
+        /* Smart Search */
+        .search-container { position: relative; }
+        .smart-dropdown {
+            position: absolute; top: 100%; right: 0; left: 0;
+            background: white; border: 1px solid var(--border);
+            border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            max-height: 160px; overflow-y: auto; z-index: 100;
+            padding: 0; margin-top: 4px; list-style: none; display: none;
+        }
+        .smart-dropdown li { padding: 8px 12px; font-size: 0.8rem; cursor: pointer; border-bottom: 1px solid #f8fafc; transition: 0.2s; }
+        .smart-dropdown li:hover { background: var(--bg); color: var(--accent); }
+        input#teacherSearch.selected { border-color: #10b981; background: #f0fdf4; }
+
+        /* Form Controls */
+        .award-form-compact { display: flex; flex-direction: column; gap: 8px; }
+        .award-form-compact label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+        .award-form-compact select, .award-form-compact input { 
+            padding: 8px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); width: 100%; box-sizing: border-box;
+        }
+
+        .btn-small { 
+            padding: 10px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.8rem;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+
+        /* Countdown Button Style */
+        .btn-reset-safe {
+            background: #fff1f2; color: #e11d48; width: 100%; border: 1px solid #fda4af;
+            position: relative; overflow: hidden;
+        }
+        .btn-reset-safe:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Podium */
+        .main-panel { display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+        .compact-podium {
             display: flex; justify-content: center; align-items: flex-end;
-            margin: 50px 0; gap: 10px; height: 300px;
+            height: 130px; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
         }
-        .podium-step { text-align: center; display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 150px; }
-        
-        .step-box {
-            width: 100%; position: relative; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; color: white;
-            border-radius: 15px 15px 5px 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        
-        .first { order: 2; } .first .step-box { height: 180px; background: var(--gold); border: 2px solid #ffd700; }
-        .second { order: 1; } .second .step-box { height: 130px; background: var(--silver); border: 2px solid #cbd5e1; }
-        .third { order: 3; } .third .step-box { height: 90px; background: var(--bronze); border: 2px solid #d97706; }
+        .p-step { flex: 1; max-width: 120px; text-align: center; }
+        .p-box { border-radius: 8px 8px 4px 4px; color: white; display: flex; flex-direction: column; justify-content: center; }
+        .p-1 { order: 2; } .p-1 .p-box { height: 70px; background: var(--gold); }
+        .p-2 { order: 1; } .p-2 .p-box { height: 45px; background: #94a3b8; }
+        .p-3 { order: 3; } .p-3 .p-box { height: 30px; background: #cd7f32; }
+        .p-name { font-size: 0.7rem; font-weight: 800; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .teacher-name { font-weight: 900; margin-bottom: 10px; font-size: 0.9rem; min-height: 40px; }
-        .crown { font-size: 2rem; color: #fbbf24; margin-bottom: -10px; z-index: 10; }
+        /* Table */
+        .table-container { flex-grow: 1; overflow-y: auto; }
+        .compact-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .compact-table th { position: sticky; top: 0; background: #f8fafc; padding: 10px; text-align: right; border-bottom: 2px solid var(--border); z-index: 5; }
+        .compact-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
 
-        /* الجدول */
-        .leaderboard-table {
-            width: 100%; background: white; border-radius: 20px; overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-collapse: collapse;
-        }
-        .leaderboard-table th { background: #f8fafc; padding: 15px; text-align: right; color: #64748b; font-size: 0.8rem; }
-        .leaderboard-table td { padding: 15px; border-top: 1px solid #f1f5f9; }
-        .top-3-bg { background-color: #fefce8; }
-
-        @media (max-width: 600px) {
-            .podium { height: 250px; gap: 5px; }
-            .teacher-name { font-size: 0.7rem; }
+        @media (max-width: 850px) {
+            .dashboard-wrapper { grid-template-columns: 1fr; height: auto; overflow: auto; }
+            body { overflow: auto; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header class="header-section">
-            <div>
-                <h1 style="margin: 0; color: var(--primary);">نظام نجوم ابن دريد</h1>
-                <p style="margin: 5px 0 0; color: #64748b; font-size: 0.8rem;">لوحة تكريم وتحفيز المعلمين</p>
+<div class="dashboard-wrapper">
+    <aside class="side-panel">
+        <div class="glass-card">
+            <div class="section-title"><i class="fas fa-chart-pie" style="color:var(--accent)"></i> ملخص الأداء</div>
+            <div class="stat-mini-grid">
+                <div class="stat-mini-card">
+                    <span class="stat-val"><%= teachers.reduce((acc, t) => acc + (t.stars_count || 0), 0) %></span>
+                    <span class="stat-lbl">إجمالي النجوم</span>
+                </div>
+                <div class="stat-mini-card">
+                    <span class="stat-val"><%= teachers.length %></span>
+                    <span class="stat-lbl">معلم</span>
+                </div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <form action="/admin/stars/reset-all" method="POST" onsubmit="return confirm('⚠️ هل أنت متأكد؟ سيتم تصفير جميع النجوم لبدء دورة جديدة!');">
-                    <button type="submit" class="btn btn-reset">
-                        <i class="fas fa-sync-alt"></i> تصفير الدورة
+        </div>
+
+        <div class="glass-card" style="flex-grow: 1;">
+            <div class="section-title"><i class="fas fa-magic" style="color:var(--gold)"></i> إسناد سريع</div>
+            <form id="awardForm" action="/admin/stars/award" method="POST" class="award-form-compact">
+                <div class="form-group search-container">
+                    <label>اسم المعلم</label>
+                    <input type="text" id="teacherSearch" placeholder="ابحث عن معلم..." autocomplete="off" required>
+                    <ul id="searchDropdown" class="smart-dropdown">
+                        <% teachers.forEach(t => { %>
+                            <li data-id="<%= t.id %>"><%= t.nom %></li>
+                        <% }) %>
+                    </ul>
+                    <input type="hidden" name="teacher_id" id="selectedTeacherId" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>النجوم المستحقة</label>
+                    <select name="points" required>
+                        <option value="1">⭐ +1 (تعاون)</option>
+                        <option value="3">🌟 +3 (تميز)</option>
+                        <option value="5">🏆 +5 (إنجاز فائق)</option>
+                        <option value="-1">⚠️ -1 (تنبيه)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>السبب</label>
+                    <input type="text" name="reason" placeholder="لماذا؟" required>
+                </div>
+
+                <button type="submit" class="btn-small" style="background:var(--primary); color:white; margin-top:5px;">
+                    <i class="fas fa-save"></i> حفظ التعديل
+                </button>
+            </form>
+
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">
+                <form id="resetForm" action="/admin/stars/reset-all" method="POST">
+                    <button type="button" id="safeResetBtn" class="btn-small btn-reset-safe">
+                        <i class="fas fa-sync"></i> تصفير الدورة (تأكيد)
                     </button>
                 </form>
-                <a href="/admin/dashboard" class="btn" style="background: #f1f5f9; color: #475569;">عودة</a>
+                <a href="/admin/dashboard" class="btn-small" style="text-decoration:none; color:var(--text-muted); margin-top:5px; border:1px solid var(--border);">
+                    <i class="fas fa-arrow-right"></i> لوحة التحكم الرئيسية
+                </a>
             </div>
-        </header>
+        </div>
+    </aside>
 
-        <section class="admin-actions-card">
-            <h3 style="margin-top: 0; font-size: 1rem;"><i class="fas fa-plus-circle"></i> منح نجوم إضافية</h3>
-            <form action="/admin/stars/award" method="POST" class="award-form">
-                <div class="form-group">
-                    <label>المعلم</label>
-                    <select name="teacher_id" required>
-                        <option value="">اختر المعلم...</option>
-                        <% teachers.forEach(t => { %>
-                            <option value="<%= t.id %>"><%= t.nom %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>عدد النجوم</label>
-                    <select name="points" required>
-                        <option value="1">+1 نجمة (تعاون/انضباط)</option>
-                        <option value="3">+3 نجوم (ابتكار/تميز)</option>
-                        <option value="5">+5 نجوم (إنجاز استثنائي)</option>
-                        <option value="-1">-1 نجمة (تقصير/تنبيه)</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex-grow: 2;">
-                    <label>السبب</label>
-                    <input type="text" name="reason" placeholder="مثلاً: التميز في تنظيم الإذاعة المدرسية" required>
-                </div>
-                <button type="submit" class="btn btn-award">تأكيد المنح</button>
-            </form>
-        </section>
+    <main class="main-panel glass-card">
+        <div class="section-title" style="justify-content: space-between;">
+            <span><i class="fas fa-trophy" style="color:var(--gold)"></i> لوحة الصدارة</span>
+            <span style="font-size:0.65rem; color:var(--text-muted);"><%= new Date().toLocaleDateString('ar-EG') %></span>
+        </div>
 
         <% if (teachers.length >= 3) { %>
-        <div class="podium">
-            <div class="podium-step second">
-                <div class="teacher-name"><%= teachers[1].nom %></div>
-                <div class="step-box">
-                    <i class="fas fa-medal" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
-                    <span style="font-size: 1.2rem; font-weight: 900;"><%= teachers[1].stars_count %></span>
-                    <small>نجمة</small>
-                </div>
+        <div class="compact-podium">
+            <div class="p-step p-2">
+                <div class="p-name"><%= teachers[1].nom.split(' ')[0] %></div>
+                <div class="p-box"><span style="font-size:1rem; font-weight:800;"><%= teachers[1].stars_count %></span></div>
             </div>
-
-            <div class="podium-step first">
-                <i class="fas fa-crown crown"></i>
-                <div class="teacher-name"><%= teachers[0].nom %></div>
-                <div class="step-box">
-                    <i class="fas fa-star" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                    <span style="font-size: 1.8rem; font-weight: 900;"><%= teachers[0].stars_count %></span>
-                    <small>نجمة</small>
-                </div>
+            <div class="p-step p-1">
+                <i class="fas fa-crown" style="color:var(--gold); font-size:1rem;"></i>
+                <div class="p-name" style="font-size:0.8rem;"><%= teachers[0].nom.split(' ')[0] %></div>
+                <div class="p-box"><span style="font-size:1.2rem; font-weight:900;"><%= teachers[0].stars_count %></span></div>
             </div>
-
-            <div class="podium-step third">
-                <div class="teacher-name"><%= teachers[2].nom %></div>
-                <div class="step-box">
-                    <i class="fas fa-award" style="font-size: 1.2rem; margin-bottom: 10px;"></i>
-                    <span style="font-size: 1.1rem; font-weight: 900;"><%= teachers[2].stars_count %></span>
-                    <small>نجمة</small>
-                </div>
+            <div class="p-step p-3">
+                <div class="p-name"><%= teachers[2].nom.split(' ')[0] %></div>
+                <div class="p-box"><span style="font-size:0.8rem; font-weight:800;"><%= teachers[2].stars_count %></span></div>
             </div>
         </div>
         <% } %>
 
-        <table class="leaderboard-table">
-            <thead>
-                <tr>
-                    <th>المركز</th>
-                    <th>المعلم</th>
-                    <th style="text-align: center;">الرصيد الحالي</th>
-                    <th>المرتبة</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% teachers.forEach((t, index) => { %>
-                <tr class="<%= index < 3 ? 'top-3-bg' : '' %>">
-                    <td style="font-weight: 700; color: #94a3b8;">#<%= index + 1 %></td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 30px; height: 30px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900;">
-                                <%= t.nom.charAt(0) %>
-                            </div>
-                            <strong><%= t.nom %></strong>
-                        </div>
-                    </td>
-                    <td style="text-align: center;">
-                        <span style="background: white; border: 1px solid #e2e8f0; padding: 5px 15px; border-radius: 20px; font-weight: 900; color: var(--primary);">
-                            <%= t.stars_count || 0 %> <i class="fas fa-star" style="color: #fbbf24; font-size: 0.8rem;"></i>
-                        </span>
-                    </td>
-                    <td>
-                        <% if(t.stars_count >= 100) { %>
-                            <span style="color: #ca8a04; font-weight: 700;"><i class="fas fa-crown"></i> معلم قدير</span>
-                        <% } else if(t.stars_count >= 50) { %>
-                            <span style="color: #64748b; font-weight: 700;"><i class="fas fa-award"></i> معلم متميز</span>
-                        <% } else { %>
-                            <span style="color: #92400e; font-weight: 700;"><i class="fas fa-seedling"></i> معلم مبادر</span>
-                        <% } %>
-                    </td>
-                </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </div>
+        <div class="table-container">
+            <table class="compact-table">
+                <thead>
+                    <tr>
+                        <th width="30">#</th>
+                        <th>المعلم</th>
+                        <th style="text-align:center;">النجوم</th>
+                        <th>الرتبة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% teachers.forEach((t, index) => { %>
+                    <tr>
+                        <td><span class="rank-badge"><%= index + 1 %></span></td>
+                        <td style="font-weight:700;"><%= t.nom %></td>
+                        <td style="text-align:center; font-weight:800; color:var(--accent);">
+                            <%= t.stars_count || 0 %> ⭐
+                        </td>
+                        <td style="font-size:0.7rem;">
+                            <% if(t.stars_count >= 100) { %> <span style="color:var(--gold)">👑 قدير</span>
+                            <% } else if(t.stars_count >= 50) { %> <span style="color:var(--accent)">💎 متميز</span>
+                            <% } else { %> <span style="color:var(--text-muted)">🌱 مبادر</span> <% } %>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script>
+    // 1. منطق البحث الذكي (كما سبق)
+    const searchInput = document.getElementById('teacherSearch');
+    const dropdown = document.getElementById('searchDropdown');
+    const hiddenIdInput = document.getElementById('selectedTeacherId');
+    const listItems = dropdown.querySelectorAll('li');
+
+    searchInput.addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        dropdown.style.display = val ? 'block' : 'none';
+        listItems.forEach(li => li.style.display = li.textContent.toLowerCase().includes(val) ? 'block' : 'none');
+    });
+
+    listItems.forEach(li => {
+        li.addEventListener('click', function() {
+            searchInput.value = this.textContent;
+            hiddenIdInput.value = this.getAttribute('data-id');
+            dropdown.style.display = 'none';
+            searchInput.classList.add('selected');
+        });
+    });
+
+    // 2. إشعارات تأكيد الإسناد
+    document.getElementById('awardForm').onsubmit = function(e) {
+        if (!hiddenIdInput.value) {
+            Swal.fire({ icon: 'warning', title: 'خطأ', text: 'يرجى اختيار معلم من القائمة', confirmButtonText: 'حسناً' });
+            e.preventDefault();
+            return false;
+        }
+        // يمكن تفعيل هذا الجزء إذا كنت تستخدم AJAX، لكن بما أنه POST عادي سنكتفي بتغيير شكل الزر
+        const btn = this.querySelector('button[type="submit"]');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+    };
+
+    // 3. عداد زر التصفير الآمن
+    const safeResetBtn = document.getElementById('safeResetBtn');
+    const resetForm = document.getElementById('resetForm');
+    let timer;
+    let count = 5;
+
+    safeResetBtn.addEventListener('click', function() {
+        if (this.classList.contains('active-timer')) return;
+
+        this.classList.add('active-timer');
+        this.style.background = "#fb7185";
+        this.style.color = "white";
+        
+        timer = setInterval(() => {
+            if (count > 0) {
+                this.innerHTML = `<i class="fas fa-clock"></i> انتظر ${count} ثوانٍ...`;
+                count--;
+            } else {
+                clearInterval(timer);
+                this.innerHTML = `<i class="fas fa-exclamation-triangle"></i> اضغط الآن للتأكيد النهائي!`;
+                this.style.background = "#e11d48";
+                this.onclick = () => {
+                    Swal.fire({
+                        title: 'هل أنت متأكد تماماً؟',
+                        text: "سيتم حذف جميع نجوم المعلمين ولا يمكن التراجع!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'نعم، قم بالتصفير',
+                        cancelButtonText: ' إلغاء'
+                    }).then((result) => {
+                        if (result.isConfirmed) resetForm.submit();
+                    });
+                };
+            }
+        }, 1000);
+    });
+
+    // إغلاق الدروب داون عند النقر في الخارج
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target)) dropdown.style.display = 'none';
+    });
+</script>
 
 </body>
 </html>

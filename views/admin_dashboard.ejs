@@ -3,331 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= titre %> - مدرسة ابن دريد</title>
+    <title><%= titre %> - <%= ecole %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --sidebar-width: 260px;
-            --primary-blue: #2c3e50;
-            --accent-blue: #34495e;
-            --light-bg: #f4f7f6;
-            --danger: #e74c3c;
-            --success: #27ae60;
-            --warning: #f39c12;
-            --info: #3498db;
-            --purple: #9b59b6;
-            --white: #ffffff;
-            --gold: #f1c40f; /* لون جديد للإعلانات */
+            --sidebar-width: 280px;
+            --primary-dark: #0f172a;
+            --accent-gold: #fbbf24;
+            --soft-blue: #3b82f6;
+            --bg-slate: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-slate: #0b0f1a;
+            --card-bg: #161e2d;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+            --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
         }
 
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: var(--light-bg); 
-            margin: 0; 
-            display: flex;
+            font-family: 'Cairo', sans-serif; 
+            background-color: var(--bg-slate); 
+            margin: 0; display: flex;
+            color: var(--text-main);
+            transition: background 0.4s ease;
         }
 
-        /* القائمة الجانبية */
+        /* --- Sidebar --- */
         .sidebar { 
-            width: var(--sidebar-width); 
-            background: var(--primary-blue); 
-            color: white; 
-            height: 100vh; 
-            position: fixed; 
-            padding: 25px; 
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            z-index: 1000;
+            width: var(--sidebar-width); background: var(--primary-dark); color: white; 
+            height: 100vh; position: fixed; display: flex; flex-direction: column; z-index: 1000;
         }
-
-        .sidebar h2 { margin-bottom: 5px; color: #ecf0f1; font-size: 1.4rem; }
-        .sidebar p { font-size: 0.85rem; opacity: 0.7; margin-bottom: 20px; }
-        .sidebar hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0; }
+        .sidebar-header { padding: 25px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-header h2 { margin: 0; font-size: 1.1rem; color: var(--accent-gold); font-weight: 800; }
         
-        .sidebar-nav { flex-grow: 1; overflow-y: auto; }
+        .sidebar-nav { flex-grow: 1; padding: 10px 15px; overflow-y: auto; }
+        .nav-group-title { font-size: 0.65rem; color: rgba(255,255,255,0.3); margin: 15px 10px 5px; text-transform: uppercase; letter-spacing: 1px; }
         
         .nav-link {
-            color: #bdc3c7;
-            text-decoration: none;
+            color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 10px; margin-bottom: 3px; transition: var(--transition); font-size: 0.85rem;
+        }
+        .nav-link:hover, .nav-link.active { background: var(--soft-blue); color: white; }
+
+        /* --- Main Content --- */
+        .main-content { 
+            margin-right: var(--sidebar-width); padding: 30px; 
+            width: calc(100% - var(--sidebar-width)); box-sizing: border-box;
+        }
+
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        
+        .theme-toggle {
+            background: var(--card-bg); border: 1px solid rgba(0,0,0,0.1); color: var(--text-main);
+            width: 40px; height: 40px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- Quick Stats Bar --- */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 18px;
+            box-shadow: var(--card-shadow);
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: 0.3s;
+            gap: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
-        .nav-link:hover {
-            background: var(--accent-blue);
-            color: white;
-            transform: translateX(-5px);
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
         }
 
-        .nav-link.active {
-            background: var(--info);
-            color: white;
+        .stat-info .stat-value { font-size: 1.2rem; font-weight: 800; display: block; }
+        .stat-info .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* --- Grid & Cards --- */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+        .card { 
+            background: var(--card-bg); padding: 22px; border-radius: 20px; 
+            box-shadow: var(--card-shadow); cursor: pointer; transition: var(--transition);
+            border-bottom: 4px solid transparent; text-align: right;
         }
+        .card:hover { transform: translateY(-5px); }
+        .card h3 { margin: 12px 0 5px; font-size: 1rem; font-weight: 700; }
+        .card p { font-size: 0.75rem; color: var(--text-muted); margin: 0; line-height: 1.4; }
+        .icon-box { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: var(--bg-slate); }
 
-        .logout-btn {
-            background: var(--danger);
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            margin-top: 20px;
-            transition: 0.3s;
+        /* الألوان المميزة للكروت */
+        .c-tea { border-bottom-color: var(--soft-blue); }
+        .c-std { border-bottom-color: #10b981; }
+        .c-sta { border-bottom-color: var(--accent-gold); }
+        .c-abs { border-bottom-color: #ef4444; }
+        .c-beh { border-bottom-color: #8b5cf6; }
+        .c-rep { border-bottom-color: #06b6d4; }
+
+        /* --- Professional Modal Design --- */
+        .modal {
+            display: none; position: fixed; inset: 0; z-index: 2000;
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); 
+            align-items: center; justify-content: center; padding: 20px;
         }
-
-        .logout-btn:hover { background: #c0392b; }
-
-        /* المحتوى الرئيسي */
-        .main-content { 
-            margin-right: var(--sidebar-width); 
-            padding: 40px; 
-            width: 100%;
+        .modal-content { 
+            background: var(--card-bg); 
+            padding: 0; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 500px; 
+            color: var(--text-main); 
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            animation: modalSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
-        header {
+        @keyframes modalSlide {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            padding: 20px 25px;
+            background: var(--bg-slate);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 35px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 15px;
         }
-
-        h1 { color: var(--primary-blue); margin: 0; font-size: 1.8rem; }
-
-        /* شبكة الكروت */
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 25px; 
+        .modal-header h3 { margin: 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .modal-body { padding: 25px; }
+        .modal-body label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 8px; color: var(--text-muted); }
+        .modal-body input, .modal-body textarea {
+            width: 100%; padding: 12px 16px; margin-bottom: 20px;
+            border: 1.5px solid var(--border-color); border-radius: 12px;
+            background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.95rem;
+            transition: all 0.2s; box-sizing: border-box;
         }
-
-        .card { 
-            background: var(--white); 
-            padding: 30px; 
-            border-radius: 15px; 
-            text-align: center; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.05); 
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 4px solid transparent;
+        .modal-body input:focus, .modal-body textarea:focus {
+            outline: none; border-color: var(--soft-blue); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
-
-        .card:hover { 
-            transform: translateY(-8px); 
-            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
-            background-color: #fafafa;
-        }
-
-        .card.teachers:hover { border-bottom-color: var(--info); }
-        .card.students:hover { border-bottom-color: var(--success); }
-        .card.timetable:hover { border-bottom-color: var(--accent-blue); }
-        .card.absence:hover { border-bottom-color: var(--danger); }
-        .card.reports:hover { border-bottom-color: var(--warning); }
-        .card.behavior:hover { border-bottom-color: var(--purple); }
-        .card.announcements:hover { border-bottom-color: var(--gold); }
-        .card.settings:hover { border-bottom-color: #95a5a6; }
-
-        .card .icon { font-size: 2.5rem; margin-bottom: 15px; }
-        .card h3 { color: var(--primary-blue); margin: 10px 0 5px 0; font-size: 1.2rem; }
-        .card p { color: #7f8c8d; font-size: 0.9rem; margin: 0; line-height: 1.4; }
-
-        /* تنسيق الـ Modal (النافذة المنبثقة) */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 500px;
-            max-width: 90%;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-            position: relative;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #eee;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            font-size: 1.4rem;
-            color: var(--primary-blue);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        .form-group input, .form-group textarea {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
-            font-family: inherit;
-        }
-
+        .modal-footer { padding: 0 25px 25px; display: flex; flex-direction: column; gap: 10px; }
         .btn-send {
-            background: var(--gold); color: white; border: none; padding: 12px 25px;
-            border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;
+            width: 100%; padding: 14px; background: var(--primary-dark); color: white;
+            border: none; border-radius: 12px; font-weight: 800; cursor: pointer;
+            transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-send:hover { background: #d4ac0d; }
-
-        .close-modal {
-            position: absolute; left: 20px; top: 20px; cursor: pointer; color: #aaa; font-size: 1.5rem;
+        .btn-send:hover { background: var(--soft-blue); transform: translateY(-2px); }
+        .btn-close-text {
+            background: none; border: none; color: var(--text-muted); padding: 5px;
+            cursor: pointer; font-weight: 600; font-size: 0.85rem; text-decoration: underline;
         }
 
-        @media (max-width: 768px) {
-            .sidebar { width: 70px; padding: 10px; }
-            .sidebar h2, .sidebar p, .sidebar hr, .nav-link span { display: none; }
-            .main-content { margin-right: 70px; padding: 20px; }
+        @media (max-width: 1024px) {
+            .sidebar { width: 75px; }
+            .sidebar span, .sidebar p, .nav-group-title, .sidebar-header h2 { display: none; }
+            .main-content { margin-right: 75px; width: calc(100% - 75px); }
         }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2><%= ecole %></h2>
-    <p>نظام الإدارة المدرسية المتكامل</p>
-    <hr>
-    
-    <div class="sidebar-nav">
-        <a href="/admin/dashboard" class="nav-link active"><i class="fas fa-home"></i> <span>لوحة التحكم</span></a>
-        <a href="/admin/enseignants" class="nav-link"><i class="fas fa-chalkboard-teacher"></i> <span>إدارة المعلمين</span></a>
-        <a href="/admin/eleves" class="nav-link"><i class="fas fa-user-graduate"></i> <span>إدارة الطلاب</span></a>
-        <a href="/admin/timetable" class="nav-link"><i class="fas fa-calendar-alt"></i> <span>الجدول المدرسي</span></a>
-        <a href="/admin/absence-profs" class="nav-link"><i class="fas fa-user-clock"></i> <span>غياب المعلمين</span></a>
-        <a href="/admin/rapport-absences-eleves" class="nav-link"><i class="fas fa-chart-line"></i> <span>تقارير غياب الطلاب</span></a>
-        <a href="/admin/behavior-reports" class="nav-link"><i class="fas fa-clipboard-list"></i> <span>تقارير السلوك</span></a>
-        <a href="/admin/student-reports-list" class="nav-link"><i class="fas fa-file-signature"></i> <span>التقييمات الأكاديمية</span></a>
-        <a href="/admin/stars-management" class="nav-link">
-    <i class="fas fa-trophy" style="color: #f1c40f;"></i> 
-    <span>نجوم التميز</span>
-</a>
-        <hr>
-        <a href="/admin/settings" class="nav-link"><i class="fas fa-cog"></i> <span>إعدادات النظام</span></a>
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h2><%= ecole %></h2>
+        <p style="font-size:0.7rem; color:rgba(255,255,255,0.5);">لوحة الإدارة المركزية</p>
     </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-title">الرئيسية</div>
+        <a href="/admin/dashboard" class="nav-link active"><i class="fas fa-chart-pie"></i> <span>لوحة التحكم</span></a>
+        
+        <div class="nav-group-title">شؤون الموظفين</div>
+        <a href="/admin/enseignants" class="nav-link"><i class="fas fa-chalkboard-teacher"></i> <span>إدارة المعلمين</span></a>
+        <a href="/admin/absence-profs" class="nav-link"><i class="fas fa-user-clock"></i> <span>غياب المعلمين</span></a>
+        <a href="/admin/stars-management" class="nav-link"><i class="fas fa-trophy"></i> <span>نجوم التميز</span></a>
 
-    <a href="/logout" class="logout-btn">خروج 🚪</a>
-</div>
+        <div class="nav-group-title">شؤون الطلاب</div>
+        <a href="/admin/eleves" class="nav-link"><i class="fas fa-user-graduate"></i> <span>إدارة الطلاب</span></a>
+        <a href="/admin/rapport-absences-eleves" class="nav-link"><i class="fas fa-history"></i> <span>سجلات الغياب</span></a>
+        <a href="/admin/behavior-reports" class="nav-link"><i class="fas fa-clipboard-list"></i> <span>تقارير السلوك</span></a>
+        <a href="/admin/student-reports-list" class="nav-link"><i class="fas fa-file-signature"></i> <span>التقييم الأكاديمي</span></a>
 
-<div class="main-content">
+        <div class="nav-group-title">التنظيم</div>
+        <a href="/admin/timetable" class="nav-link"><i class="fas fa-calendar-alt"></i> <span>الجدول المدرسي</span></a>
+        <a href="/admin/settings" class="nav-link"><i class="fas fa-tools"></i> <span>الإعدادات</span></a>
+    </nav>
+</aside>
+
+<main class="main-content">
     <header>
-        <h1><%= titre %></h1>
-        <div style="color: #7f8c8d;">أهلاً بك، مدير النظام</div>
+        <div>
+            <h1 style="margin:0;"><%= titre %></h1>
+            <p style="color:var(--text-muted); margin:4px 0 0; font-size:0.9rem;">إحصائيات وتحكم مدرسة <%= ecole %></p>
+        </div>
+        
+        <div style="display:flex; gap:12px; align-items:center;">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
+            <div style="display:flex; align-items:center; gap:10px; background:var(--card-bg); padding:6px 12px; border-radius:12px; box-shadow:var(--card-shadow);">
+                <div style="text-align:left">
+                    <div style="font-weight:800; font-size:0.85rem;"><%= ecole %></div>
+                    <div style="font-size:0.65rem; color:var(--soft-blue);">مدير النظام</div>
+                </div>
+                <i class="fas fa-school" style="color:var(--accent-gold); font-size:1.2rem;"></i>
+            </div>
+        </div>
     </header>
 
-    <div class="grid">
-        <div class="card announcements" onclick="openAnnModal()">
-            <div class="icon">📢</div>
-            <h3>إرسال إعلان / تنبيه</h3>
-            <p>تنبيه المعلمين باجتماع أو تعميم إداري جديد</p>
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fas fa-signal"></i></div>
+            <div class="stat-info">
+                <span class="stat-value"><%= stats.teachersOnline %></span>
+                <span class="stat-label">معلم متصل الآن</span>
+            </div>
         </div>
-
-        <div class="card teachers" onclick="location.href='/admin/enseignants'">
-            <div class="icon">👨‍🏫</div>
-            <h3>إدارة المعلمين</h3>
-            <p>إضافة المعلمين، التخصصات، وتعديل البيانات</p>
+        
+        <div class="stat-item">
+            <div class="stat-icon" style="background:rgba(239,68,68,0.1); color:#ef4444;"><i class="fas fa-user-times"></i></div>
+            <div class="stat-info">
+                <span class="stat-value"><%= stats.teachersAbsent %></span>
+                <span class="stat-label">غياب المعلمين اليوم</span>
+            </div>
         </div>
-<div class="card" style="border-bottom-color: #f1c40f;" onclick="location.href='/admin/stars-management'">
-    <div class="icon" style="color: #f1c40f;">🏆</div>
-    <h3>نجوم التميز</h3>
-    <p>لوحة الشرف، تحفيز المعلمين، وإدارة نقاط الأداء</p>
-</div>
-
-
-        <div class="card students" onclick="location.href='/admin/eleves'">
-            <div class="icon">👨‍🎓</div>
-            <h3>إدارة الطلاب</h3>
-            <p>تسجيل الطلاب الجدد وتوزيع الفصول</p>
+        
+        <div class="stat-item">
+            <div class="stat-icon" style="background:rgba(59,130,246,0.1); color:var(--soft-blue);"><i class="fas fa-user-slash"></i></div>
+            <div class="stat-info">
+                <span class="stat-value"><%= stats.studentsAbsent %></span>
+                <span class="stat-label">غياب الطلاب اليوم</span>
+            </div>
         </div>
-
-        <div class="card timetable" onclick="location.href='/admin/timetable'">
-            <div class="icon">📅</div>
-            <h3>الجدول المدرسي</h3>
-            <p>تنظيم الحصص الأسبوعية وتوزيع المهام</p>
-        </div>
-
-        <div class="card absence" onclick="location.href='/admin/absence-profs'">
-            <div class="icon">🔄</div>
-            <h3>الاحتياط والغياب</h3>
-            <p>رصد غياب المعلمين وتعيين الاحتياط</p>
-        </div>
-
-        <div class="card reports" onclick="location.href='/admin/rapport-absences-eleves'">
-            <div class="icon">📊</div>
-            <h3>غياب الطلاب</h3>
-            <p>كشوفات الغياب اليومية، الشهرية، والسنوية</p>
-        </div>
-
-        <div class="card behavior" onclick="location.href='/admin/behavior-reports'">
-            <div class="icon" style="color: var(--purple);">📑</div>
-            <h3>تقارير السلوك</h3>
-            <p>متابعة ملاحظات المعلمين حول سلوك الطلاب</p>
-        </div>
-
-        <div class="card reports" style="border-bottom-color: var(--info);" onclick="location.href='/admin/student-reports-list'">
-             <div class="icon" style="color: var(--info);">📝</div>
-             <h3>نتائج التقييمات</h3>
-              <p>مراجعة تقييمات المعلمين للمستوى الأكاديمي للطلاب</p>
-        </div>
-
-        <div class="card settings" onclick="location.href='/admin/settings'">
-            <div class="icon">⚙️</div>
-            <h3>إعدادات النظام</h3>
-            <p>ضبط الشعب، توقيت الحصص، والمواد الدراسية</p>
+        
+        <div class="stat-item">
+            <div class="stat-icon" style="background:rgba(251,191,36,0.1); color:var(--accent-gold);"><i class="fas fa-bell"></i></div>
+            <div class="stat-info">
+                <span class="stat-value"><%= stats.unreadBehaviors %></span>
+                <span class="stat-label">تنبيهات سلوك معلقة</span>
+            </div>
         </div>
     </div>
-</div>
+
+    <div class="grid">
+        <div class="card c-sta" onclick="openAnnModal()">
+            <div class="icon-box" style="color:var(--accent-gold);"><i class="fas fa-bullhorn"></i></div>
+            <h3>بث إعلان جديد</h3>
+            <p>إرسال تعاميم إدارية فورية لجميع الطاقم.</p>
+        </div>
+
+        <div class="card c-tea" onclick="location.href='/admin/enseignants'">
+            <div class="icon-box" style="color:var(--soft-blue);"><i class="fas fa-chalkboard-teacher"></i></div>
+            <h3>إدارة المعلمين</h3>
+            <p>إضافة المعلمين، التخصصات، وتعديل البيانات.</p>
+        </div>
+
+        <div class="card c-sta" onclick="location.href='/admin/stars-management'">
+            <div class="icon-box" style="color:#f59e0b;"><i class="fas fa-award"></i></div>
+            <h3>نجوم التميز</h3>
+            <p>تحفيز المعلمين وإدارة لوحة شرف المدرسة.</p>
+        </div>
+
+        <div class="card c-std" onclick="location.href='/admin/eleves'">
+            <div class="icon-box" style="color:#10b981;"><i class="fas fa-user-graduate"></i></div>
+            <h3>إدارة الطلاب</h3>
+            <p>تسجيل الطلاب الجدد وتوزيع الفصول.</p>
+        </div>
+
+        <div class="card c-abs" onclick="location.href='/admin/absence-profs'">
+            <div class="icon-box" style="color:#ef4444;"><i class="fas fa-user-clock"></i></div>
+            <h3>الاحتياط والغياب</h3>
+            <p>رصد غياب المعلمين وتعيين حصص الاحتياط.</p>
+        </div>
+
+        <div class="card c-rep" onclick="location.href='/admin/rapport-absences-eleves'">
+            <div class="icon-box" style="color:#06b6d4;"><i class="fas fa-chart-line"></i></div>
+            <h3>غياب الطلاب</h3>
+            <p>كشوفات الغياب اليومية والتقارير الإحصائية.</p>
+        </div>
+
+        <div class="card c-beh" onclick="location.href='/admin/behavior-reports'">
+            <div class="icon-box" style="color:#8b5cf6;"><i class="fas fa-clipboard-list"></i></div>
+            <h3>تقارير السلوك</h3>
+            <p>متابعة ملاحظات المعلمين حول سلوكيات الطلاب.</p>
+        </div>
+
+        <div class="card" style="border-bottom-color: var(--soft-blue);" onclick="location.href='/admin/student-reports-list'">
+            <div class="icon-box" style="color:var(--soft-blue);"><i class="fas fa-file-signature"></i></div>
+            <h3>نتائج التقييمات</h3>
+            <p>مراجعة تقييمات المعلمين للمستوى الأكاديمي.</p>
+        </div>
+
+        <div class="card" onclick="location.href='/admin/timetable'">
+            <div class="icon-box" style="color:#8b5cf6;"><i class="fas fa-calendar-alt"></i></div>
+            <h3>الجدول المدرسي</h3>
+            <p>تنظيم الحصص الأسبوعية وتوزيع المهام.</p>
+        </div>
+
+        <div class="card" onclick="location.href='/admin/settings'">
+            <div class="icon-box" style="color:#64748b;"><i class="fas fa-cog"></i></div>
+            <h3>إعدادات النظام</h3>
+            <p>ضبط الشعب، توقيت الحصص، والمواد.</p>
+        </div>
+    </div>
+</main>
 
 <div id="announcementModal" class="modal">
     <div class="modal-content">
-        <span class="close-modal" onclick="closeAnnModal()">&times;</span>
         <div class="modal-header">
-            <i class="fas fa-bullhorn" style="color: var(--gold);"></i> إرسال إعلان جديد
+            <h3><i class="fas fa-paper-plane" style="color:var(--accent-gold);"></i> إرسال إعلان جديد</h3>
+            <i class="fas fa-times" onclick="closeAnnModal()" style="cursor:pointer; color:var(--text-muted);"></i>
         </div>
         <form action="/admin/announcements/add" method="POST">
-            <div class="form-group">
+            <div class="modal-body">
                 <label>عنوان الإعلان</label>
-                <input type="text" name="title" placeholder="مثلاً: اجتماع عام للموظفين" required>
+                <input type="text" name="title" placeholder="أدخل عنواناً واضحاً..." required>
+                
+                <label>محتوى التعميم الإداري</label>
+                <textarea name="content" rows="5" placeholder="اكتب تفاصيل الإعلان هنا..." required></textarea>
             </div>
-            <div class="form-group">
-                <label>تفاصيل الإعلان</label>
-                <textarea name="content" rows="4" placeholder="اكتب نص الإعلان هنا بالتفصيل..." required></textarea>
+            <div class="modal-footer">
+                <button type="submit" class="btn-send">
+                    <i class="fas fa-share-square"></i> إرسال الآن للجميع
+                </button>
+                <button type="button" class="btn-close-text" onclick="closeAnnModal()">إلغاء وإغلاق</button>
             </div>
-            <button type="submit" class="btn-send">إرسال لجميع المعلمين 🚀</button>
         </form>
     </div>
 </div>
 
 <script>
-    function openAnnModal() {
-        document.getElementById('announcementModal').style.display = 'block';
+    function toggleTheme() {
+        const body = document.body;
+        const icon = document.querySelector('#themeBtn i');
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            icon.className = 'fas fa-moon';
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            icon.className = 'fas fa-sun';
+            localStorage.setItem('theme', 'dark');
+        }
     }
 
-    function closeAnnModal() {
-        document.getElementById('announcementModal').style.display = 'none';
-    }
+    window.onload = () => {
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            document.querySelector('#themeBtn i').className = 'fas fa-sun';
+        }
+    };
 
-    // إغلاق النافذة عند الضغط خارجها
+    function openAnnModal() { 
+        const modal = document.getElementById('announcementModal');
+        modal.style.display = 'flex'; 
+    }
+    function closeAnnModal() { 
+        document.getElementById('announcementModal').style.display = 'none'; 
+    }
+    
+    // إغلاق المودال عند النقر خارجه
     window.onclick = function(event) {
-        let modal = document.getElementById('announcementModal');
+        const modal = document.getElementById('announcementModal');
         if (event.target == modal) {
             closeAnnModal();
         }

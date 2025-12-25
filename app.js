@@ -71,6 +71,26 @@ function isAdmin(req, res, next) {
  */
 initializeDatabase().then(() => {
 
+
+
+// مسار حذف إسناد فصل محدد عن معلم
+app.get('/admin/enseignants/supprimer-affectation/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // حذف السجل من جدول الإسنادات (affectations)
+        await pool.query("DELETE FROM affectations WHERE id = $1", [id]);
+        
+        // نرسل رد نجاح (200) لأن الواجهة تستخدم fetch وتنتظر استجابة
+        res.sendStatus(200); 
+    } catch (e) {
+        console.error("Error deleting assignment:", e);
+        res.status(500).send("خطأ في حذف الإسناد");
+    }
+});
+
+
+
+
 // --- [ نظام التقييم الأكاديمي ] ---
 
 app.get('/teacher/evaluate/:requestId/:studentId', async (req, res) => {
@@ -158,21 +178,54 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
 
     // --- [ 3. لوحة تحكم المدير ] ---
 
-    app.get('/admin/dashboard', async (req, res) => {
-        try {
-            const teachersCount = (await pool.query("SELECT COUNT(*) as c FROM enseignants")).rows[0].c;
-            const studentsCount = (await pool.query("SELECT COUNT(*) as c FROM students")).rows[0].c;
-            const absenceCount = (await pool.query("SELECT COUNT(*) as c FROM absences WHERE date = CURRENT_DATE::text")).rows[0].c;
+   app.get('/admin/dashboard', async (req, res) => {
+    try {
+        // الاستعلامات المعتمدة على الهيكلية التي أرسلتها
+        const queries = {
+            // 1. إجمالي المعلمين والطلاب
+            teachersCount: "SELECT COUNT(*) as c FROM enseignants",
+            studentsCount: "SELECT COUNT(*) as c FROM students",
             
-            res.render('admin_dashboard', { 
-                ecole: "مدرسة ابن دريد", 
-                titre: "لوحة التحكم", 
-                stats: { teachers: teachersCount, students: studentsCount, absences: absenceCount } 
-            });
-        } catch (e) {
-            res.status(500).send("خطأ في جلب إحصائيات اللوحة");
-        }
-    });
+            // 2. غياب المعلمين اليوم (جدول daily_absences)
+            profAbsences: "SELECT COUNT(*) as c FROM daily_absences WHERE date = CURRENT_DATE",
+            
+            // 3. غياب الطلاب اليوم (جدول student_absences)
+            studentAbsences: "SELECT COUNT(*) as c FROM student_absences WHERE date = CURRENT_DATE::text",
+            
+            // 4. المعلمون المتصلون (بناءً على آخر ظهور في آخر 5 دقائق مثلاً)
+            // ملاحظة: بما أنه لا يوجد حقل is_online، سنستخدم last_login
+            onlineTeachers: "SELECT COUNT(*) as c FROM enseignants WHERE last_login >= (NOW() - INTERVAL '5 minutes')::text",
+            
+            // 5. تقارير السلوك (behavior_logs) - لنفترض أنSeverity هي وسيلة الفلترة أو جلب آخر التقارير
+            recentBehaviors: "SELECT COUNT(*) as c FROM behavior_logs WHERE date = CURRENT_DATE::text"
+        };
+
+        const [t, s, pa, sa, ot, rb] = await Promise.all([
+            pool.query(queries.teachersCount),
+            pool.query(queries.studentsCount),
+            pool.query(queries.profAbsences),
+            pool.query(queries.studentAbsences),
+            pool.query(queries.onlineTeachers),
+            pool.query(queries.recentBehaviors)
+        ]);
+
+        res.render('admin_dashboard', { 
+            ecole: "مدرسة ابن دريد", 
+            titre: "لوحة التحكم", 
+            stats: { 
+                teachers: t.rows[0].c, 
+                students: s.rows[0].c, 
+                absences: pa.rows[0].c,        // غياب المعلمين اليوم
+                studentAbsences: sa.rows[0].c, // غياب الطلاب اليوم
+                online: ot.rows[0].c,          // المعلمون النشطون
+                unreadBehaviors: rb.rows[0].c  // بلاغات السلوك اليوم
+            } 
+        });
+    } catch (e) {
+        console.error("❌ Error fetching dashboard stats:", e);
+        res.status(500).send("خطأ في جلب إحصائيات اللوحة من Supabase");
+    }
+});
 
     // --- [ 4. إدارة المعلمين والتعيينات ] ---
 
@@ -217,34 +270,61 @@ app.post('/admin/students/request-evaluation', async (req, res) => {
         }
     });
 
-    app.post('/admin/enseignants/affecter-multiple', async (req, res) => {
-        const { enseignant_id, classes_data } = req.body;
-        try {
-            const selectedClasses = JSON.parse(classes_data);
-            const currentTeacher = (await pool.query("SELECT nom, matiere FROM enseignants WHERE id = $1", [enseignant_id])).rows[0];
+   app.post('/admin/enseignants/affecter-multiple', async (req, res) => {
+    const { enseignant_id, classes_data } = req.body;
+    
+    try {
+        // 1. جلب بيانات المعلم
+        const teacherResult = await pool.query("SELECT nom, matiere FROM enseignants WHERE id = $1", [enseignant_id]);
+        const currentTeacher = teacherResult.rows[0];
+        
+        if (!currentTeacher) {
+            return res.status(404).json({ message: "المعلم غير موجود" });
+        }
+
+        // 2. فحص التعارضات لجميع الفصول في المصفوفة قبل البدء
+        for (const item of classes_data) {
+            const [classe, section] = item.split('|');
             
-            if (!currentTeacher) return res.status(404).send("المعلم غير موجود");
+            const conflictResult = await pool.query(`
+                SELECT e.nom FROM affectations a 
+                JOIN enseignants e ON a.enseignant_id = e.id 
+                WHERE a.classe = $1 AND a.section = $2 AND e.matiere = $3
+            `, [classe, section, currentTeacher.matiere]);
 
-            for (const item of selectedClasses) {
-                const [classe, section] = item.split('|');
-                const conflict = (await pool.query(`
-                    SELECT e.nom FROM affectations a 
-                    JOIN enseignants e ON a.enseignant_id = e.id 
-                    WHERE a.classe = $1 AND a.section = $2 AND e.matiere = $3
-                `, [classe, section, currentTeacher.matiere])).rows[0];
-
-                if (conflict) {
-                    return res.send(`<script>alert("خطأ: الفصل ${classe} (${section}) مسند بالفعل لمدرس مادة ${currentTeacher.matiere} آخر وهو: ${conflict.nom}"); window.location.href = "/admin/enseignants";</script>`);
-                }
-
-                const exists = (await pool.query("SELECT id FROM affectations WHERE enseignant_id = $1 AND classe = $2 AND section = $3", [enseignant_id, classe, section])).rows[0];
-                if (!exists) {
-                    await pool.query("INSERT INTO affectations (enseignant_id, classe, section) VALUES ($1, $2, $3)", [enseignant_id, classe, section]);
-                }
+            if (conflictResult.rows.length > 0) {
+                const conflict = conflictResult.rows[0];
+                return res.status(400).json({ 
+                    message: `تعارض: الفصل ${classe} (${section}) لديه مدرس ${currentTeacher.matiere} بالفعل وهو: ${conflict.nom}` 
+                });
             }
-            res.redirect('/admin/enseignants');
-        } catch (e) { res.status(500).send("خطأ في تعيين الأقسام"); }
-    });
+        }
+
+        // 3. إذا لم يوجد تعارض، نقوم بالإسناد الفعلي
+        for (const item of classes_data) {
+            const [classe, section] = item.split('|');
+            
+            // تجنب التكرار لنفس المعلم
+            const exists = await pool.query(
+                "SELECT id FROM affectations WHERE enseignant_id = $1 AND classe = $2 AND section = $3", 
+                [enseignant_id, classe, section]
+            );
+
+            if (exists.rows.length === 0) {
+                await pool.query(
+                    "INSERT INTO affectations (enseignant_id, classe, section) VALUES ($1, $2, $3)", 
+                    [enseignant_id, classe, section]
+                );
+            }
+        }
+
+        res.status(200).json({ message: "تم إسناد جميع الفصول المختارة بنجاح" });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "خطأ فني في السيرفر" });
+    }
+});
 
     // --- [ 5. إدارة الجدول الزمني ] ---
 
@@ -575,15 +655,55 @@ app.post('/teacher/absences/mark', async (req, res) => {
         }
     });
 
-    app.post('/admin/enseignants/desaffecter', async (req, res) => {
-        try {
-            const { id } = req.body;
-            await pool.query("DELETE FROM affectations WHERE id = $1", [id]);
-            res.redirect('/admin/enseignants?success=deassigned');
-        } catch (e) {
-            res.status(500).send("خطأ في إلغاء الإسناد");
+    app.post('/admin/enseignants/affecter-multiple', async (req, res) => {
+    const { enseignant_id, classes_data } = req.body;
+    try {
+        // التحقق مما إذا كانت البيانات مصفوفة أم نص يحتاج تحويل
+        const selectedClasses = Array.isArray(classes_data) ? classes_data : JSON.parse(classes_data);
+        
+        const teacherRes = await pool.query("SELECT nom, matiere FROM enseignants WHERE id = $1", [enseignant_id]);
+        const currentTeacher = teacherRes.rows[0];
+        
+        if (!currentTeacher) return res.status(404).json({ message: "المعلم غير موجود" });
+
+        for (const item of selectedClasses) {
+            const [classe, section] = item.split('|');
+
+            // 1. التحقق من وجود تعارض لنفس المادة في نفس الفصل
+            const conflictRes = await pool.query(`
+                SELECT e.nom FROM affectations a 
+                JOIN enseignants e ON a.enseignant_id = e.id 
+                WHERE a.classe = $1 AND a.section = $2 AND e.matiere = $3
+            `, [classe, section, currentTeacher.matiere]);
+            
+            const conflict = conflictRes.rows[0];
+
+            if (conflict) {
+                return res.status(400).json({ 
+                    message: `خطأ: الفصل ${classe} (${section}) مسند بالفعل لمدرس مادة ${currentTeacher.matiere} آخر وهو: ${conflict.nom}` 
+                });
+            }
+
+            // 2. التحقق من عدم تكرار نفس المعلم لنفس الفصل
+            const existsRes = await pool.query(
+                "SELECT id FROM affectations WHERE enseignant_id = $1 AND classe = $2 AND section = $3", 
+                [enseignant_id, classe, section]
+            );
+            
+            if (existsRes.rows.length === 0) {
+                await pool.query(
+                    "INSERT INTO affectations (enseignant_id, classe, section) VALUES ($1, $2, $3)", 
+                    [enseignant_id, classe, section]
+                );
+            }
         }
-    });
+        // إرسال رد نجاح بصيغة JSON
+        res.status(200).json({ message: "تم التعيين بنجاح" });
+    } catch (e) { 
+        console.error(e);
+        res.status(500).json({ message: "خطأ داخلي في السيرفر" }); 
+    }
+});
 
 // --- [ Timetable Routes ] ---
 
@@ -1530,6 +1650,8 @@ app.get('/admin/eleves/supprimer/:id', async (req, res) => {
         res.status(500).send("حدث خطأ أثناء الحذف: " + e.message);
     }
 });
+
+
     // --- [ تشغيل الخادم ] ---
     app.listen(PORT, () => {
         console.log(`🚀 نظام مدرسة ابن دريد يعمل على: http://localhost:${PORT}`);

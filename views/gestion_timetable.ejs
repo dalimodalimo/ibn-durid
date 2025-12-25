@@ -3,176 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جدول الحصص - مدرسة ابن دريد</title>
+    <title>إدارة الجداول - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --sidebar-width: 280px;
-            --primary-blue: #1e293b;
-            --accent-blue: #3b82f6;
-            --success-green: #10b981;
-            --bg-slate: #f1f5f9;
-        }
+    :root {
+        --primary-blue: #0f172a;
+        --accent-blue: #3b82f6;
+        --danger-red: #ef4444;
+        --bg-slate: #f1f5f9;
+        --border-color: #e2e8f0;
+        /* تحسين الارتفاع ليتناسب مع جميع الشاشات */
+        --cell-height: calc((100vh - 170px) / 5.8);
+    }
 
-        body { 
-            display: flex; margin: 0; font-family: 'Cairo', sans-serif; 
-            background-color: var(--bg-slate); color: var(--primary-blue);
-            min-height: 100vh;
-        }
+    body { 
+        margin: 0; font-family: 'Cairo', sans-serif; 
+        background-color: var(--bg-slate); color: var(--primary-blue);
+        height: 100vh; overflow: hidden;
+        display: flex; flex-direction: column;
+    }
 
-        /*Sidebar*/
-        .sidebar {
-            width: var(--sidebar-width); background: var(--primary-blue);
-            color: white; position: fixed; height: 100vh; right: 0; top: 0;
-            z-index: 1000; box-shadow: -4px 0 10px rgba(0,0,0,0.1);
-        }
+    /* --- الهيدر الرقمي (المتصفح) --- */
+    .top-navbar {
+        background: var(--primary-blue); color: white;
+        padding: 5px 20px; display: flex; flex-direction: column; gap: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 1001;
+    }
+    .nav-main-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .brand-section { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+    .brand-text h1 { font-size: 0.9rem; margin: 0; font-weight: 800; }
+    .controls-section { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: center; }
+    .search-box { position: relative; width: 250px; }
+    .nav-input, .nav-select {
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; outline: none;
+    }
+    .active-teacher-info {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(59, 130, 246, 0.15); padding: 3px 15px; border-radius: 20px;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .info-value { font-size: 0.75rem; font-weight: 700; color: #60a5fa; }
+    .btn-nav { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; text-decoration: none; border: none; }
+    .btn-primary { background: var(--accent-blue); color: white; }
+    .btn-white { background: white; color: var(--primary-blue); }
 
-        .main-content {
-            flex: 1; margin-right: var(--sidebar-width); padding: 30px;
-            width: calc(100% - var(--sidebar-width));
-        }
+    /* --- بنك الحصص --- */
+    .bassin-wrapper { 
+        background: white; padding: 4px 20px; border-bottom: 1px solid var(--border-color); 
+        display: flex; align-items: center; gap: 10px; height: 50px;
+    }
+    .bassin-scroll { display: flex; gap: 8px; overflow-x: auto; flex: 1; align-items: center; }
+    .class-mini-box { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 6px; padding: 3px 8px; min-width: 120px; }
+    .drag-card { background: var(--accent-blue); color: white; padding: 2px 6px; border-radius: 4px; cursor: grab; font-size: 0.65rem; font-weight: 700; display: block; margin-top: 2px; text-align: center; }
 
-        /*Header Controls*/
-        .controls-card {
-            background: white; padding: 20px; border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;
-        }
+    /* --- الجدول الرئيسي --- */
+    .main-grid-container { flex: 1; padding: 5px 10px; overflow: hidden; }
+    .smart-table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 2px; table-layout: fixed; }
+    .smart-table th { background: var(--primary-blue); color: white; padding: 4px; border-radius: 4px; font-size: 0.75rem; }
+    .drop-zone { height: var(--cell-height); background: #fff; border: 1.5px dashed #cbd5e1; border-radius: 6px; position: relative; }
+    .session-item { background: white; border: 1px solid #cbd5e1; border-right: 3px solid var(--accent-blue); border-radius: 6px; height: 90%; display: flex; align-items: center; justify-content: center; position: relative; font-size: 0.75rem; }
+    .btn-del { position: absolute; top: -3px; left: -3px; background: var(--danger-red); color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        .input-group label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; }
-        input, select { 
-            width: 100%; padding: 12px; border: 1px solid #e2e8f0; 
-            border-radius: 10px; font-family: inherit; outline: none;
-        }
+    /* =========================================
+       تنسيق الطباعة المطور (لجدولين في صفحة A4)
+       ========================================= */
+    #print-header { display: none; }
 
-        /*Layout Split*/
-        .workspace { display: grid; grid-template-columns: 1fr 320px; gap: 25px; align-items: start; }
-
-        /*Table Styling*/
-        .table-container { 
-            background: white; padding: 20px; border-radius: 16px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow-x: auto;
-        }
-        .smart-table { width: 100%; border-collapse: separate; border-spacing: 6px; }
-        .smart-table th { background: #f8fafc; padding: 15px; border-radius: 8px; font-size: 0.85rem; }
-        .drop-zone { 
-            height: 90px; background: #fbfcfd; border: 2px dashed #e2e8f0; 
-            border-radius: 12px; transition: 0.2s; min-width: 100px;
-        }
-        .drop-zone.over { border-color: var(--accent-blue); background: #eff6ff; }
-
-        /*Bassin (Cards Area)*/
-        .bassin-panel {
-            background: white; border-radius: 16px; padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            position: sticky; top: 30px; max-height: 85vh; overflow-y: auto;
-        }
-
-        .class-group-box {
-            background: #f8fafc; border: 1px solid #e2e8f0;
-            border-radius: 12px; padding: 15px; margin-bottom: 15px;
-        }
-
-        .group-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;
-        }
-
-        .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media print {
+        @page { size: A4 portrait; margin: 0.5cm; }
         
-        .drag-card {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white; padding: 10px; border-radius: 8px;
-            cursor: grab; font-size: 0.75rem; text-align: center;
-            font-weight: 600; box-shadow: 0 2px 4px rgba(59,130,246,0.3);
-        }
+        body { background: white; height: auto; overflow: visible; display: block; }
+        .top-navbar, .bassin-wrapper, .btn-del, .modal-overlay, .btn-group, .btn-nav { display: none !important; }
 
-        .session-item {
-            background: white; border: 1px solid #e2e8f0;
-            border-right: 4px solid var(--accent-blue);
-            border-radius: 8px; padding: 8px; height: 80%;
-            display: flex; flex-direction: column; justify-content: center;
-            position: relative; font-size: 0.8rem;
+        #print-header { 
+            display: flex !important; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px;
         }
+        .print-school-info h3 { margin: 0; font-size: 1rem; }
+        .print-school-info p { margin: 1px 0; font-size: 0.7rem; }
+        .print-title h2 { margin: 0; font-size: 1.1rem; color: #000; }
+        .print-title p { margin: 0; font-size: 0.8rem; font-weight: bold; }
         
-        .btn-del {
-            position: absolute; top: 2px; left: 2px; color: #ef4444;
-            background: none; border: none; cursor: pointer; font-size: 0.9rem;
+        .main-grid-container { 
+            padding: 0; 
+            height: 42vh; /* تقليل الارتفاع ليسمح بجدول آخر في نفس الصفحة */
+            min-height: 42vh;
+            overflow: visible; 
+            page-break-inside: avoid;
         }
-
-        #suggestions-list {
-            position: absolute; background: white; width: 100%;
-            z-index: 100; border: 1px solid #ddd; border-radius: 8px;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: none;
+        .smart-table { 
+            border: 2px solid #000 !important; 
+            border-collapse: collapse !important; 
+            height: 100%; 
+            table-layout: fixed;
         }
-        .suggest-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
-        .suggest-item:hover { background: #f8fafc; color: var(--accent-blue); }
+        .smart-table th, .smart-table td { 
+            border: 1px solid #000 !important; 
+            padding: 4px !important; 
+            color: #000 !important;
+            background: none !important;
+            text-align: center !important;
+            font-size: 0.85rem !important;
+        }
+        .smart-table th { font-weight: bold; background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+        .session-item { 
+            border: none !important; 
+            font-weight: bold; 
+            font-size: 0.9rem !important; 
+            background: none !important;
+        }
+    }
 
-    </style>
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; }
+    .modal-card { background: white; width: 300px; border-radius: 12px; padding: 20px; text-align: center; }
+    #suggestions-list { position: absolute; background: white; width: 100%; top: 35px; z-index: 2000; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: none; }
+    .suggest-item { padding: 8px 12px; cursor: pointer; color: var(--primary-blue); font-size: 0.8rem; border-bottom: 1px solid #eee; }
+</style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div style="padding: 40px 20px; text-align: center;">
-        <i class="fas fa-school fa-3x" style="margin-bottom: 15px;"></i>
-        <h2 style="font-size: 1.2rem; font-weight: 800;">مدرسة ابن دريد</h2>
+<div id="print-header">
+    <div class="print-school-info">
+        <h3>مدرسة ابن دريد للتعليم الأساسي</h3>
+        <p>سلطنة عمان - وزارة التربية والتعليم</p>
     </div>
-    <nav style="padding: 0 20px;">
-        <a href="/admin/dashboard" style="display: flex; align-items: center; gap: 12px; color: white; text-decoration: none; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px;">
-            <i class="fas fa-home"></i> العودة للرئيسية
-        </a>
-    </nav>
+    <div class="print-title">
+        <h2>جدول الحصص الأسبوعي</h2>
+        <p id="print-teacher-details" style="font-weight: bold; margin-top: 5px;">الاسم: ........ | المادة: ........</p>
+    </div>
+    <div class="print-logo" style="text-align: left;">
+        <i class="fas fa-school fa-2x"></i>
+        <p style="font-size: 0.6rem; margin: 0;">2024 / 2025 م</p>
+    </div>
 </div>
 
-<div class="main-content">
-    <div class="controls-card">
-        <div class="input-group" style="position: relative;">
-            <label><i class="fas fa-user-tie"></i> البحث عن معلم</label>
-            <input type="text" id="teacher-search" placeholder="اكتب اسم المعلم..." oninput="searchTeachers(this.value)">
-            <div id="suggestions-list"></div>
+<header class="top-navbar">
+    <div class="nav-main-row">
+        <div class="brand-section">
+            <i class="fas fa-calendar-check" style="font-size: 1.2rem; color: var(--accent-blue);"></i>
+            <div class="brand-text"><h1>مدرسة ابن دريد</h1></div>
         </div>
-        
-        <div class="input-group">
-            <label><i class="fas fa-layer-group"></i> عدد الحصص لكل فصل (مثلاً 2 لكل سابع)</label>
-            <input type="number" id="sessions-per-class" value="2" min="1" max="10" onchange="refreshBassin()">
+        <div class="controls-section">
+            <div class="search-box">
+                <input type="text" id="teacher-search" class="nav-input" placeholder="🔍 ابحث عن معلم..." oninput="searchTeachers(this.value)">
+                <div id="suggestions-list"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:5px;">
+                <label style="font-size: 0.65rem; opacity: 0.8;">حصص/فصل:</label>
+                <select id="sessions-per-class" class="nav-select" onchange="refreshBassin()">
+                    <% for(let i=1; i<=10; i++) { %>
+                        <option value="<%= i %>" <%= i==2 ? 'selected' : '' %>><%= i %></option>
+                    <% } %>
+                </select>
+            </div>
+        </div>
+        <div class="btn-group">
+            <a href="/admin/dashboard" class="btn-nav btn-primary"><i class="fas fa-home"></i></a>
+            <button onclick="window.print()" class="btn-nav btn-white"><i class="fas fa-print"></i> طباعة الجدول</button>
         </div>
     </div>
 
-    <div class="workspace">
-        <div class="table-container">
-            <h3 id="table-title" style="margin-bottom: 20px; font-weight: 800;">الجدول الدراسي العام</h3>
-            <table class="smart-table">
-                <thead>
-                    <tr>
-                        <th style="width: 80px;">اليوم / الحصة</th>
-                        <% for(let i=1; i<=8; i++) { %> <th><%= i %></th> <% } %>
-                    </tr>
-                </thead>
-                <tbody id="grid-body">
-                    <% const jours = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس']; %>
-                    <% jours.forEach(j => { %>
-                        <tr>
-                            <td style="font-weight: 800; background: #f8fafc; text-align: center;"><%= j %></td>
-                            <% for(let p=1; p<=8; p++) { %>
-                                <td class="drop-zone" data-day="<%= j %>" data-period="<%= p %>" 
-                                    ondrop="handleDrop(event)" ondragover="allowDrop(event)" ondragleave="clearDropEffect(event)"></td>
-                            <% } %>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+    <div class="active-teacher-info" id="teacher-badge" style="visibility: hidden;">
+        <div class="info-item"><span class="info-label">المعلم</span><span class="info-value" id="display-name">-</span></div>
+        <div style="width: 1px; height: 15px; background: rgba(255,255,255,0.2);"></div>
+        <div class="info-item"><span class="info-label">المادة</span><span class="info-value" id="display-subject">-</span></div>
+    </div>
+</header>
 
-        <aside class="bassin-panel">
-            <h4 style="margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
-                <i class="fas fa-briefcase"></i> بنك الحصص
-            </h4>
-            <div id="drag-source-area">
-                <p style="text-align: center; color: #94a3b8; padding-top: 20px;">يرجى اختيار معلم أولاً</p>
-            </div>
-        </aside>
+<div class="bassin-wrapper">
+    <div style="font-size:0.65rem; font-weight:800; color:#64748b; white-space:nowrap;">📦 بنك الحصص:</div>
+    <div id="drag-source-area" class="bassin-scroll">
+        <span style="color:#94a3b8; font-size:0.65rem;">اختر معلماً للبدء...</span>
+    </div>
+</div>
+
+<div class="main-grid-container">
+    <table class="smart-table">
+        <thead>
+            <tr>
+                <th style="width: 60px;">اليوم</th>
+                <% for(let i=1; i<=8; i++) { %> <th><%= i %></th> <% } %>
+            </tr>
+        </thead>
+        <tbody id="grid-body">
+            <% const jours = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس']; %>
+            <% jours.forEach(j => { %>
+                <tr>
+                    <td style="font-weight: 800; background: #f1f5f9; text-align: center; border-radius: 4px; font-size: 0.7rem;"><%= j %></td>
+                    <% for(let p=1; p<=8; p++) { %>
+                        <td class="drop-zone" data-day="<%= j %>" data-period="<%= p %>" ondrop="handleDrop(event)" ondragover="allowDrop(event)" ondragleave="clearDropEffect(event)"></td>
+                    <% } %>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-card">
+        <h4 style="margin:0 0 10px 0;">حذف الحصة؟</h4>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn-nav btn-primary" style="flex:1; background:var(--danger-red)" id="confirmBtn">حذف</button>
+            <button class="btn-nav btn-white" style="flex:1; border:1px solid #ddd" onclick="closeModal()">إلغاء</button>
+        </div>
     </div>
 </div>
 
@@ -181,12 +217,12 @@
     const allAffectations = <%- JSON.stringify(all_affectations) %>;
     let fullSchedule = <%- JSON.stringify(schedule) %>;
     let currentTeacher = null;
+    let pendingDeleteId = null;
 
     function searchTeachers(val) {
         const list = document.getElementById('suggestions-list');
         list.innerHTML = '';
         if (!val) { list.style.display = 'none'; return; }
-
         const matches = enseignants.filter(t => t.nom.toLowerCase().includes(val.toLowerCase()));
         matches.forEach(t => {
             const div = document.createElement('div');
@@ -202,7 +238,10 @@
         currentTeacher = t;
         document.getElementById('teacher-search').value = t.nom;
         document.getElementById('suggestions-list').style.display = 'none';
-        document.getElementById('table-title').innerText = `جدول المعلم: ${t.nom}`;
+        document.getElementById('teacher-badge').style.visibility = 'visible';
+        document.getElementById('display-name').innerText = t.nom;
+        document.getElementById('display-subject').innerText = t.matiere || 'غير محدد';
+        document.getElementById('print-teacher-details').innerText = `المعلم: ${t.nom} | المادة: ${t.matiere || 'غير محدد'}`;
         refreshBassin();
         renderGrid();
     }
@@ -211,141 +250,78 @@
         if (!currentTeacher) return;
         const area = document.getElementById('drag-source-area');
         area.innerHTML = '';
-        
-        const qtyPerClass = parseInt(document.getElementById('sessions-per-class').value) || 2;
-        
-        // فلترة التكليفات الخاصة بالمعلم (مثلاً سابع 1، سابع 2...)
+        const qty = parseInt(document.getElementById('sessions-per-class').value);
         const assignments = allAffectations.filter(a => a.enseignant_id == currentTeacher.id);
         
         assignments.forEach(a => {
-            // حساب كم حصة تم وضعها لهذا المعلم في هذا الفصل تحديداً
-            const placedCount = fullSchedule.filter(s => 
-                s.enseignant_id == currentTeacher.id && 
-                s.classe == a.classe && 
-                s.section == a.section
-            ).length;
-
-            const remaining = qtyPerClass - placedCount;
-
+            const placed = fullSchedule.filter(s => s.enseignant_id == currentTeacher.id && s.classe == a.classe && s.section == a.section).length;
+            const remaining = qty - placed;
             const box = document.createElement('div');
-            box.className = 'class-group-box';
-            box.innerHTML = `
-                <div class="group-header">
-                    <strong>${a.classe}-${a.section}</strong>
-                    <span style="font-size: 0.7rem; font-weight: 800;">${placedCount}/${qtyPerClass}</span>
-                </div>
-                <div class="cards-grid">
-                    ${remaining > 0 ? Array(remaining).fill(0).map(() => `
-                        <div class="drag-card" draggable="true" ondragstart="handleDragStart(event, ${JSON.stringify(a).replace(/"/g, '&quot;')})">
-                            ${a.classe}-${a.section}
-                        </div>
-                    `).join('') : '<span style="color:var(--success-green); font-size:0.7rem; grid-column:span 2">✅ مكتمل</span>'}
-                </div>
-            `;
+            box.className = 'class-mini-box';
+            box.innerHTML = `<div style="font-size:0.65rem; font-weight:800;">${a.classe}-${a.section}</div>
+                ${remaining > 0 ? `<div class="drag-card" draggable="true" ondragstart="handleDragStart(event, ${JSON.stringify(a).replace(/"/g, '&quot;')})">سحب (${remaining})</div>` : '<div style="color:green; font-size:0.6rem;">✅</div>'}`;
             area.appendChild(box);
         });
     }
 
-    function handleDragStart(e, data) {
-        e.dataTransfer.setData("application/json", JSON.stringify(data));
-    }
+    function handleDragStart(e, data) { e.dataTransfer.setData("application/json", JSON.stringify(data)); }
+    function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('over'); }
+    function clearDropEffect(e) { e.currentTarget.classList.remove('over'); }
 
-    function allowDrop(e) { 
-        e.preventDefault(); 
-        e.currentTarget.classList.add('over'); 
-    }
-
-    function clearDropEffect(e) { 
-        e.currentTarget.classList.remove('over'); 
-    }
-
-   async function handleDrop(e) {
-
-    
-   
-   
-    e.preventDefault();
-    e.currentTarget.classList.remove('over');
-    if (!currentTeacher) return;
-
-    try {
+    async function handleDrop(e) {
+        e.preventDefault(); e.currentTarget.classList.remove('over');
+        if (!currentTeacher) return;
         const data = JSON.parse(e.dataTransfer.getData("application/json"));
-        const payload = {
-            enseignant_id: currentTeacher.id,
-            class_info: `${data.classe}|${data.section}`,
-            jour: e.currentTarget.dataset.day,
-            periode: e.currentTarget.dataset.period
+        const payload = { 
+            enseignant_id: currentTeacher.id, 
+            class_info: `${data.classe}|${data.section}`, 
+            jour: e.currentTarget.dataset.day, 
+            periode: e.currentTarget.dataset.period 
         };
 
-        const res = await fetch('/admin/timetable/ajouter-json', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
+        const res = await fetch('/admin/timetable/ajouter-json', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(payload) 
         });
         
         const result = await res.json();
-        
         if (result.success) {
-            // ملاحظة هامة: يجب أن نتأكد أن السيرفر يعيد result.id 
-            // إذا كان السيرفر يعيد نتيجة مختلفة، استخدم المعرف العائد منه
-            const newSession = {
-                id: result.id, // التأكد من أن هذا هو المعرف الحقيقي من قاعدة البيانات
-                enseignant_id: currentTeacher.id,
-                classe: data.classe,
-                section: data.section,
-                jour: payload.jour,
-                periode: payload.periode,
-                matiere: currentTeacher.matiere
-            };
-
-            fullSchedule.push(newSession);
-            renderGrid();
-            refreshBassin();
-        } else {
-            alert("خطأ من السيرفر: " + result.message);
-        }
-    } catch (err) {
-        console.error("Drop error:", err);
-    }
-}
-   
-
-
-
-async function deleteSession(id) {
-    if (!id || id === 'undefined') {
-        alert("خطأ: لم يتم العثور على معرف لهذه الحصة. يرجى تحديث الصفحة.");
-        return;
-    }
-
-    if (!confirm('حذف هذه الحصة؟')) return;
-    
-    try {
-        const res = await fetch(`/admin/timetable/supprimer-json/${id}`, { method: 'DELETE' });
-        const result = await res.json();
-        if (result.success) {
-            fullSchedule = fullSchedule.filter(s => s.id != id);
+            fullSchedule.push({ 
+                id: result.id, 
+                enseignant_id: currentTeacher.id, 
+                classe: data.classe, 
+                section: data.section, 
+                jour: payload.jour, 
+                periode: payload.periode 
+            });
             renderGrid();
             refreshBassin();
         }
-    } catch(err) { console.error("Delete error", err); }
-} 
+    }
 
-function renderGrid() {
+    function askDelete(id) { pendingDeleteId = id; document.getElementById('deleteModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('deleteModal').style.display = 'none'; pendingDeleteId = null; }
+
+    document.getElementById('confirmBtn').onclick = async function() {
+        if (!pendingDeleteId) return;
+        const res = await fetch(`/admin/timetable/supprimer-json/${pendingDeleteId}`, { method: 'DELETE' });
+        if ((await res.json()).success) {
+            fullSchedule = fullSchedule.filter(s => s.id != pendingDeleteId);
+            renderGrid();
+            refreshBassin();
+        }
+        closeModal();
+    };
+
+    function renderGrid() {
         document.querySelectorAll('.drop-zone').forEach(z => z.innerHTML = '');
-        const filtered = fullSchedule.filter(s => s.enseignant_id == currentTeacher?.id);
-        
-        filtered.forEach(s => {
+        fullSchedule.filter(s => s.enseignant_id == currentTeacher?.id).forEach(s => {
             const zone = document.querySelector(`.drop-zone[data-day="${s.jour}"][data-period="${s.periode}"]`);
-            if (zone) {
-                zone.innerHTML = `
-                    <div class="session-item">
-                        <button class="btn-del" onclick="deleteSession(${s.id})">&times;</button>
-                        <strong>${s.classe}-${s.section}</strong>
-                        <span style="font-size:0.6rem; color:#64748b">${s.matiere || ''}</span>
-                    </div>
-                `;
-            }
+            if (zone) zone.innerHTML = `<div class="session-item">
+                                            <button class="btn-del" onclick="askDelete(${s.id})">&times;</button>
+                                            <div style="font-weight:800;">${s.classe}-${s.section}</div>
+                                        </div>`;
         });
     }
 </script>

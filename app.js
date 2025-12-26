@@ -1651,6 +1651,105 @@ app.get('/admin/eleves/supprimer/:id', async (req, res) => {
     }
 });
 
+//-------future features end here-------
+
+// ==========================================
+// قسم الإعدادات المتقدمة وأدوات المعلم (الموحد)
+// ==========================================
+
+// 1. مسار عرض صفحة أدوات المعلم
+app.get('/admin/teacher-tools-management', isAdmin, async (req, res) => {
+    try {
+        // إنشاء الجدول إذا لم يكن موجوداً لضمان عدم تعطل الصفحة
+        await pool.query(`CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value text)`);
+        
+        const result = await pool.query("SELECT * FROM settings");
+        let tools = {};
+        result.rows.forEach(row => {
+            tools[row.key] = row.value;
+        });
+
+        res.render('teacher-tools-management', { 
+            ecole: "ابن دريد", 
+            tools: tools 
+        });
+    } catch (err) {
+        console.error("Error loading tools:", err);
+        res.render('teacher-tools-management', { ecole: "ابن دريد", tools: {} });
+    }
+});
+
+// 2. مسار حفظ إعدادات الأدوات (POST)
+app.post('/admin/update-teacher-tools', isAdmin, async (req, res) => {
+    const { exam_table_active, polls_active, digital_library } = req.body;
+    const settings = [
+        { k: 'exam_table_active', v: exam_table_active === 'on' ? 'true' : 'false' },
+        { k: 'polls_active', v: polls_active === 'on' ? 'true' : 'false' },
+        { k: 'digital_library', v: digital_library === 'on' ? 'true' : 'false' }
+    ];
+
+    try {
+        for (let item of settings) {
+            await pool.query(`
+                INSERT INTO settings (key, value) VALUES ($1, $2)
+                ON CONFLICT (key) DO UPDATE SET value = $2`, [item.k, item.v]);
+        }
+        res.send("<script>alert('تم التحديث بنجاح'); window.location.href='/admin/teacher-tools-management';</script>");
+    } catch (err) {
+        console.error("Update error:", err);
+        res.status(500).send("خطأ في حفظ الإعدادات");
+    }
+});
+
+// 3. صفحة الإعدادات المتقدمة
+app.get('/admin/advanced-settings', isAdmin, (req, res) => {
+    res.render('advanced-settings', { 
+        ecole: "ابن دريد" 
+    });
+});
+
+// 4. مسار تنفيذ الحذف (Reset) - نسخة موحدة وآمنة
+app.get('/admin/reset/:target', isAdmin, async (req, res) => {
+    const target = req.params.target;
+    
+    // منع خطأ الـ undefined الذي ظهر لك في سجل الأخطاء
+    if (!target || target === 'undefined') {
+        return res.status(400).send("فشل: الهدف غير محدد بشكل صحيح");
+    }
+
+    let queries = [];
+    try {
+        if (target === 'eleves') {
+            // ترتيب الحذف مهم جداً بسبب العلاقات (Foreign Keys)
+            queries = [
+                "DELETE FROM student_absences",
+                "DELETE FROM academic_evaluations",
+                "DELETE FROM behavior_logs",
+                "DELETE FROM evaluation_requests",
+                "DELETE FROM eleves"
+            ];
+        } else if (target === 'absences') {
+            queries = [
+                "DELETE FROM absences",
+                "DELETE FROM student_absences"
+            ];
+        } else if (target === 'timetable') {
+            queries = ["DELETE FROM timetable"];
+        }
+
+        if (queries.length > 0) {
+            for (let q of queries) {
+                await pool.query(q);
+            }
+            res.send("<script>alert('تم مسح البيانات بنجاح'); window.location.href='/admin/advanced-settings';</script>");
+        } else {
+            res.redirect('/admin/advanced-settings');
+        }
+    } catch (err) {
+        console.error("Reset Execution Error:", err);
+        res.status(500).send("حدث خطأ تقني أثناء الحذف: " + err.message);
+    }
+});
 
     // --- [ تشغيل الخادم ] ---
     app.listen(PORT, () => {

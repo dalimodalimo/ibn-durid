@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة أدوات المعلم - <%= ecole %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-width: 280px; --primary-dark: #0f172a; --accent-gold: #fbbf24;
+            --soft-blue: #3b82f6; --bg-slate: #f8fafc; --card-bg: #ffffff;
+            --text-main: #1e293b; --text-muted: #64748b; --border-color: #e2e8f0;
+            --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+        [data-theme="dark"] {
+            --bg-slate: #0b0f1a; --card-bg: #161e2d; --text-main: #f1f5f9;
+            --text-muted: #94a3b8; --border-color: #1e293b;
+        }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg-slate); color: var(--text-main); margin: 0; display: flex; }
+        .main-content { padding: 30px; width: 100%; box-sizing: border-box; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+        
+        .tool-card {
+            background: var(--card-bg); border-radius: 20px; padding: 25px;
+            box-shadow: var(--card-shadow); border: 1px solid var(--border-color);
+            max-width: 900px; margin: 0 auto;
+        }
+
+        .tool-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px; border-bottom: 1px solid var(--border-color);
+            transition: 0.3s;
+        }
+        .tool-row:hover { background: rgba(59, 130, 246, 0.05); }
+        .tool-info { display: flex; align-items: center; gap: 15px; }
+        .tool-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--bg-slate); color: var(--soft-blue); font-size: 1.2rem; }
+
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--soft-blue); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-save {
+            background: var(--primary-dark); color: white; border: none; padding: 15px 40px;
+            border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 25px; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
+        }
+        .btn-save:hover { opacity: 0.9; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <header>
+            <div>
+                <h1 style="margin:0;"><i class="fas fa-tasks" style="color:var(--soft-blue);"></i> إدارة واجهة المعلم</h1>
+                <p style="color:var(--text-muted); margin-top:5px;">تفعيل وتعطيل الصلاحيات والأدوات في تطبيق المعلمين</p>
+            </div>
+            <button onclick="window.location.href='/admin/dashboard'" class="btn-save" style="width:auto; margin:0; background:var(--card-bg); color:var(--text-main); border:1px solid var(--border-color);">عودة للرئيسية</button>
+        </header>
+
+        <div class="tool-card">
+            <form action="/admin/update-teacher-tools" method="POST">
+                <div class="tool-row">
+                    <div class="tool-info">
+                        <div class="tool-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div>
+                            <div style="font-weight:800;">جدول الامتحانات (Exam Timetable)</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">السماح للمعلم برفع وعرض جدول امتحانات الفصل.</div>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="exam_table_active" <%= tools.exam_table_active === 'true' ? 'checked' : '' %>>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="tool-row">
+                    <div class="tool-info">
+                        <div class="tool-icon"><i class="fas fa-poll-h"></i></div>
+                        <div>
+                            <div style="font-weight:800;">نظام الاستطلاعات (Sondage)</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">تمكين الإدارة  من طرح أسئلة تصويت للمعلمين.</div>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="polls_active" <%= tools.polls_active === 'true' ? 'checked' : '' %>>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="tool-row">
+                    <div class="tool-info">
+                        <div class="tool-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div>
+                            <div style="font-weight:800;">المكتبة الرقمية</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">السماح برفع مذكرات PDF ودروس فيديو.</div>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="digital_library" <%= tools.digital_library === 'true' ? 'checked' : '' %>>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> حفظ التغييرات وتطبيقها فوراً
+                </button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

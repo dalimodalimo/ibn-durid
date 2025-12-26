@@ -9,97 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
     <style>
-
-/* تنسيق حاوية القفل */
-.lock-message {
-    grid-column: 1/-1;
-    text-align: center;
-    padding: 40px 20px;
-    background: linear-gradient(145deg, #ffffff, #f1f8e9);
-    border-radius: 20px;
-    border: 2px solid #a5d6a7;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-
-@keyframes bell-shake {
-    0% { transform: rotate(0); }
-    15% { transform: rotate(15deg); }
-    30% { transform: rotate(-15deg); }
-    45% { transform: rotate(10deg); }
-    60% { transform: rotate(-10deg); }
-    75% { transform: rotate(5deg); }
-    100% { transform: rotate(0); }
-}
-
-.bell-urgent {
-    animation: bell-shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite;
-    color: #ef4444 !important;
-}
-
-.lock-message i {
-    font-size: 3rem;
-    color: #2e7d32;
-    background: #c8e6c9;
-    width: 80px;
-    height: 80px;
-    line-height: 80px;
-    border-radius: 50%;
-    margin-bottom: 15px;
-}
-
-/* حركة بسيطة عند ظهور الرسالة */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* تمييز الحصص التي تم رصدها في الجدول */
-.period-card.is-done {
-    border-right: 5px solid #4caf50 !important;
-    position: relative;
-}
-
-.period-card.is-done::after {
-    content: '✅';
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    font-size: 0.8rem;
-}
-
-
-
-    .custom-search-results {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 0 0 10px 10px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 999;
-        display: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .search-item {
-        padding: 12px;
-        cursor: pointer;
-        border-bottom: 1px solid #f0f0f0;
-        transition: background 0.2s;
-    }
-    .search-item:hover {
-        background: #f8f9fa;
-        color: var(--primary);
-    }
-    .search-item span {
-        font-size: 0.8rem;
-        color: #777;
-    }
-
         :root {
             --primary: #1e3a8a;
             --primary-gradient: linear-gradient(135deg, #1e3a8a, #3b82f6);
@@ -119,27 +28,50 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 15px; display: flex; flex-direction: column; gap: 20px; }
         .hidden { display: none !important; }
 
-        .period-card.sub-active {
-            background-color: #fef9c3 !important; 
-            border: 2px solid #facc15 !important; 
-        }
-        .sub-tag {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            background: #eab308; color: white; font-size: 0.55rem; padding: 2px 8px;
-            border-radius: 20px; font-weight: 900; white-space: nowrap;
-        }
-
         .main-header {
-            background: var(--primary-gradient); color: white; padding: 20px; border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-            display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow);
-            position: sticky; top: 0; z-index: 1000;
+            background: linear-gradient(135deg, #00843D 0%, #D21034 50%, #FFFFFF 100%);
+            background-size: 200% 200%;
+            animation: gradientAnimation 10s ease infinite;
+            color: white; padding: 20px 30px; border-radius: 0 0 20px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 1000;
         }
-        .header-user h1 { font-size: 1.1rem; font-weight: 900; }
-        .btn-logout { background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3); display: inline-block; margin-top: 5px; }
 
-        .live-clock-box { text-align: left; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 12px; }
-        #live-clock { font-size: 1.2rem; font-weight: 900; display: block; }
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
+        .header-user h1 { font-size: 1.5rem; margin: 0; text-shadow: 1px 1px 4px rgba(0,0,0,0.3); }
+
+        /* تأثير اهتزاز الجرس */
+@keyframes bell-shake {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(15deg); }
+    40% { transform: rotate(-15deg); }
+    60% { transform: rotate(10deg); }
+    80% { transform: rotate(-10deg); }
+}
+
+.bell-urgent {
+    animation: bell-shake 0.5s ease infinite;
+    color: #ffd700 !important; /* اللون الذهبي للتنبيه فوق الخلفية العمانية */
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+}
+
+#urgent-dot {
+    display: none;
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 2px solid #D21034; /* حدود حمراء عُمانية */
+    border-radius: 50%;
+}
+        
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; background: white;
             display: flex; justify-content: space-around; padding: 12px 0;
@@ -149,20 +81,6 @@
         .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
         .nav-item.active { color: var(--primary); }
 
-        .substitution-alert {
-            background: #fff3cd; border-right: 6px solid var(--warning);
-            padding: 15px; border-radius: var(--radius-lg); display: flex; 
-            flex-direction: column; gap: 10px; box-shadow: var(--shadow); animation: slideDown 0.5s ease-out;
-        }
-        .sub-info { display: flex; align-items: center; gap: 10px; }
-        .sub-info i { font-size: 1.5rem; color: var(--warning); animation: pulse-icon 1.5s infinite; }
-        .btn-accept { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-
-        .admin-notif-bar {
-            background: #e0f2fe; border-right: 6px solid var(--primary);
-            padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 12px; animation: slideDown 0.5s ease;
-        }
-
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-card { background: var(--card-bg); padding: 15px; border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; border-bottom: 4px solid var(--primary); }
         .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #eff6ff; color: var(--primary); }
@@ -170,528 +88,280 @@
         .banner-container { background: #e2e8f0; padding: 20px 10px; border-radius: 25px; overflow: hidden; }
         .banner-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 5px; scrollbar-width: none; }
         .banner-scroll::-webkit-scrollbar { display: none; }
-        .period-card { min-width: 140px; background: white; border-radius: 18px; padding: 15px 10px; text-align: center; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative;}
+        .period-card { min-width: 140px; background: white; border-radius: 18px; padding: 15px 10px; text-align: center; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
         .period-card.active-now { border: 2px solid var(--accent); background: #fff1f2; transform: scale(1.02); animation: pulse-border 2s infinite; }
-        
+        .period-card.is-done { border-right: 5px solid #4caf50 !important; position: relative; }
+        .period-card.is-done::after { content: '✅'; position: absolute; top: 5px; left: 5px; font-size: 0.8rem; }
+
+        @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        .sub-tag { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #eab308; color: white; font-size: 0.55rem; padding: 2px 8px; border-radius: 20px; font-weight: 900; }
+
         .panel { background: var(--card-bg); border-radius: var(--radius-xl); padding: 20px; box-shadow: var(--shadow); }
-        .student-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 15px; }
+        #student-grid-container { display: grid; grid-template-columns: 1fr; gap: 10px; }
         .student-card { background: #f1f5f9; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
 
-        .todo-section { background: var(--card-bg); padding: 20px; border-radius: var(--radius-xl); box-shadow: var(--shadow); }
-        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; }
-        
+        .lock-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(145deg, #ffffff, #f1f8e9);
+            border-radius: 20px;
+            border: 2px solid #a5d6a7;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .lock-message i { font-size: 3rem; color: #2e7d32; background: #c8e6c9; width: 80px; height: 80px; line-height: 80px; border-radius: 50%; margin-bottom: 15px; }
+
+        .custom-search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 0 0 10px 10px; max-height: 200px; overflow-y: auto; z-index: 999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background 0.2s; }
+        .search-item:hover { background: #f8f9fa; color: var(--primary); }
+
         .switch { position: relative; width: 44px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch input { opacity: 0; }
         .slider { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 34px; transition: 0.4s; }
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.4s; }
         input:checked + .slider { background: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse-icon { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-   
-   /* حل تعارض Grid في قسم الغياب */
-#student-grid-container {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    width: 100%;
-}
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; }
 
-/* تأكيد أن رسالة القفل تأخذ العرض الكامل وتغطي الشبكة */
-#student-grid-container .lock-message {
-    grid-column: 1 / -1; /* يمتد على كافة الأعمدة */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin: 10px 0;
-    z-index: 10;
-}
-
-/* إخفاء زر التأكيد تلقائياً عند وجود رسالة قفل لمنع التداخل الوظيفي */
-#attendance-active:has(.lock-message) .btn-submit {
-    display: none !important;
-}
-   </style>
+        /* تأمين الحساب */
+        .secure-open { max-height: 250px !important; padding-bottom: 20px !important; }
+        .rotate-chevron { transform: rotate(180deg); }
+        .form-row { display: flex; gap: 8px; align-items: center; }
+        .input-wrapper { position: relative; flex: 1; }
+        .input-icon { position: absolute; right: 12px; color: #94a3b8; z-index: 5; }
+        .custom-input { width: 100%; padding: 12px 40px; border: 2px solid #f1f5f9; border-radius: 12px; background: #f8fafc; transition: 0.3s; }
+        .custom-input:focus { border-color: var(--primary); background: #fff; }
+        .toggle-view-btn { position: absolute; left: 10px; background: none; border: none; color: #94a3b8; cursor: pointer; }
+        .submit-action-btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .strength-meter { height: 4px; width: 0; background: #e2e8f0; margin-top: 8px; border-radius: 2px; transition: 0.3s; }
+    </style>
 </head>
-<body id="top">
+<body>
 
-<header class="main-header" style="
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 20px 30px; 
-    /* تدرج لوني مستوحى من ألوان عمان: الأخضر العماني والأحمر مع لمسة بيضاء */
-    background: linear-gradient(135deg, #00843D 0%, #D21034 50%, #FFFFFF 100%);
-    background-size: 200% 200%;
-    animation: gradientAnimation 10s ease infinite;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    border-bottom: 3px solid #d4af37; /* لمسة ذهبية */
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    color: white;
-    border-radius: 0 0 20px 20px;
-">
+<header class="main-header">
     <div class="header-user">
-        <h1 style="margin:0; font-size: 1.5rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.3);">
-            أهلاً أ/ <%= prof.nom %>
-        </h1>
-        <div style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); color: #fff; padding: 5px 15px; border-radius: 50px; display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; border: 1px solid rgba(255, 255, 255, 0.4); font-size: 0.9rem;">
+        <h1>أهلاً أ/ <%= prof.nom %></h1>
+        <div style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 50px; display: inline-flex; align-items: center; gap: 8px; margin-top: 8px;">
             <i class="fas fa-star" style="color: #ffd700;"></i>
             <span style="font-weight: 700;"><%= prof.stars_count || 0 %> نجمة</span>
         </div>
     </div>
-
-    <div class="header-right" style="display: flex; align-items: center; gap: 25px;">
-        <div class="notification-bell" style="position: relative; cursor: pointer;" onclick="document.getElementById('ann-container').scrollIntoView({behavior: 'smooth'})">
-            <i class="fas fa-bell" id="sidebar-bell" style="font-size: 1.8rem; color: white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: 0.3s;"></i>
-            <span id="urgent-dot" style="display:none; position:absolute; top:0; right:0; width:12px; height:12px; background:#fff; border-radius:50%; border:2px solid #D21034;"></span>
+    <div style="display: flex; align-items: center; gap: 25px;">
+        <div class="notification-bell" onclick="document.getElementById('ann-container').scrollIntoView({behavior: 'smooth'})">
+            <i class="fas fa-bell" id="sidebar-bell" style="font-size: 1.8rem; transition: 0.3s;"></i>
+            <span id="urgent-dot"></span>
         </div>
-
-        <div style="height: 40px; width: 2px; background: rgba(255,255,255,0.3);"></div>
-
-        <a href="/logout" style="text-decoration:none; color: white; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 8px;">
+        <a href="/logout" style="color: white; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 10px; display: flex; align-items: center; gap: 8px; text-decoration: none;">
             <i class="fas fa-sign-out-alt"></i> خروج
         </a>
     </div>
 </header>
 
-<style>
-/* أنيميشن لتحريك الألوان في الخلفية بشكل انسيابي */
-@keyframes gradientAnimation {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* أنيميشن اهتزاز الجرس عند وجود إشعار عاجل */
-.bell-urgent {
-    animation: bell-shake 0.5s ease infinite;
-    color: #ffd700 !important; /* يتغير للذهبي للتنبيه */
-}
-
-@keyframes bell-shake {
-    0%, 100% { transform: rotate(0); }
-    25% { transform: rotate(15deg); }
-    75% { transform: rotate(-15deg); }
-}
-</style>
-
-<% if (typeof evaluation_requests !== 'undefined' && evaluation_requests.length > 0) { %>
-    <div id="eval-requests-container" style="margin-bottom: 20px; padding: 0 15px;">
-        <% evaluation_requests.forEach(req => { %>
-            <div class="admin-notif-bar" style="background: #fdf2f8; border-right: 6px solid #db2777; display: flex; align-items: center; padding: 15px; border-radius: 15px; margin-bottom: 10px;">
-                <i class="fas fa-star" style="color: #db2777; margin-left: 15px; font-size: 1.2rem;"></i>
-                <div style="flex:1; font-size: 0.85rem;">
-                    <div style="font-weight: 800; color: #9d174d;">طلب تقييم أكاديمي</div>
-                    <div style="color: #4b5563;">
-                        يرجى تقييم الطالب: <strong><%= req.student_name || 'جاري تحميل الاسم...' %></strong> 
-                        <span style="background: #fae8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px;"><%= req.classe %></span>
-                    </div>
-                </div>
-                <a href="/teacher/evaluate/<%= req.id %>/<%= req.eleve_id %>" style="background: #db2777; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: bold;">تقييم الآن</a>
-            </div>
-        <% }) %>
-    </div>
-<% } %>
-
 <div class="container">
-    
-    <% if (typeof substitute_logs !== 'undefined' && substitute_logs.length > 0) { %>
-        <div id="sub-requests-container">
+
+    <% if (evaluation_requests && evaluation_requests.length > 0) { %>
+        <div style="margin: 0 15px 20px;">
+            <% evaluation_requests.forEach(req => { %>
+                <div class="admin-notif-bar" style="background: #fdf2f8; border-right: 6px solid #db2777; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center;">
+                    <i class="fas fa-star" style="color: #db2777; font-size: 1.2rem; margin-left: 15px;"></i>
+                    <div style="flex:1;">
+                        <div style="font-weight: 800; color: #9d174d;">طلب تقييم أكاديمي</div>
+                        <div>الطالب: <strong><%= req.student_name %></strong> - <%= req.classe %></div>
+                    </div>
+                    <a href="/teacher/evaluate/<%= req.id %>/<%= req.eleve_id %>" style="background: #db2777; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none;">تقييم الآن</a>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+
+    <% if (substitute_logs && substitute_logs.some(s => s.status === 'pending')) { %>
+        <div style="margin: 0 15px 20px;">
             <% substitute_logs.filter(s => s.status === 'pending').forEach(sub => { %>
-                <div class="substitution-alert">
-                    <div class="sub-info">
-                        <i class="fas fa-clock-rotate-left"></i>
+                <div class="substitution-alert" style="background: #fffbeb; border-right: 6px solid #f59e0b; padding: 15px; border-radius: 15px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-clock" style="color: #f59e0b; font-size: 1.5rem;"></i>
                         <div>
-                            <h4 style="color: #856404; font-size: 0.9rem;">توزيع حصة احتياط</h4>
-                            <p style="font-size: 0.8rem;">الحصة: <%= sub.periode %> | الفصل: <%= sub.classe %>-<%= sub.section %></p>
+                            <strong>حصة احتياط</strong><br>
+                            الحصة <%= sub.periode %> | الفصل <%= sub.classe %>-<%= sub.section %>
                         </div>
                     </div>
-                   <form action="/teacher/substitute/respond" method="POST">
-    <input type="hidden" name="sub_id" value="<%= sub.id %>">
-    <input type="hidden" name="action" value="accept">
-    <input type="hidden" name="teacher_id" value="<%= prof.id %>"> 
-    
-    <button type="submit" class="btn-accept" style="background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
-        <i class="fas fa-check"></i> قبول الحصة
-    </button>
-</form>
+                    <form action="/teacher/substitute/respond" method="POST" style="margin-top: 10px;">
+                        <input type="hidden" name="sub_id" value="<%= sub.id %>">
+                        <input type="hidden" name="action" value="accept">
+                        <input type="hidden" name="teacher_id" value="<%= prof.id %>">
+                        <button type="submit" style="background: #22c55e; color: white; border: none; padding: 8px 15px; border-radius: 8px;">قبول الحصة</button>
+                    </form>
                 </div>
             <% }) %>
         </div>
     <% } %>
 
     <div class="announcements-list" id="ann-container">
-    <% announcements.forEach(ann => { 
-        // 1. تحديد السمات البصرية بناءً على الأولوية
-        let cardStyle = "border-right: 5px solid #3b82f6; background: #f0f9ff;"; 
-        let badgeColor = "#3b82f6";
-        
-        if (ann.priority === 'urgent') {
-            cardStyle = "border-right: 5px solid #ef4444; background: #fef2f2;";
-            badgeColor = "#ef4444";
-        } else if (ann.priority === 'high') {
-            cardStyle = "border-right: 5px solid #f59e0b; background: #fffbeb;";
-            badgeColor = "#f59e0b";
-        }
-    %>
-    <div class="announcement-card" id="teacher-ann-<%= ann.id %>" 
-         style="<%= cardStyle %> padding: 20px; margin-bottom: 15px; border-radius: 12px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: all 0.3s ease;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px;">
-            <div style="flex: 1;">
-                <h4 style="margin: 0 0 10px 0; color: #1e293b; font-weight: 800;"><%= ann.title %></h4>
-                <p style="margin: 0; color: #475569; line-height: 1.6;"><%= ann.content %></p>
+        <% announcements.forEach(ann => { %>
+            <% let cardStyle = ann.priority === 'urgent' ? 'border-right: 5px solid #ef4444; background: #fef2f2;' : ann.priority === 'high' ? 'border-right: 5px solid #f59e0b; background: #fffbeb;' : 'border-right: 5px solid #3b82f6; background: #f0f9ff;'; %>
+            <div class="announcement-card" id="teacher-ann-<%= ann.id %>" style="<%= cardStyle %> padding: 20px; margin-bottom: 15px; border-radius: 12px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 10px 0; color: #1e293b;"><%= ann.title %></h4>
+                        <p style="margin: 0; color: #475569;"><%= ann.content %></p>
+                    </div>
+                    <button onclick="hideAnnouncement('<%= ann.id %>')" style="background: none; border: none; color: #64748b; cursor: pointer; padding: 5px;">
+    <i class="fas fa-times-circle"></i> إخفاء من واجهتي
+</button>
+                </div>
+                <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); font-size: 0.8rem; display: flex; justify-content: space-between;">
+                    <span><%= ann.priority === 'urgent' ? 'عاجل' : ann.priority === 'high' ? 'مهم' : 'عادي' %></span>
+                    <span><%= ann.date %></span>
+                </div>
             </div>
-            
-            <button onclick="hideAnnouncement('<%= ann.id %>')" 
-                    title="إخفاء الإعلان"
-                    style="background: rgba(0,0,0,0.05); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); font-size: 0.8rem;">
-            <span style="color: <%= badgeColor %>; font-weight: bold;">
-                <i class="fas fa-layer-group"></i> <%= ann.importance_level %>
-            </span>
-            <span style="color: #94a3b8;">
-                <i class="far fa-clock"></i> <%= ann.time %> | <%= ann.date %>
-            </span>
-        </div>
+        <% }) %>
+        <% if (announcements.length === 0) { %>
+            <div style="text-align: center; padding: 30px; color: #94a3b8;">
+                <i class="fas fa-check-double" style="font-size: 2rem;"></i>
+                <p>لا توجد إعلانات جديدة</p>
+            </div>
+        <% } %>
     </div>
-    <% }) %>
-
-    <% if (announcements.length === 0) { %>
-        <div style="text-align: center; padding: 30px; color: #94a3b8;">
-            <i class="fas fa-check-double" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
-            لا توجد تعاميم أو إعلانات جديدة
-        </div>
-    <% } %>
-</div>
-
-<script>
-    function checkNotifications() {
-    const bell = document.getElementById('sidebar-bell');
-    const dot = document.getElementById('urgent-dot');
-    const hiddenAnns = JSON.parse(localStorage.getItem('teacher_hidden_anns') || '[]');
-    
-    // فحص هل يوجد أي إعلان "عاجل" في الصفحة لم يقم المعلم بإخفائه
-    const announcements = Array.from(document.querySelectorAll('.announcement-card'));
-    let hasUrgent = false;
-
-    announcements.forEach(card => {
-        const id = card.id.replace('teacher-ann-', '');
-        // إذا كان الكارت يحتوي على ستايل الأحمر (عاجل) وغير موجود في القائمة المخفية
-        if (card.style.borderRightColor === 'rgb(239, 68, 68)' && !hiddenAnns.includes(id)) {
-            hasUrgent = true;
-        }
-    });
-
-    if (hasUrgent) {
-        bell.classList.add('bell-urgent');
-        dot.style.display = 'block';
-    } else {
-        bell.classList.remove('bell-urgent');
-        dot.style.display = 'none';
-    }
-}
-
-// تشغيل الفحص عند التحميل وعند أي عملية إخفاء
-document.addEventListener('DOMContentLoaded', checkNotifications);
-
-// نعدل دالة الإخفاء لتقوم بتحديث الجرس فوراً
-const oldHide = hideAnnouncement;
-hideAnnouncement = function(id) {
-    oldHide(id);
-    setTimeout(checkNotifications, 400); 
-};
-// دالة إخفاء الإعلان من متصفح المعلم فقط
-function hideAnnouncement(id) {
-    const el = document.getElementById(`teacher-ann-${id}`);
-    if (el) {
-        // تأثير حركي عند الإخفاء
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(20px)';
-        
-        setTimeout(() => {
-            el.remove();
-            // حفظ المعرف في LocalStorage لكي لا يظهر مجدداً عند تحديث الصفحة
-            const hiddenAnns = JSON.parse(localStorage.getItem('teacher_hidden_anns') || '[]');
-            if (!hiddenAnns.includes(id.toString())) {
-                hiddenAnns.push(id.toString());
-                localStorage.setItem('teacher_hidden_anns', JSON.stringify(hiddenAnns));
-            }
-        }, 300);
-    }
-}
-
-// تنفيذ الإخفاء عند تحميل الصفحة للإعلانات المحذوفة سابقاً
-document.addEventListener('DOMContentLoaded', () => {
-    const hiddenAnns = JSON.parse(localStorage.getItem('teacher_hidden_anns') || '[]');
-    hiddenAnns.forEach(id => {
-        const el = document.getElementById(`teacher-ann-${id}`);
-        if (el) el.remove();
-    });
-});
-</script>
 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-tasks"></i></div>
-            <div><h3 id="todo-count">0</h3><p style="font-size: 0.7rem;">مهام</p></div>
+            <div><h3 id="todo-count">0</h3><p>مهام</p></div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="color: var(--success);"><i class="fas fa-check-double"></i></div>
-            <div><h3 id="marked-sessions">0</h3><p style="font-size: 0.7rem;">حصص مرصودة</p></div>
+            <div><h3 id="marked-sessions">0</h3><p>حصص مرصودة</p></div>
         </div>
-        <div class="stat-card" style="grid-column: span 2; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border-bottom: 4px solid #ffd700;">
+        <div class="stat-card" style="grid-column: span 2;">
             <div class="stat-icon" style="background: rgba(255,215,0,0.1); color: #ffd700;"><i class="fas fa-trophy"></i></div>
             <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                <div><h3 style="color: #ffd700;"><%= prof.stars_count || 0 %> <i class="fas fa-star" style="font-size: 0.9rem;"></i></h3><p style="font-size: 0.75rem;">رصيد التميز</p></div>
-                <span style="font-size: 0.7rem; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.1); color:#ffd700; border:1px solid #ffd700;">
-                    <%= (prof.stars_count || 0) >= 100 ? 'معلم قدير' : ((prof.stars_count || 0) >= 50 ? 'معلم متميز' : 'معلم مبادر') %>
+                <div><h3 style="color: #ffd700;"><%= prof.stars_count || 0 %> <i class="fas fa-star"></i></h3><p>رصيد التميز</p></div>
+                <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; color: #ffd700;">
+                    <%= (prof.stars_count || 0) >= 100 ? 'معلم قدير' : (prof.stars_count || 0) >= 50 ? 'معلم متميز' : 'معلم مبادر' %>
                 </span>
             </div>
         </div>
     </div>
 
-   <section class="star-history-panel" style="margin-top: 20px;">
-    <h3 onclick="toggleStarHistory()" style="font-size: 0.9rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #f1f5f9; padding: 10px; border-radius: 12px;">
-        <i class="fas fa-history"></i> 
-        سجل مكافآت النجوم
-        <i id="history-chevron" class="fas fa-chevron-down" style="margin-right: auto; transition: 0.3s;"></i>
-    </h3>
-
-    <div id="star-history-content" style="background: white; border-radius: 15px; padding: 10px; box-shadow: var(--shadow); display: none; overflow: hidden;">
-        <% if (typeof starHistory !== 'undefined' && starHistory.length > 0) { %>
-            <% starHistory.forEach(log => { %>
-                <div class="star-history-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px dashed #eee;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; background: #fff9db; color: #fab005; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
-                            <i class="fas fa-star"></i>
+    <section class="star-history-panel">
+        <h3 onclick="toggleStarHistory()" style="cursor: pointer; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 10px; border-radius: 12px;">
+            <i class="fas fa-history"></i> سجل النجوم <i id="history-chevron" class="fas fa-chevron-down" style="margin-left: auto; transition: 0.3s;"></i>
+        </h3>
+        <div id="star-history-content" style="display: none; background: white; border-radius: 15px; padding: 10px; box-shadow: var(--shadow);">
+            <% if (starHistory && starHistory.length > 0) { %>
+                <% starHistory.forEach(log => { %>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px dashed #eee;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 30px; height: 30px; background: #fff9db; color: #fab005; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 700;"><%= log.reason %></div>
+                                <small style="color: #94a3b8;"><%= log.date %></small>
+                            </div>
                         </div>
-                        <div>
-                            <div style="font-size: 0.85rem; font-weight: 700;"><%= log.reason %></div>
-                            <small style="color: #94a3b8; font-size: 0.7rem;"><%= log.date %></small>
-                        </div>
+                        <span style="color: #40c057; font-weight: 900;"><%= log.points %></span>
                     </div>
-                    <span style="color: #40c057; font-weight: 900; font-size: 0.9rem;"><%= log.points %></span>
-                </div>
-            <% }) %>
-        <% } else { %>
-            <p style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 10px;">ابدأ بإتمام المهام للحصول على النجوم!</p>
-        <% } %>
-    </div>
-</section>
-
-    <section id="section-schedule">
-    <h3 style="margin-bottom: 10px; color: var(--primary); font-size: 1rem;">
-        <i class="fas fa-calendar-day"></i> 
-        جدول حصص يوم: <span id="current-day-name" style="color: var(--accent);"></span>
-    </h3>
-    <div class="banner-container">
-        <div class="banner-scroll" id="banner-scroll">
-            <% for(let i=1; i<=8; i++) { 
-                let p = school_periods.find(x => x.id === i);
-                
-                // التعديل الجوهري: نبحث عن الحصة التي تطابق رقم الحصة "و" اليوم الحالي
-                // سنقوم بتعريف currentDayLocale في السكريبت بالأسفل
-            %>
-                <div class="period-card" id="period-<%= i %>">
-                    <span style="font-size: 0.7rem; font-weight: bold; color: #64748b;">الحصة <%= i %></span>
-                    <div id="session-content-<%= i %>" style="font-size: 1.1rem; font-weight: 900; color: var(--primary); margin: 8px 0;">
-                        <span style="opacity: 0.2;">--</span>
-                    </div>
-                    <span style="font-size: 0.7rem; color: #94a3b8;"><%= p ? p.start_time : '--:--' %></span>
-                </div>
+                <% }) %>
+            <% } else { %>
+                <p style="text-align: center; color: #94a3b8; padding: 20px;">لا يوجد سجل بعد</p>
             <% } %>
         </div>
-    </div>
-</section>
+    </section>
+
+    <section id="section-schedule">
+        <h3 style="color: var(--primary);"><i class="fas fa-calendar-day"></i> جدول اليوم: <span id="current-day-name"></span></h3>
+        <div class="banner-container">
+            <div class="banner-scroll" id="banner-scroll">
+                <% for(let i = 1; i <= 8; i++) { %>
+                    <% let p = school_periods.find(x => x.id === i); %>
+                    <div class="period-card" id="period-<%= i %>">
+                        <span style="font-size: 0.7rem; color: #64748b;">الحصة <%= i %></span>
+                        <div id="session-content-<%= i %>" style="font-size: 1.1rem; font-weight: 900; margin: 8px 0;">--</div>
+                        <span style="font-size: 0.7rem; color: #94a3b8;"><%= p ? p.start_time : '--:--' %></span>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </section>
 
     <section id="section-attendance" class="panel">
-    <div id="no-session-msg" class="hidden" style="text-align: center; color: #94a3b8; padding: 30px;">
-        <i class="fas fa-hourglass-start" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.3;"></i>
-        <h3>لا توجد حصة نشطة حالياً</h3>
-    </div>
-
-    <div id="attendance-already-marked" class="hidden" style="text-align: center; color: var(--success); padding: 30px; border: 2px dashed var(--success); border-radius: 15px;">
-        <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 15px;"></i>
-        <h3>تم رصد غياب هذا الفصل مسبقاً اليوم</h3>
-        <p>لا يمكن رصد الغياب أكثر من مرة واحدة للفصل في اليوم الواحد.</p>
-    </div>
-
-    <div id="attendance-active" class="hidden">
-        <div style="background: #eff6ff; padding: 12px; border-radius: 12px; border-right: 5px solid var(--primary); margin-bottom: 15px; font-size: 0.9rem;">
-            <strong> رصد غياب فصل: </strong> <span id="active-class-title">--</span>
+        <div id="no-session-msg" class="hidden" style="text-align: center; padding: 40px; color: #94a3b8;">
+            <i class="fas fa-hourglass-start" style="font-size: 2.5rem;"></i>
+            <h3>لا توجد حصة نشطة حالياً</h3>
         </div>
-        <form action="/teacher/absences/mark" method="POST">
-            <input type="hidden" name="enseignant_id" value="<%= prof.id %>">
-            <input type="hidden" name="date" id="input-date">
-            <input type="hidden" name="periode" id="input-p">
-            <input type="hidden" name="classe" id="input-classe">
-            <input type="hidden" name="section" id="input-section">
-            
-            <div class="student-grid" id="student-grid-container"></div>
-            <button type="submit" class="btn-submit">تأكيد وحفظ الغياب</button>
-        </form>
-    </div>
-</section>
-
-    <section id="section-todo" class="todo-section">
-    <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 1rem;">
-        <i class="fas fa-list-check"></i> قائمة المهام الشخصية
-    </h3>
-    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-        <input type="text" id="todo-input" 
-               style="padding: 12px; flex:1; border:2px solid #f1f5f9; border-radius:12px; outline:none; transition:0.3s;" 
-               placeholder="ماذا تريد أن تنجز اليوم؟"
-               onkeypress="if(event.key === 'Enter') addTodo()">
-        <button type="button" onclick="addTodo()" 
-                style="background:var(--primary); color:white; border:none; width:45px; height:45px; border-radius:12px; cursor:pointer; font-size:1.2rem; transition:0.3s; display:flex; align-items:center; justify-content:center;">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-    <ul id="todo-list" style="list-style: none; padding: 0; font-size: 0.9rem;">
-        </ul>
-</section>
-<script>
-
-    // أضف هذا الكود داخل سكريبت صفحة المعلم
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('input-date');
-    if (dateInput) {
-        // الحصول على تاريخ اليوم بتنسيق YYYY-MM-DD
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-    }
-});
-async function refreshAttendancePanel(classe, section, date) {
-    const res = await fetch(`/teacher/absences/check-status?classe=${classe}&section=${section}&date=${date}`);
-    const data = await res.json();
-
-    if (data.alreadyMarked) {
-        document.getElementById('attendance-active').classList.add('hidden');
-        document.getElementById('no-session-msg').classList.add('hidden');
-        
-        // إظهار رسالة تفيد بأن الغياب مكتمل
-        let msgArea = document.getElementById('attendance-completed-msg');
-        if(!msgArea) {
-            msgArea = document.createElement('div');
-            msgArea.id = 'attendance-completed-msg';
-            msgArea.innerHTML = `<div style="text-align:center; padding:20px; color:#059669; background:#ecfdf5; border-radius:12px;">
-                <i class="fas fa-check-double" style="font-size:2rem;"></i>
-                <p>تم رصد الغياب لهذا الفصل مسبقاً اليوم.</p>
-            </div>`;
-            document.getElementById('section-attendance').appendChild(msgArea);
-        }
-        msgArea.style.display = 'block';
-    } else {
-        // إظهار النموذج بشكل طبيعي
-        document.getElementById('attendance-active').classList.remove('hidden');
-        if(document.getElementById('attendance-completed-msg')) 
-            document.getElementById('attendance-completed-msg').style.display = 'none';
-    }
-}
-    
-
-    // دالة افتراضية لتحديث حالة الواجهة
-async function checkClassAttendance(classe, section) {
-    const today = new Date().toISOString().split('T')[0];
-    
-    try {
-        const response = await fetch(`/teacher/absences/check?classe=${classe}&section=${section}&date=${today}`);
-        const data = await response.json();
-
-        if (data.alreadyMarked) {
-            // إذا تم الرصد مسبقاً: أخفِ النموذج وأظهر رسالة النجاح
-            document.getElementById('attendance-active').classList.add('hidden');
-            document.getElementById('attendance-already-marked').classList.remove('hidden');
-        } else {
-            // إذا لم يتم الرصد: أظهر النموذج بشكل طبيعي
-            document.getElementById('attendance-active').classList.remove('hidden');
-            document.getElementById('attendance-already-marked').classList.add('hidden');
-        }
-    } catch (error) {
-        console.error("Error checking attendance:", error);
-    }
-}
-// 1. وظيفة تحديث العداد العلوي
-function updateTodoCounter() {
-    const list = document.getElementById('todo-list'); // قائمة المهام
-    const counter = document.getElementById('todo-count'); // الرقم الموجود في البطاقة العلوية
-    
-    if (list && counter) {
-        counter.innerText = list.children.length; // حساب عدد العناصر داخل القائمة
-    }
-}
-
-// 2. تعديل وظيفة الإضافة لتشمل التحديث
-function addTodo() {
-    const input = document.getElementById('todo-input');
-    const list = document.getElementById('todo-list');
-    
-    if (input.value.trim() === '') return;
-
-    const li = document.createElement('li');
-    li.style.cssText = "background:white; padding:10px 15px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #f1f5f9;";
-    
-    li.innerHTML = `
-        <span>${input.value}</span>
-        <button onclick="removeTask(this)" style="background:none; border:none; color:#94a3b8; cursor:pointer;">
-            <i class="fas fa-trash-alt"></i>
-        </button>
-    `;
-
-    list.appendChild(li);
-    input.value = '';
-    
-    updateTodoCounter(); // نداء الوظيفة لتحديث الرقم 0
-}
-
-// 3. وظيفة الحذف مع التحديث
-function removeTask(btn) {
-    btn.parentElement.remove();
-    updateTodoCounter(); // نداء الوظيفة لتحديث الرقم بعد الحذف
-}
-
-// 4. تحديث العداد فور تحميل الصفحة (في حال وجود مهام مسبقة)
-document.addEventListener('DOMContentLoaded', updateTodoCounter);
-</script>
+        <div id="attendance-active" class="hidden">
+            <div style="background: #eff6ff; padding: 12px; border-radius: 12px; border-right: 5px solid var(--primary); margin-bottom: 15px;">
+                <strong>رصد غياب فصل:</strong> <span id="active-class-title">--</span>
+            </div>
+            <form action="/teacher/absences/mark" method="POST">
+                <input type="hidden" name="enseignant_id" value="<%= prof.id %>">
+                <input type="hidden" name="date" id="input-date">
+                <input type="hidden" name="periode" id="input-p">
+                <div class="student-grid" id="student-grid-container"></div>
+                <button type="submit" class="btn-submit">تأكيد وحفظ الغياب</button>
+            </form>
+        </div>
+    </section>
 
     <section id="section-behavior" class="panel">
-    <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 1rem;"><i class="fas fa-user-shield"></i> ملاحظة سلوكية ذكية</h3>
-    
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div style="position: relative;">
-            <input type="text" id="studentSearchInput" placeholder="🔍 ابحث عن اسم الطالب..." 
-                   style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--primary); font-family: 'Cairo'; outline: none;">
-            
-            <div id="searchResultsList" class="custom-search-results"></div>
-        </div>
-
-        <form action="/teacher/behavior/add" method="POST" id="behaviorForm">
-            <input type="hidden" name="teacher_id" value="<%= prof.id %>">
-            <input type="hidden" name="student_id" id="hiddenStudentId" required>
-            
-            <div id="selectedStudentBadge" style="display: none; margin-bottom: 10px; padding: 5px 10px; background: #e3f2fd; border-radius: 5px; color: #1976d2; font-size: 0.9rem;">
-                تم اختيار: <span id="selectedStudentName" style="font-weight: bold;"></span>
+        <h3 style="color: var(--primary);"><i class="fas fa-user-shield"></i> ملاحظة سلوكية</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="position: relative;">
+                <input type="text" id="studentSearchInput" placeholder="🔍 ابحث عن الطالب..." style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--primary);">
+                <div id="searchResultsList" class="custom-search-results"></div>
+            </div>
+            <div id="selectedStudentBadge" style="display: none; padding: 8px; background: #e3f2fd; border-radius: 8px;">
+                تم اختيار: <strong id="selectedStudentName"></strong>
                 <i class="fas fa-times" style="margin-right: 10px; cursor: pointer; color: red;" onclick="clearStudentSelection()"></i>
             </div>
+            <form action="/teacher/behavior/add" method="POST">
+                <input type="hidden" name="teacher_id" value="<%= prof.id %>">
+                <input type="hidden" name="student_id" id="hiddenStudentId" required>
+                <textarea name="event" placeholder="وصف الملاحظة..." required style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; height: 80px;"></textarea>
+                <button type="submit" class="btn-submit">إرسال الملاحظة</button>
+            </form>
+        </div>
+    </section>
 
-            <textarea name="event" placeholder="صف السلوك أو الحادثة بالتفصيل..." required 
-                      style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; height: 80px; font-family: 'Cairo'; margin-top: 5px;"></textarea>
-            
-            <button type="submit" class="btn-submit" style="width: 100%; padding: 12px; margin-top: 10px;">إرسال للإدارة</button>
-        </form>
+    <section id="section-todo" class="panel">
+        <h3 style="color: var(--primary);"><i class="fas fa-list-check"></i> قائمة المهام</h3>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="todo-input" placeholder="أضف مهمة جديدة..." style="flex: 1; padding: 12px; border-radius: 12px; border: 2px solid #f1f5f9;">
+            <button onclick="addTodo()" style="background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer;">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        <ul id="todo-list" style="list-style: none; margin-top: 15px;"></ul>
+    </section>
+
+    <div class="card secure-card" style="padding: 0; border-radius: 15px; background: white; box-shadow: var(--shadow); overflow: hidden;">
+        <div onclick="toggleSecureSection()" style="padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-user-lock" style="color: var(--primary);"></i>
+                <h3 style="margin: 0;">تأمين الحساب</h3>
+            </div>
+            <i class="fas fa-chevron-down" id="secure-chevron" style="transition: 0.3s;"></i>
+        </div>
+        <div id="secure-content" style="max-height: 0; overflow: hidden; transition: all 0.4s ease; padding: 0 20px;">
+            <p style="color: #64748b;">غيّر كلمة المرور الافتراضية لتعزيز الأمان.</p>
+            <form action="/teacher/update-my-password" method="POST">
+                <div class="form-row">
+                    <div class="input-wrapper">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" name="new_password" id="teacher_secret_input" placeholder="كلمة مرور جديدة" required>
+                        <button type="button" class="toggle-view-btn" onclick="handleTeacherView()">
+                            <i class="fas fa-eye" id="teacher_eye_icon"></i>
+                        </button>
+                    </div>
+                    <button type="submit" class="submit-action-btn">حفظ</button>
+                </div>
+                <div id="pass-strength" class="strength-meter"></div>
+            </form>
+        </div>
     </div>
-</section>
 </div>
 
 <nav class="bottom-nav">
@@ -700,449 +370,350 @@ document.addEventListener('DOMContentLoaded', updateTodoCounter);
     <a href="#section-attendance" class="nav-item"><i class="fas fa-user-check"></i>الغياب</a>
     <a href="#section-todo" class="nav-item"><i class="fas fa-tasks"></i>المهام</a>
 </nav>
-
 <script>
-    // 1. Initialisation des données
+    // البيانات المرسلة من السيرفر
     const TIMETABLE = <%- JSON.stringify(timetable || []) %>;
     const PERIODS = <%- JSON.stringify(school_periods || []) %>;
     const ELEVES = <%- JSON.stringify(eleves || []) %>;
     const SUBSTITUTIONS = <%- JSON.stringify(substitute_logs || []) %>;
     const classLocks = <%- JSON.stringify(classLocks || []) %>;
-    const dayNamesAr = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const dayNamesAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
-    const cleanAr = (str) => str ? str.trim().replace(/[أإآ]/g, 'ا') : "";
+    const cleanAr = str => str ? str.trim().replace(/[أإآ]/g, 'ا') : "";
 
-    // --- [FONCTION SUPPRESSION NOTIFICATION] ---
-    function dismissNotification(annId, profId) {
-        const element = document.getElementById('ann-box-' + annId);
-        if (element) {
-            element.style.opacity = '0';
-            setTimeout(() => element.remove(), 300);
-            
-            // Sauvegarde locale pour ne plus l'afficher
-            let dismissed = JSON.parse(localStorage.getItem('dismissed_ann_prof_' + profId) || '[]');
-            if (!dismissed.includes(annId)) {
-                dismissed.push(annId);
-                localStorage.setItem('dismissed_ann_prof_' + profId, JSON.stringify(dismissed));
-            }
+    // معرف المعلم الحالي (لجعل إخفاء الإعلانات شخصيًا)
+    const PROF_ID = "<%= prof.id %>";
+    const STORAGE_KEY = `teacher_hidden_anns_${PROF_ID}`;
+
+    // === إخفاء الإعلانات (شخصي لكل معلم) ===
+    function hideAnnouncement(annId) {
+        const card = document.getElementById('teacher-ann-' + annId);
+        if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-10px)';
+            setTimeout(() => card.remove(), 300);
+        }
+
+        // حفظ في localStorage الخاص بهذا المعلم فقط
+        let hidden = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (!hidden.includes(annId)) {
+            hidden.push(annId);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(hidden));
+        }
+
+        updateBellStatus();
+    }
+
+    // تحديث حالة الجرس (عاجل أم لا)
+    function updateBellStatus() {
+        const visibleCards = document.querySelectorAll('.announcement-card');
+        const hasUrgent = Array.from(visibleCards).some(card =>
+            card.textContent.includes('عاجل') || 
+            card.style.borderRightColor === 'rgb(239, 68, 68)' // لون الأحمر للعاجل
+        );
+
+        const bell = document.getElementById('sidebar-bell');
+        const dot = document.getElementById('urgent-dot');
+
+        if (hasUrgent) {
+            bell.classList.add('bell-urgent');
+            dot.style.display = 'block';
+        } else {
+            bell.classList.remove('bell-urgent');
+            dot.style.display = 'none';
         }
     }
 
+    // === تحديث الجدول الزمني والحصة النشطة ===
     function updateApp() {
-        try {
-            const now = new Date();
-            const currentDayNameAr = dayNamesAr[now.getDay()];
-            const todayStr = '<%= typeof todayDate !== "undefined" ? todayDate : "" %>';
+        const now = new Date();
+        const currentDayName = dayNamesAr[now.getDay()];
+        
+        if (document.getElementById('current-day-name')) {
+            document.getElementById('current-day-name').textContent = currentDayName;
+        }
 
-            if(document.getElementById('current-day-name')) 
-                document.getElementById('current-day-name').textContent = currentDayNameAr;
-            
-            if(document.getElementById('live-clock')) 
-                document.getElementById('live-clock').textContent = now.toLocaleTimeString('ar-EG', {hour12:false});
+        let activePeriod = null;
 
-            const mins = now.getHours() * 60 + now.getMinutes();
-            let activeP = null;
+        PERIODS.forEach(p => {
+            const card = document.getElementById(`period-${p.id}`);
+            const content = document.getElementById(`session-content-${p.id}`);
+            if (!card || !content) return;
 
-            PERIODS.forEach(p => {
-                const card = document.getElementById(`period-${p.id}`);
-                const sessionContent = document.getElementById(`session-content-${p.id}`); 
-                if(!card || !sessionContent) return;
+            const normalSession = TIMETABLE.find(t => 
+                Number(t.periode) === Number(p.id) && 
+                cleanAr(t.jour) === cleanAr(currentDayName)
+            );
 
-                const normal = TIMETABLE.find(x => Number(x.periode) === Number(p.id) && cleanAr(x.jour) === cleanAr(currentDayNameAr));
-                const sub = SUBSTITUTIONS.find(x => Number(x.periode) === Number(p.id));
+            const subSession = SUBSTITUTIONS.find(s => Number(s.periode) === Number(p.id));
 
-                if (sub) {
-                    sessionContent.innerHTML = `<span class="sub-tag">احتياط</span> ${sub.classe}-${sub.section}`;
-                } else if (normal) {
-                    sessionContent.innerHTML = `${normal.classe}-${normal.section}`;
-                } else {
-                    sessionContent.innerHTML = '<span style="opacity:0.3">استراحة</span>';
-                }
+            if (subSession) {
+                content.innerHTML = `<span class="sub-tag">احتياط</span> ${subSession.classe}-${subSession.section}`;
+                card.classList.add('sub-active');
+            } else if (normalSession) {
+                content.innerHTML = `${normalSession.classe}-${normalSession.section}`;
+                card.classList.remove('sub-active');
+            } else {
+                content.innerHTML = '<span style="opacity:0.3">استراحة</span>';
+                card.classList.remove('sub-active');
+            }
 
-                const [hS, mS] = p.start_time.split(':').map(Number);
-                const [hE, mE] = p.end_time.split(':').map(Number);
-                const startMins = hS * 60 + mS;
-                const endMins = hE * 60 + mE;
+            // حساب ما إذا كانت الحصة نشطة الآن
+            const [hS, mS] = p.start_time.split(':').map(Number);
+            const [hE, mE] = p.end_time.split(':').map(Number);
+            const startMins = hS * 60 + mS;
+            const endMins = hE * 60 + mE;
+            const currentMins = now.getHours() * 60 + now.getMinutes();
 
-                if (mins >= startMins && mins < endMins) {
-                    card.classList.add('active-now');
-                    activeP = p;
-                } else {
-                    card.classList.remove('active-now');
-                }
-            });
+            if (currentMins >= startMins && currentMins < endMins) {
+                card.classList.add('active-now');
+                activePeriod = p;
+            } else {
+                card.classList.remove('active-now');
+            }
+        });
 
-            manageAttendanceUI(activeP, currentDayNameAr, todayStr);
-        } catch (err) { console.error(err); }
+        manageAttendanceUI(activePeriod);
     }
 
-  function manageAttendanceUI(p, currentDayName, todayStr) {
+    // === إدارة واجهة رصد الغياب ===
+    function manageAttendanceUI(period) {
         const noMsg = document.getElementById('no-session-msg');
         const activeArea = document.getElementById('attendance-active');
-        const gridContainer = document.getElementById('student-grid-container');
-        const submitBtn = document.querySelector('#attendance-active button[type="submit"]');
+        const container = document.getElementById('student-grid-container');
 
-        if (!p) {
-            if(noMsg) noMsg.classList.remove('hidden'); 
-            if(activeArea) activeArea.classList.add('hidden');
+        if (!period) {
+            noMsg.classList.remove('hidden');
+            activeArea.classList.add('hidden');
             return;
         }
 
         const session = TIMETABLE.find(s => 
-            Number(s.periode) === Number(p.id) && 
-            cleanAr(s.jour) === cleanAr(currentDayName)
-        ) || SUBSTITUTIONS.find(x => Number(x.periode) === Number(p.id));
+            Number(s.periode) === Number(period.id) && 
+            cleanAr(s.jour) === cleanAr(dayNamesAr[new Date().getDay()])
+        ) || SUBSTITUTIONS.find(s => Number(s.periode) === Number(period.id));
 
         if (!session) {
-            if(noMsg) noMsg.classList.remove('hidden'); 
-            if(activeArea) activeArea.classList.add('hidden');
-        } else {
-            if(noMsg) noMsg.classList.add('hidden'); 
-            if(activeArea) activeArea.classList.remove('hidden');
-            
-            document.getElementById('active-class-title').textContent = `${session.classe}-${session.section}`;
-            document.getElementById('input-p').value = p.id;
-            document.getElementById('input-date').value = todayStr;
+            noMsg.classList.remove('hidden');
+            activeArea.classList.add('hidden');
+            return;
+        }
 
-            // 1. التحقق من القفل القادم من السيرفر
-            const serverLock = classLocks.find(l => 
-                String(l.classe) === String(session.classe) && 
-                String(l.section) === String(session.section) && 
-                Number(l.periode) === Number(p.id)
-            );
+        noMsg.classList.add('hidden');
+        activeArea.classList.remove('hidden');
 
-            // 2. التحقق من "نجاح الحفظ" من رابط الـ URL (بعد Redirect مباشرة)
-            const urlParams = new URLSearchParams(window.location.search);
-            const justSaved = urlParams.get('success') === 'attendance_saved';
+        document.getElementById('active-class-title').textContent = `${session.classe}-${session.section}`;
+        document.getElementById('input-p').value = period.id;
+        document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
 
-            if (serverLock || (justSaved && document.getElementById('input-p').value == p.id)) {
-                gridContainer.innerHTML = `
-                    <div class="lock-message" style="background: #f0fdf4; border: 2px solid #22c55e; padding: 25px; border-radius: 20px; text-align: center;">
-                        <div style="background: #22c55e; color: white; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; margin: 0 auto 15px; font-size: 1.5rem;">
+        // التحقق من القفل (تم الرصد مسبقًا)
+        const isLocked = classLocks.some(l => 
+            String(l.classe) === String(session.classe) && 
+            String(l.section) === String(session.section) && 
+            Number(l.periode) === Number(period.id)
+        );
+
+        if (isLocked || container.querySelector('.lock-message')) {
+            if (!container.querySelector('.lock-message')) {
+                container.innerHTML = `
+                    <div class="lock-message">
+                        <div style="background:#22c55e;color:white;width:60px;height:60px;line-height:60px;border-radius:50%;margin:0 auto 15px;font-size:2rem;">
                             <i class="fas fa-check"></i>
                         </div>
-                        <h4 style="color: #15803d; font-weight: 800;">تم رصد حضور الحصة</h4>
-                        <p style="color: #166534; font-size: 0.85rem; margin-top: 5px;">تم إرسال البيانات وتحديث رصيد نجومك</p>
+                        <h4 style="color:#15803d;">تم رصد الغياب بنجاح</h4>
+                        <p style="color:#166534;">تم تحديث رصيد نجومك</p>
                     </div>`;
-                if(submitBtn) submitBtn.style.display = 'none';
-                gridContainer.dataset.currentClass = "LOCKED";
-            } else {
-                if(submitBtn) submitBtn.style.display = 'block';
-                renderStudents(session.classe, session.section);
             }
+            // إخفاء زر الإرسال
+            const submitBtn = activeArea.querySelector('.btn-submit');
+            if (submitBtn) submitBtn.style.display = 'none';
+        } else {
+            const submitBtn = activeArea.querySelector('.btn-submit');
+            if (submitBtn) submitBtn.style.display = 'block';
+            renderStudents(session.classe, session.section);
         }
-    }  
-     function renderStudents(classe, section) {
-    const container = document.getElementById('student-grid-container');
-    
-    // 1. بوابة الفحص: إذا كانت الرسالة الموجودة هي رسالة "نجاح الرصد"، توقف فوراً ولا تمسحها
-    if (container.querySelector('.lock-message')) {
-        return; 
     }
 
-    // 2. إذا كنا نعرض نفس الفصل حالياً، لا تفعل شيئاً (لتحسين الأداء)
-    if (container.dataset.currentClass === `${classe}-${section}`) return;
-
-    // 3. الآن فقط يمكننا المسح والرسم لأننا تأكدنا أن الصف غير مقفل
-    container.innerHTML = ""; 
-    container.dataset.currentClass = `${classe}-${section}`;
-
-    const filteredStudents = ELEVES.filter(e => 
-        String(e.classe) === String(classe) && 
-        String(e.section) === String(section)
-    );
-
-    if (filteredStudents.length === 0) {
-        container.innerHTML = "<p style='text-align:center; padding:20px; color:#94a3b8;'>لا يوجد طلاب مسجلين في هذا الفصل</p>";
-        return;
-    }
-
-    filteredStudents.forEach(el => {
-        container.innerHTML += `
-            <div class="student-card">
-                <span>${el.nom}</span>
-                <label class="switch">
-                    <input type="checkbox" name="eleve_ids[]" value="${el.id}">
-                    <span class="slider"></span>
-                </label>
-            </div>`;
-    });
-}
-    // Initialisation au chargement
-    window.onload = () => {
-        updateApp();
-        setInterval(updateApp, 5000);
+    // === عرض قائمة الطلاب في الحصة ===
+    function renderStudents(classe, section) {
+        const container = document.getElementById('student-grid-container');
         
-        // Cacher les notifications déjà supprimées
-        const profId = '<%= prof.id %>';
-        const dismissed = JSON.parse(localStorage.getItem('dismissed_ann_prof_' + profId) || '[]');
-        dismissed.forEach(id => {
-            const el = document.getElementById('ann-box-' + id);
-            if (el) el.remove();
+        // لا نعيد الرسم إذا كان الفصل نفسه وغير مقفل
+        if (container.querySelector('.lock-message')) return;
+        if (container.dataset.currentClass === `${classe}-${section}`) return;
+
+        container.dataset.currentClass = `${classe}-${section}`;
+        container.innerHTML = '';
+
+        const students = ELEVES.filter(s => 
+            String(s.classe) === String(classe) && 
+            String(s.section) === String(section)
+        );
+
+        if (students.length === 0) {
+            container.innerHTML = '<p style="text-align:center;padding:30px;color:#94a3b8;">لا يوجد طلاب في هذا الفصل</p>';
+            return;
+        }
+
+        students.forEach(student => {
+            container.innerHTML += `
+                <div class="student-card">
+                    <span>${student.nom}</span>
+                    <label class="switch">
+                        <input type="checkbox" name="eleve_ids[]" value="${student.id}">
+                        <span class="slider"></span>
+                    </label>
+                </div>`;
         });
-
-       // فحص إذا كان المعلم عائداً من عملية تقييم ناجحة
-const urlParams = new URLSearchParams(window.location.search);
-
-if (urlParams.get('success') === 'evaluated') {
-    
-    // 1. تشغيل تأثير النجوم (الكونفيتي)
-    runConfetti();
-
-    // 2. إظهار رسالة الشكر (Toast)
-    showSuccessToast();
-
-    // 3. الخطوة الأهم: مسح الـ URL فوراً دون إعادة تحميل الصفحة
-    // هذا يمنع تكرار التأثير عند عمل Refresh
-    window.history.replaceState({}, document.title, window.location.pathname);
-}
-
-function runConfetti() {
-    var duration = 3 * 1000;
-    var end = Date.now() + duration;
-
-    (function frame() {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ['#ffd700', '#1e3a8a']
-      });
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ['#ffd700', '#1e3a8a']
-      });
-      if (Date.now() < end) requestAnimationFrame(frame);
-    }());
-}
-
-function showSuccessToast() {
-    const toast = document.createElement('div');
-    toast.className = 'success-toast-animation'; // سنضيف لها تنسيق بسيط
-    toast.innerHTML = `
-        <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
-                    background: #1e3a8a; color: white; padding: 15px 25px; 
-                    border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
-                    z-index: 9999; display: flex; align-items: center; gap: 10px;
-                    border: 2px solid #ffd700; animation: slideDown 0.5s ease;">
-            <i class="fas fa-star" style="color: #ffd700;"></i>
-            <span>شكراً لك! تم منحك <strong>نجمة ذهبية</strong></span>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => { toast.remove(); }, 4000);
-} 
-
-
-    };
-
-    function toggleStarHistory() {
-    const content = document.getElementById('star-history-content');
-    const chevron = document.getElementById('history-chevron');
-    
-    if (content.style.display === 'none') {
-        content.style.display = 'block';
-        chevron.style.transform = 'rotate(180deg)'; // La flèche pointe vers le haut
-        
-        // Optionnel : Petit effet d'animation pour les items
-        const items = content.querySelectorAll('.star-history-item');
-        items.forEach((item, index) => {
-            item.style.animation = `slideInRight 0.3s ease forwards ${index * 0.1}s`;
-        });
-    } else {
-        content.style.display = 'none';
-        chevron.style.transform = 'rotate(0deg)'; // La flèche revient vers le bas
     }
-}
-</script>
 
-<script>
-    // --- نظام البحث السلوكي الذكي - كما هو ---
-    const studentsData = <%- JSON.stringify(eleves) %>;
+    // === قائمة المهام الشخصية ===
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        const list = document.getElementById('todo-list');
+        if (!input.value.trim()) return;
+
+        const li = document.createElement('li');
+        li.style = "background:white;padding:10px 15px;border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f1f5f9;";
+        li.innerHTML = `
+            <span>${input.value}</span>
+            <button onclick="this.parentElement.remove(); updateTodoCounter()" style="background:none;border:none;color:#94a3b8;cursor:pointer;">
+                <i class="fas fa-trash-alt"></i>
+            </button>`;
+        list.appendChild(li);
+        input.value = '';
+        updateTodoCounter();
+    }
+
+    function updateTodoCounter() {
+        const count = document.getElementById('todo-list').children.length;
+        document.getElementById('todo-count').textContent = count;
+    }
+
+    // === البحث الذكي في الملاحظات السلوكية ===
     const searchInput = document.getElementById('studentSearchInput');
     const resultsList = document.getElementById('searchResultsList');
-    const hiddenIdInput = document.getElementById('hiddenStudentId');
+    const hiddenId = document.getElementById('hiddenStudentId');
     const badge = document.getElementById('selectedStudentBadge');
     const badgeName = document.getElementById('selectedStudentName');
 
-    if(searchInput) {
-        searchInput.addEventListener('input', function() {
-            const term = this.value.trim().toLowerCase();
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const term = searchInput.value.trim().toLowerCase();
             resultsList.innerHTML = '';
-            if (term.length < 2) { resultsList.style.display = 'none'; return; }
-            const matches = studentsData.filter(s => s.nom.toLowerCase().includes(term));
+            if (term.length < 2) {
+                resultsList.style.display = 'none';
+                return;
+            }
+
+            const matches = ELEVES.filter(s => s.nom.toLowerCase().includes(term));
             if (matches.length > 0) {
                 matches.forEach(s => {
                     const item = document.createElement('div');
                     item.className = 'search-item';
-                    item.innerHTML = `<strong>${s.nom}</strong> <br> <span>الصف: ${s.classe} - ${s.section}</span>`;
-                    item.onclick = function() { selectStudent(s.id, s.nom); };
+                    item.innerHTML = `<strong>${s.nom}</strong><br><span>${s.classe}-${s.section}</span>`;
+                    item.onclick = () => {
+                        hiddenId.value = s.id;
+                        badgeName.textContent = s.nom;
+                        badge.style.display = 'block';
+                        searchInput.value = '';
+                        resultsList.style.display = 'none';
+                    };
                     resultsList.appendChild(item);
                 });
                 resultsList.style.display = 'block';
-            } else { resultsList.style.display = 'none'; }
+            } else {
+                resultsList.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (!searchInput.contains(e.target) && !resultsList.contains(e.target)) {
+                resultsList.style.display = 'none';
+            }
         });
     }
 
-    function selectStudent(id, name) {
-        hiddenIdInput.value = id;
-        badgeName.innerText = name;
-        badge.style.display = 'block';
-        searchInput.value = '';
-        resultsList.style.display = 'none';
-    }
-
     function clearStudentSelection() {
-        hiddenIdInput.value = '';
+        hiddenId.value = '';
         badge.style.display = 'none';
         searchInput.value = '';
     }
 
-    document.addEventListener('click', function(e) {
-        if (resultsList && e.target !== searchInput) resultsList.style.display = 'none';
+    // === تأمين الحساب ===
+    function toggleSecureSection() {
+        const content = document.getElementById('secure-content');
+        const chevron = document.getElementById('secure-chevron');
+        content.classList.toggle('secure-open');
+        chevron.classList.toggle('rotate-chevron');
+    }
+
+    function handleTeacherView() {
+        const input = document.getElementById('teacher_secret_input');
+        const icon = document.getElementById('teacher_eye_icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    document.getElementById('teacher_secret_input')?.addEventListener('input', e => {
+        const meter = document.getElementById('pass-strength');
+        const len = e.target.value.length;
+        meter.style.width = len === 0 ? '0' : len < 4 ? '30%' : len < 8 ? '60%' : '100%';
+        meter.style.background = len < 4 ? '#ef4444' : len < 8 ? '#f59e0b' : '#22c55e';
+    });
+
+    // === سجل النجوم ===
+    function toggleStarHistory() {
+        const content = document.getElementById('star-history-content');
+        const chevron = document.getElementById('history-chevron');
+        if (content.style.display === 'none' || !content.style.display) {
+            content.style.display = 'block';
+            chevron.style.transform = 'rotate(180deg)';
+        } else {
+            content.style.display = 'none';
+            chevron.style.transform = 'rotate(0)';
+        }
+    }
+
+    // === تأثير الكونفيتي عند التقييم الناجح ===
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success') && urlParams.get('success') === 'evaluated') {
+        confetti({
+            particleCount: 120,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ffd700', '#1e3a8a', '#22c55e']
+        });
+        // تنبيه لطيف (يمكن استبداله بـ toast أجمل لاحقًا)
+        setTimeout(() => alert('🎉 شكرًا لك! تم منحك نجمة جديدة بنجاح'), 1000);
+        // مسح البارامتر من الـ URL بدون إعادة تحميل
+        history.replaceState({}, '', location.pathname);
+    }
+
+    // === التشغيل عند تحميل الصفحة ===
+    document.addEventListener('DOMContentLoaded', () => {
+        // إخفاء الإعلانات المخفية سابقًا لهذا المعلم فقط
+        const hidden = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        hidden.forEach(id => {
+            const card = document.getElementById('teacher-ann-' + id);
+            if (card) card.remove();
+        });
+
+        updateBellStatus();
+        updateTodoCounter();
+        updateApp();
+
+        // تحديث تلقائي كل 10 ثواني
+        setInterval(updateApp, 10000);
     });
 </script>
-<div class="card secure-card" style="margin-top: 20px; padding: 0; border-radius: 15px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
-    <div onclick="toggleSecureSection()" style="padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-user-lock" style="color: #1e3a8a;"></i>
-            <h3 style="color: #1e3a8a; margin: 0; font-size: 1.1rem;">تأمين الحساب</h3>
-        </div>
-        <i class="fas fa-chevron-down" id="secure-chevron" style="color: #94a3b8; transition: 0.3s;"></i>
-    </div>
-
-    <div id="secure-content" style="max-height: 0; overflow: hidden; transition: all 0.4s ease; padding: 0 20px;">
-        <p style="font-size: 0.9rem; color: #64748b; margin-top: 0;">قم بتغيير كلمة المرور الافتراضية لتعزيز أمان حسابك.</p>
-        
-        <form action="/teacher/update-my-password" method="POST" class="secure-form-container" style="padding-bottom: 20px;">
-            <div class="form-row">
-                <div class="input-wrapper">
-                    <i class="fas fa-key input-icon"></i>
-                    <input 
-                        type="password" 
-                        name="new_password" 
-                        id="teacher_secret_input" 
-                        placeholder="رمز دخول جديد..." 
-                        required 
-                        minlength="4"
-                        autocomplete="new-password" 
-                        class="custom-input"
-                    >
-                    <button type="button" class="toggle-view-btn" onclick="handleTeacherView()">
-                        <i class="fas fa-eye" id="teacher_eye_icon"></i>
-                    </button>
-                </div>
-
-                <button type="submit" class="submit-action-btn">
-                    <span>حفظ</span>
-                    <i class="fas fa-save"></i>
-                </button>
-            </div>
-            <div id="pass-strength" class="strength-meter"></div>
-        </form>
-    </div>
-</div>
-
-<style>
-    /* الكلاس الذي سيضيفه الجافاسكريبت لفتح القسم */
-    .secure-open {
-        max-height: 250px !important; /* قيمة كافية للمحتوى */
-        padding-bottom: 10px !important;
-    }
-    
-    .rotate-chevron {
-        transform: rotate(180deg);
-    }
-
-    /* تنسيقات النموذج (نفس التي أرسلتها مع تحسينات طفيفة) */
-    .form-row { display: flex; gap: 8px; align-items: center; }
-    .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
-    .input-icon { position: absolute; right: 12px; color: #94a3b8; z-index: 5; }
-    .custom-input {
-        width: 100%;
-        padding: 12px 35px 12px 40px !important;
-        border: 2px solid #f1f5f9;
-        border-radius: 12px;
-        background: #f8fafc;
-        transition: 0.3s;
-    }
-    .custom-input:focus { border-color: #1e3a8a; outline: none; background: #fff; }
-    .toggle-view-btn { position: absolute; left: 10px; background: none; border: none; color: #94a3b8; cursor: pointer; }
-    .submit-action-btn {
-        background: #1e3a8a; color: white; border: none; padding: 12px 20px;
-        border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
-    }
-    .strength-meter { height: 4px; width: 0; background: #e2e8f0; margin-top: 8px; border-radius: 2px; transition: 0.3s; }
-</style>
-
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-<script>
-// 1. وظيفة الفتح والإغلاق (الانطواء)
-function toggleSecureSection() {
-    const content = document.getElementById('secure-content');
-    const chevron = document.getElementById('secure-chevron');
-    
-    content.classList.toggle('secure-open');
-    chevron.classList.toggle('rotate-chevron');
-}
 
-// 2. وظيفة إظهار/إخفاء كلمة المرور (العين)
-function handleTeacherView() {
-    const input = document.getElementById('teacher_secret_input');
-    const icon = document.getElementById('teacher_eye_icon');
-    
-    if (input.type === "password") {
-        input.type = "text";
-        icon.classList.replace('fa-eye', 'fa-eye-slash');
-    } else {
-        input.type = "password";
-        icon.classList.replace('fa-eye-slash', 'fa-eye');
-    }
-}
 
-// 3. مراقب قوة كلمة المرور
-document.getElementById('teacher_secret_input').addEventListener('input', function(e) {
-    const meter = document.getElementById('pass-strength');
-    const val = e.target.value;
-    if(val.length === 0) meter.style.width = "0";
-    else if(val.length < 4) { meter.style.width = "30%"; meter.style.background = "#ef4444"; }
-    else if(val.length < 8) { meter.style.width = "60%"; meter.style.background = "#f59e0b"; }
-    else { meter.style.width = "100%"; meter.style.background = "#22c55e"; }
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // جلب قائمة الإعلانات المخفية من ذاكرة المتصفح
-    const hiddenAnns = JSON.parse(localStorage.getItem('hidden_announcements') || '[]');
-    
-    // إخفاء العناصر المخزنة مسبقاً
-    hiddenAnns.forEach(id => {
-        const el = document.getElementById(`teacher-ann-${id}`);
-        if (el) el.style.display = 'none';
-    });
-});
-
-function hideAnnouncement(id) {
-    // 1. إخفاء بصري فوري مع تأثير بسيط
-    const el = document.getElementById(`teacher-ann-${id}`);
-    if (el) {
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(20px)';
-        setTimeout(() => el.style.display = 'none', 300);
-    }
-
-    // 2. حفظ في LocalStorage لضمان عدم ظهوره مجدداً
-    const hiddenAnns = JSON.parse(localStorage.getItem('hidden_announcements') || '[]');
-    if (!hiddenAnns.includes(id)) {
-        hiddenAnns.push(id);
-        localStorage.setItem('hidden_announcements', JSON.stringify(hiddenAnns));
-    }
-}
-</script>
 </body>
 </html>

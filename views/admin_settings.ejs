@@ -10,154 +10,133 @@
         :root {
             --primary: #1e293b;
             --accent: #2563eb;
+            --soft-blue: #3b82f6;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
             --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
 
-        body {
-            background-color: var(--bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            display: flex;
-            color: var(--primary);
-            scroll-behavior: smooth;
-        }
+        body { background-color: var(--bg); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; color: var(--primary); scroll-behavior: smooth; }
 
-        /* --- Sidebar --- */
-        .sidebar {
-            width: 260px;
-            background: var(--primary);
-            height: 100vh;
-            position: fixed;
-            right: 0;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-        }
-
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--primary); height: 100vh; position: fixed; right: 0; color: white; display: flex; flex-direction: column; z-index: 1000; }
         .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-nav a {
-            padding: 15px 25px; color: #cbd5e1; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.3s;
-        }
+        .sidebar-nav a { padding: 15px 25px; color: #cbd5e1; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.3s; font-size: 0.9rem; }
         .sidebar-nav a:hover { background: rgba(255,255,255,0.05); color: white; border-right: 4px solid var(--accent); }
 
-        /* --- Main Content --- */
-        .main-container {
-            margin-right: 260px;
-            width: calc(100% - 260px);
-            padding: 40px;
-            box-sizing: border-box;
-        }
+        /* Layout */
+        .main-container { margin-right: 260px; width: calc(100% - 260px); padding: 40px; box-sizing: border-box; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .section-header { border-right: 5px solid var(--accent); padding-right: 15px; }
+        #clock { font-size: 1.1rem; font-weight: bold; color: var(--accent); background: white; padding: 10px 25px; border-radius: 50px; box-shadow: var(--card-shadow); }
 
-        .top-bar {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;
-        }
+        /* Cards */
+        .card { background: white; border-radius: 20px; padding: 30px; box-shadow: var(--card-shadow); margin-bottom: 40px; border: 1px solid #eef2f6; }
+        .card-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #f8fafc; padding-bottom: 15px; }
 
-        .section-header {
-            border-right: 5px solid var(--accent);
-            padding-right: 15px;
-        }
-
-        #clock { font-size: 1.2rem; font-weight: bold; color: var(--accent); background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-
-        /* --- Cards Cascade --- */
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            margin-bottom: 50px; /* تباعد كبير للشكل المتتالي */
-            border: 1px solid #eef2f6;
-        }
-
-        .card-title {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--primary);
-            border-bottom: 2px solid #f8fafc;
-            padding-bottom: 15px;
-        }
-
-        /* --- Tables --- */
+        /* Table & Inputs */
         .table-wrapper { overflow-x: auto; border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; padding: 15px; text-align: right; color: #64748b; font-weight: 600; }
-        td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
-
-        /* --- Inputs & Buttons --- */
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input, select {
-            padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent); }
-
-        .btn {
-            padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s;
-        }
+        th { background: #f8fafc; padding: 12px; text-align: right; color: #64748b; font-size: 0.85rem; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        input, select { padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; outline: none; font-family: inherit; }
+        .btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-outline { background: transparent; border: 2px solid #e2e8f0; color: #64748b; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border-color); color: #64748b; }
 
-        /* --- Time Scheme Grid --- */
-        .scheme-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .scheme-item {
-            border: 2px solid #f1f5f9; padding: 20px; border-radius: 15px; text-align: center; transition: 0.3s;
-        }
+        /* Specific Grids */
+        .scheme-grid, .visibility-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .scheme-item, .setting-item { border: 1.5px solid #f1f5f9; padding: 15px; border-radius: 15px; transition: 0.3s; }
         .scheme-item.active { border-color: var(--accent); background: #f0f7ff; }
 
+        /* Toggle Switch */
+        .switch-container { position: relative; display: inline-block; width: 42px; height: 22px; }
+        .switch-container input { opacity: 0; width: 0; height: 0; }
+        .switch-slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .switch-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .switch-slider { background-color: var(--soft-blue); }
+        input:checked + .switch-slider:before { transform: translateX(20px); }
+
+        @media (max-width: 992px) { .sidebar { width: 70px; } .sidebar span, .sidebar h2, .sidebar p { display: none; } .main-container { margin-right: 70px; width: calc(100% - 70px); } }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
-    <div class="sidebar-header">
-        <h2 style="margin:0;"><i class="fas fa-tools"></i> الإعدادات</h2>
-    </div>
+    <div class="sidebar-header"><h2>الإعدادات</h2><p style="font-size:0.6rem; opacity:0.7">التحكم البرمجي</p></div>
     <nav class="sidebar-nav">
-        <a href="/admin/dashboard"><i class="fas fa-home"></i> الرئيسية</a>
-        <a href="#section-time"><i class="fas fa-clock"></i> خرائط التوقيت</a>
-        <a href="#section-policy"><i class="fas fa-user-shield"></i> سياسة الاحتياط</a>
-        <a href="#section-data"><i class="fas fa-database"></i> المواد والفصول</a>
-        <a href="#section-accounts"><i class="fas fa-key"></i> الحسابات</a>
+        <a href="/admin/dashboard"><i class="fas fa-home"></i> <span>الرئيسية</span></a>
+        <a href="#section-visibility"><i class="fas fa-eye-slash"></i> <span>واجهة اللوحة</span></a>
+        <a href="#section-time"><i class="fas fa-clock"></i> <span>خرائط التوقيت</span></a>
+        <a href="#section-policy"><i class="fas fa-user-shield"></i> <span>سياسة العمل</span></a>
+        <a href="#section-data"><i class="fas fa-database"></i> <span>المواد والفصول</span></a>
+        <a href="#section-accounts"><i class="fas fa-key"></i> <span>إدارة الدخول</span></a>
     </nav>
 </aside>
 
 <div class="main-container">
     <div class="top-bar">
         <div class="section-header">
-            <h1 style="margin:0;">لوحة التهيئة الشاملة</h1>
-            <p style="color:#64748b;">إدارة المخططات الزمنية وسياسات العمل</p>
+            <h1 style="margin:0;">التهيئة الشاملة</h1>
+            <p style="color:#64748b; margin:5px 0 0;">تخصيص النظام وقاعدة البيانات</p>
         </div>
         <div id="clock">--:--:--</div>
     </div>
 
+    <section class="card" id="section-visibility">
+        <div class="card-title"><i class="fas fa-eye-slash" style="color:var(--soft-blue)"></i> تخصيص واجهة الإدارة (Client-Side)</div>
+        <div class="visibility-grid">
+            <% 
+            const sections = [
+                { id: 'manage_teachers', label: 'إدارة المعلمين', icon: 'fa-chalkboard-teacher' },
+                { id: 'teacher_absence', label: 'الاحتياط والغياب', icon: 'fa-user-clock' },
+                { id: 'stars_excellence', label: 'نجوم التميز', icon: 'fa-trophy' },
+                { id: 'manage_students', label: 'إدارة الطلاب', icon: 'fa-user-graduate' },
+                { id: 'student_absence', label: 'سجلات الغياب', icon: 'fa-history' },
+                { id: 'behavior_reports', label: 'تقارير السلوك', icon: 'fa-clipboard-list' },
+                { id: 'academic_eval', label: 'التقييم الأكاديمي', icon: 'fa-file-signature' },
+                { id: 'teacher_tools', label: 'أدوات المعلم', icon: 'fa-tasks' },
+                { id: 'timetable', label: 'الجدول المدرسي', icon: 'fa-calendar-alt' },
+                { id: 'advanced_ops', label: 'إعدادات متقدمة', icon: 'fa-user-shield' }
+            ];
+            %>
+            <% sections.forEach(s => { %>
+                <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas <%= s.icon %>" style="color: var(--soft-blue); width: 20px;"></i>
+                        <span style="font-size: 0.85rem; font-weight: 600;"><%= s.label %></span>
+                    </div>
+                    <label class="switch-container">
+                        <input type="checkbox" class="section-toggle" data-section-id="<%= s.id %>" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+            <% }) %>
+        </div>
+        <button onclick="saveDashboardSettings()" class="btn btn-primary" style="width: 100%; justify-content: center;">
+            <i class="fas fa-save"></i> حفظ إعدادات الرؤية
+        </button>
+    </section>
+
     <section class="card" id="section-time">
-        <div class="card-title"><i class="fas fa-stopwatch" style="color:var(--warning)"></i> خرائط توقيت الدوام (PostgreSQL Sync)</div>
+        <div class="card-title"><i class="fas fa-stopwatch" style="color:var(--warning)"></i> خرائط توقيت الدوام</div>
         <div class="scheme-grid">
             <% [{id:1, n:'الصيفي'}, {id:2, n:'الشتوي'}, {id:3, n:'رمضان'}, {id:4, n:'الاستثنائي'}].forEach(s => { %>
-                <div class="scheme-item" id="scheme-box-<%= s.id %>">
-                    <div style="font-weight: bold; margin-bottom: 10px;"><%= s.n %></div>
+                <div class="scheme-item" id="scheme-box-<%= s.id %>" style="text-align: center;">
+                    <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.9rem;"><%= s.n %></div>
                     <div style="display: flex; gap: 5px; justify-content: center;">
-                        <button class="btn btn-outline" style="padding: 5px 10px;" onclick="loadScheme('<%= s.id %>')">تفعيل</button>
-                        <button class="btn btn-success" style="padding: 5px 10px;" onclick="saveScheme('<%= s.id %>', '<%= s.n %>')"><i class="fas fa-save"></i></button>
+                        <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.75rem;" onclick="loadScheme('<%= s.id %>')">استدعاء</button>
+                        <button class="btn btn-success" style="padding: 5px 10px; font-size: 0.75rem;" onclick="saveScheme('<%= s.id %>', '<%= s.n %>')">حفظ</button>
                     </div>
                 </div>
             <% }) %>
         </div>
-
         <form action="/admin/settings/periods/update" method="POST">
             <div class="table-wrapper">
                 <table>
@@ -165,7 +144,7 @@
                     <tbody>
                         <% for(let i=1; i<=8; i++) { %>
                         <tr>
-                            <td>الحصة <%= i %></td>
+                            <td style="font-size: 0.85rem;">الحصة <%= i %></td>
                             <td><input type="time" name="start_time[]" id="start-<%= i %>" style="width:100%"></td>
                             <td><input type="time" name="end_time[]" id="end-<%= i %>" style="width:100%"></td>
                         </tr>
@@ -173,9 +152,7 @@
                     </tbody>
                 </table>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; justify-content: center;">
-                <i class="fas fa-check-double"></i> اعتماد التوقيت الحالي كجدول رسمي
-            </button>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; justify-content: center;"><i class="fas fa-check-circle"></i> اعتماد كجدول رسمي</button>
         </form>
     </section>
 
@@ -183,23 +160,16 @@
         <div class="card-title"><i class="fas fa-balance-scale" style="color:var(--accent)"></i> سياسة توزيع الاحتياط والعبء</div>
         <div class="table-wrapper">
             <table>
-                <thead>
-                    <tr><th>المعلم</th><th>الرتبة</th><th>إداري</th><th>العبء</th><th>حفظ</th></tr>
-                </thead>
+                <thead><tr><th>المعلم</th><th>الرتبة</th><th>إداري</th><th>العبء</th><th>إجراء</th></tr></thead>
                 <tbody>
                     <% teachers.forEach(t => { %>
                     <form action="/admin/settings/teachers/update-policy" method="POST">
                         <input type="hidden" name="teacher_id" value="<%= t.id %>">
                         <tr>
-                            <td><strong><%= t.nom %></strong></td>
-                            <td>
-                                <select name="rank">
-                                    <option value="معلم" <%= t.rank === 'معلم' ? 'selected' : '' %>>معلم</option>
-                                    <option value="معلم أول" <%= t.rank === 'معلم أول' ? 'selected' : '' %>>معلم أول</option>
-                                </select>
-                            </td>
-                            <td><input type="checkbox" name="is_admin_duty" <%= t.is_admin_duty ? 'checked' : '' %>></td>
-                            <td><input type="number" name="weekly_load" value="<%= t.weekly_load || 0 %>" style="width:60px"></td>
+                            <td style="font-size: 0.85rem;"><strong><%= t.nom %></strong></td>
+                            <td><select name="rank"><option value="معلم" <%= t.rank==='معلم'?'selected':'' %>>معلم</option><option value="معلم أول" <%= t.rank==='معلم أول'?'selected':'' %>>معلم أول</option></select></td>
+                            <td><input type="checkbox" name="is_admin_duty" <%= t.is_admin_duty?'checked':'' %>></td>
+                            <td><input type="number" name="weekly_load" value="<%= t.weekly_load || 0 %>" style="width:50px"></td>
                             <td><button type="submit" class="btn btn-success" style="padding:8px;"><i class="fas fa-save"></i></button></td>
                         </tr>
                     </form>
@@ -210,65 +180,93 @@
     </section>
 
     <section class="card" id="section-data">
-        <div class="card-title"><i class="fas fa-database" style="color:var(--success)"></i> قاعدة البيانات الأساسية</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <div class="card-title"><i class="fas fa-database" style="color:var(--success)"></i> البيانات الأساسية</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
             <div>
-                <h4><i class="fas fa-school"></i> الفصول</h4>
-                <form action="/admin/settings/classes/add" method="POST" class="input-group">
-                    <input type="text" name="class_name" placeholder="الفصل" required style="flex:1">
+                <h4 style="font-size:0.9rem;"><i class="fas fa-school"></i> الفصول</h4>
+                <form action="/admin/settings/classes/add" method="POST" style="display:flex; gap:5px; margin-bottom:15px;">
+                    <input type="text" name="class_name" placeholder="اسم الفصل" required style="flex:1">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i></button>
                 </form>
-                <div class="table-wrapper" style="max-height: 200px; overflow-y: auto;">
-                    <table>
-                        <% classes.forEach(c => { %>
-                        <tr>
-                            <td><%= c.class_name %></td>
-                            <td><button class="btn btn-danger" onclick="confirmDeletion('/admin/settings/classes/delete', 'class_id', '<%= c.id %>')"><i class="fas fa-trash"></i></button></td>
-                        </tr>
-                        <% }) %>
-                    </table>
+                <div class="table-wrapper" style="max-height: 200px; border: 1px solid #f1f5f9;">
+                    <table><% classes.forEach(c => { %><tr><td><%= c.class_name %></td><td style="text-align:left"><button class="btn btn-danger" style="padding:5px 10px" onclick="confirmDeletion('/admin/settings/classes/delete', 'class_id', '<%= c.id %>')"><i class="fas fa-trash"></i></button></td></tr><% }) %></table>
                 </div>
             </div>
             <div>
-                <h4><i class="fas fa-book"></i> المواد</h4>
-                <form action="/admin/settings/subjects/add" method="POST" class="input-group">
-                    <input type="text" name="subject_name" placeholder="المادة" required style="flex:1">
+                <h4 style="font-size:0.9rem;"><i class="fas fa-book"></i> المواد</h4>
+                <form action="/admin/settings/subjects/add" method="POST" style="display:flex; gap:5px; margin-bottom:15px;">
+                    <input type="text" name="subject_name" placeholder="اسم المادة" required style="flex:1">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i></button>
                 </form>
-                <div class="table-wrapper" style="max-height: 200px; overflow-y: auto;">
-                    <table>
-                        <% subjects.forEach(s => { %>
-                        <tr>
-                            <td><%= s.name %></td>
-                            <td><button class="btn btn-danger" onclick="confirmDeletion('/admin/settings/subjects/delete', 'id', '<%= s.id %>')"><i class="fas fa-trash"></i></button></td>
-                        </tr>
-                        <% }) %>
-                    </table>
+                <div class="table-wrapper" style="max-height: 200px; border: 1px solid #f1f5f9;">
+                    <table><% subjects.forEach(s => { %><tr><td><%= s.name %></td><td style="text-align:left"><button class="btn btn-danger" style="padding:5px 10px" onclick="confirmDeletion('/admin/settings/subjects/delete', 'id', '<%= s.id %>')"><i class="fas fa-trash"></i></button></td></tr><% }) %></table>
                 </div>
             </div>
         </div>
     </section>
+    <section class="card" id="section-announcements-manage">
+    <div class="card-title">
+        <i class="fas fa-bullhorn" style="color:var(--warning)"></i> 
+        إدارة الإعلانات المنشورة
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>العنوان</th>
+                    <th>التاريخ والوقت</th>
+                    <th>مستوى الأهمية</th>
+                    <th>التحكم</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% announcements.forEach(ann => { %>
+                <tr id="ann-row-<%= ann.id %>">
+                    <td><strong><%= ann.title %></strong></td>
+                    <td><%= ann.date %> | <%= ann.time %></td>
+                    <td>
+                        <% 
+                        let bColor = ann.priority === 'urgent' ? 'var(--danger)' : (ann.priority === 'high' ? 'var(--warning)' : 'var(--accent)');
+                        %>
+                        <span style="background:<%= bColor %>; color:white; padding:2px 8px; border-radius:5px; font-size:0.8rem;">
+                            <%= ann.importance_level %>
+                        </span>
+                    </td>
+                    <td>
+                        <button onclick="deleteAnnouncement('<%= ann.id %>')" class="btn btn-danger" style="padding: 5px 10px;">
+                            <i class="fas fa-trash-alt"></i> حذف
+                        </button>
+                    </td>
+                </tr>
+                <% }) %>
+                <% if (announcements.length === 0) { %>
+                    <tr><td colspan="4" style="text-align:center; color:#94a3b8;">لا توجد إعلانات نشطة حالياً</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</section>
 
     <section class="card" id="section-accounts">
         <div class="card-title"><i class="fas fa-key" style="color:var(--danger)"></i> إدارة الدخول</div>
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>المعلم</th><th>كلمة المرور</th><th>تغيير</th></tr></thead>
+                <thead><tr><th>المعلم</th><th>كلمة المرور</th><th>تحديث</th></tr></thead>
                 <tbody>
                     <% teachers.forEach(t => { %>
                     <tr>
-                        <td><%= t.nom %></td>
+                        <td style="font-size: 0.85rem;"><%= t.nom %></td>
                         <td>
-                            <div style="display:flex; align-items:center; gap:5px;">
-                                <input type="password" value="<%= t.password %>" id="pass-<%= t.id %>" readonly style="width:100px; border:none; background:#eee;">
-                                <button onclick="togglePass('<%= t.id %>')" class="btn-outline" style="border:none; cursor:pointer;"><i class="fas fa-eye"></i></button>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="password" value="<%= t.password %>" id="pass-<%= t.id %>" readonly style="width:100px; border:none; background:#f1f5f9; font-size:0.8rem;">
+                                <i class="fas fa-eye" onclick="togglePass('<%= t.id %>')" style="cursor:pointer; color:var(--soft-blue)"></i>
                             </div>
                         </td>
                         <td>
                             <form action="/admin/settings/password/update" method="POST" style="display:flex; gap:5px;">
                                 <input type="hidden" name="teacher_id" value="<%= t.id %>">
-                                <input type="text" name="new_password" placeholder="جديد" required style="width:80px;">
-                                <button type="submit" class="btn btn-primary" style="padding:5px;"><i class="fas fa-sync"></i></button>
+                                <input type="text" name="new_password" placeholder="كلمة سر جديدة" required style="width:120px; font-size:0.8rem;">
+                                <button type="submit" class="btn btn-primary" style="padding:5px 10px;"><i class="fas fa-sync-alt"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -279,132 +277,125 @@
     </section>
 </div>
 
-<script>
-    // --- منطق حفظ المخططات (POSTGRESQL SYNC) ---
-    // --- منطق حفظ واستدعاء المخططات ---
-async function saveScheme(schemeId, name) {
-    const periods = [];
-    for(let i=1; i<=8; i++) {
-        periods.push({
-            period_num: i,
-            start: document.getElementById(`start-${i}`).value,
-            end: document.getElementById(`end-${i}`).value
-        });
-    }
 
-    const { isConfirmed } = await Swal.fire({
-        title: `حفظ ${name}؟`,
-        text: "سيتم تحديث المخطط في قاعدة البيانات",
-        icon: 'question',
+
+<script>
+
+
+// أضف هذه الدالة مع باقي الدوال (مثل loadScheme و confirmDeletion)
+async function deleteAnnouncement(id) {
+    const result = await Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: "سيتم إزالة الإعلان من لوحة المعلمين نهائياً",
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'نعم، حفظ'
+        confirmButtonColor: 'var(--danger)',
+        confirmButtonText: 'نعم، حذف الإعلان',
+        cancelButtonText: 'إلغاء'
     });
 
-    if (isConfirmed) {
+    if (result.isConfirmed) {
         try {
-            // تصحيح الرابط ليطابق السيرفر (أزلنا /settings/)
-            const res = await fetch(`/api/save-scheme`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ schemeId, periods })
-            });
-            if(res.ok) {
-                Swal.fire('تم الحفظ', '', 'success');
+            const res = await fetch(`/admin/announcements/delete/${id}`, { method: 'POST' });
+            if (res.ok) {
+                const row = document.getElementById(`ann-row-${id}`);
+                if (row) row.remove();
+                Swal.fire('تم الحذف', 'تمت إزالة الإعلان من القاعدة', 'success');
             } else {
-                throw new Error('فشل الحفظ');
+                Swal.fire('خطأ', 'فشل في عملية الحذف من السيرفر', 'error');
             }
         } catch (e) {
-            Swal.fire('خطأ', 'فشل في الاتصال بالسيرفر', 'error');
+            Swal.fire('خطأ', 'تعذر الاتصال بالسيرفر', 'error');
         }
     }
 }
-
-async function loadScheme(id) {
-    try {
-        // نستخدم نفس المسار المعرف في السيرفر
-        const response = await fetch(`/api/get-scheme/${id}`);
-        
-        if (!response.ok) throw new Error('Not Found');
-
-        const data = await response.json();
-
-        if (!data || data.length === 0) {
-            return Swal.fire('تنبيه', 'هذا المخطط فارغ في القاعدة حالياً', 'info');
-        }
-
-        data.forEach(p => {
-            const sInput = document.getElementById(`start-${p.period_num}`);
-            const eInput = document.getElementById(`end-${p.period_num}`);
-            if (sInput) sInput.value = p.start_time;
-            if (eInput) eInput.value = p.end_time;
+ 
+    // 1. إدارة ظهور الأقسام (Dashboard Visibility)
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = JSON.parse(localStorage.getItem('admin_dashboard_visibility') || '{}');
+        document.querySelectorAll('.section-toggle').forEach(chk => {
+            const id = chk.getAttribute('data-section-id');
+            if (saved[id] === false) chk.checked = false;
         });
+    });
 
-        // تأثير بصري للمخطط النشط
-        document.querySelectorAll('.scheme-item').forEach(el => el.classList.remove('active'));
-        document.getElementById(`scheme-box-${id}`).classList.add('active');
-        
-        Swal.fire({ icon: 'success', title: 'تم جلب البيانات', timer: 1000, showConfirmButton: false });
-    } catch (e) {
-        console.error(e);
-        Swal.fire('خطأ', 'فشل في جلب البيانات من السيرفر', 'error');
+    function saveDashboardSettings() {
+        const settings = {};
+        document.querySelectorAll('.section-toggle').forEach(chk => {
+            settings[chk.getAttribute('data-section-id')] = chk.checked;
+        });
+        localStorage.setItem('admin_dashboard_visibility', JSON.stringify(settings));
+        Swal.fire('تم الحفظ', 'سيتم تطبيق التغييرات على لوحة التحكم والسايدبار فوراً', 'success');
     }
-}
+
+    // 2. إدارة المخططات الزمنية
+    async function saveScheme(schemeId, name) {
+        const periods = [];
+        for(let i=1; i<=8; i++) {
+            periods.push({
+                period_num: i,
+                start: document.getElementById(`start-${i}`).value,
+                end: document.getElementById(`end-${i}`).value
+            });
+        }
+        const { isConfirmed } = await Swal.fire({ title: `حفظ مخطط ${name}؟`, icon: 'question', showCancelButton: true });
+        if (isConfirmed) {
+            try {
+                const res = await fetch(`/api/save-scheme`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ schemeId, periods })
+                });
+                if(res.ok) Swal.fire('تم الحفظ بنجاح', '', 'success');
+            } catch (e) { Swal.fire('خطأ', 'فشل الاتصال بالسيرفر', 'error'); }
+        }
+    }
+
     async function loadScheme(id) {
-    try {
-        const response = await fetch(`/api/get-scheme/${id}`);
-        const data = await response.json(); // ستكون مصفوفة مباشرة من الصفوف
-
-        if (!data || data.length === 0) {
-            return Swal.fire('تنبيه', 'هذا المخطط فارغ في القاعدة، قم بملئه ثم اضغط حفظ', 'info');
-        }
-
-        data.forEach(p => {
-            const startInput = document.getElementById(`start-${p.period_num}`);
-            const endInput = document.getElementById(`end-${p.period_num}`);
-            if (startInput) startInput.value = p.start_time;
-            if (endInput) endInput.value = p.end_time;
-        });
-
-        // تمييز المخطط المختار
-        document.querySelectorAll('.scheme-item').forEach(el => el.classList.remove('active'));
-        document.getElementById(`scheme-box-${id}`).classList.add('active');
-        
-        Swal.fire({ icon: 'success', title: 'تم جلب البيانات', timer: 1000, showConfirmButton: false });
-    } catch (e) {
-        Swal.fire('خطأ', 'فشل في الاتصال بالسيرفر', 'error');
+        try {
+            const response = await fetch(`/api/get-scheme/${id}`);
+            const data = await response.json();
+            if (!data || data.length === 0) return Swal.fire('تنبيه', 'المخطط فارغ في القاعدة', 'info');
+            
+            data.forEach(p => {
+                document.getElementById(`start-${p.period_num}`).value = p.start_time;
+                document.getElementById(`end-${p.period_num}`).value = p.end_time;
+            });
+            document.querySelectorAll('.scheme-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`scheme-box-${id}`).classList.add('active');
+            Swal.fire({ icon: 'success', title: 'تم الاستدعاء', timer: 800, showConfirmButton: false });
+        } catch (e) { Swal.fire('خطأ', 'فشل جلب البيانات', 'error'); }
     }
-}
+
+    // 3. وظائف مساعدة
     function togglePass(id) {
         const p = document.getElementById('pass-' + id);
         p.type = p.type === 'password' ? 'text' : 'password';
     }
 
     function confirmDeletion(url, param, id) {
-        Swal.fire({
-            title: 'هل أنت متأكد؟',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            confirmButtonText: 'حذف'
-        }).then((r) => {
+        Swal.fire({ title: 'حذف نهائي؟', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((r) => {
             if(r.isConfirmed) {
-                const f = document.createElement('form');
-                f.method = 'POST'; f.action = url;
-                const i = document.createElement('input');
-                i.type = 'hidden'; i.name = param; i.value = id;
+                const f = document.createElement('form'); f.method = 'POST'; f.action = url;
+                const i = document.createElement('input'); i.type = 'hidden'; i.name = param; i.value = id;
                 f.appendChild(i); document.body.appendChild(f); f.submit();
             }
         });
     }
 
-    setInterval(() => {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-SA');
-    }, 1000);
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-SA'); }, 1000);
 
     <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
-        Swal.fire('تم بنجاح', '<%= success_msg %>', 'success');
+        Swal.fire('تم', '<%= success_msg %>', 'success');
     <% } %>
+
+
+    
 </script>
 
+
+
+
 </body>
+
 </html>

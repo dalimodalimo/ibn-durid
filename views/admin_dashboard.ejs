@@ -205,22 +205,22 @@
         <a href="/admin/dashboard" class="nav-link active"><i class="fas fa-chart-pie"></i> <span>لوحة التحكم</span></a>
         
         <div class="nav-group-title">شؤون الموظفين</div>
-        <a href="/admin/enseignants" class="nav-link"><i class="fas fa-chalkboard-teacher"></i> <span>إدارة المعلمين</span></a>
-        <a href="/admin/absence-profs" class="nav-link"><i class="fas fa-user-clock"></i> <span>غياب المعلمين</span></a>
-        <a href="/admin/stars-management" class="nav-link"><i class="fas fa-trophy"></i> <span>نجوم التميز</span></a>
+        <a href="/admin/enseignants" class="nav-link" data-section="manage_teachers"><i class="fas fa-chalkboard-teacher"></i> <span>إدارة المعلمين</span></a>
+        <a href="/admin/absence-profs" class="nav-link" data-section="teacher_absence"><i class="fas fa-user-clock"></i> <span>غياب المعلمين</span></a>
+        <a href="/admin/stars-management" class="nav-link" data-section="stars_excellence"><i class="fas fa-trophy"></i> <span>نجوم التميز</span></a>
 
         <div class="nav-group-title">شؤون الطلاب</div>
-        <a href="/admin/eleves" class="nav-link"><i class="fas fa-user-graduate"></i> <span>إدارة الطلاب</span></a>
-        <a href="/admin/rapport-absences-eleves" class="nav-link"><i class="fas fa-history"></i> <span>سجلات الغياب</span></a>
-        <a href="/admin/behavior-reports" class="nav-link"><i class="fas fa-clipboard-list"></i> <span>تقارير السلوك</span></a>
-        <a href="/admin/student-reports-list" class="nav-link"><i class="fas fa-file-signature"></i> <span>التقييم الأكاديمي</span></a>
+        <a href="/admin/eleves" class="nav-link" data-section="manage_students"><i class="fas fa-user-graduate"></i> <span>إدارة الطلاب</span></a>
+        <a href="/admin/rapport-absences-eleves" class="nav-link" data-section="student_absence"><i class="fas fa-history"></i> <span>سجلات الغياب</span></a>
+        <a href="/admin/behavior-reports" class="nav-link" data-section="behavior_reports"><i class="fas fa-clipboard-list"></i> <span>تقارير السلوك</span></a>
+        <a href="/admin/student-reports-list" class="nav-link" data-section="academic_eval"><i class="fas fa-file-signature"></i> <span>التقييم الأكاديمي</span></a>
 
         <div class="nav-group-title">الإعدادات المتقدمة</div>
-        <a href="/admin/advanced-settings" class="nav-link"><i class="fas fa-user-shield"></i> <span>إعدادات متقدمة</span></a>
-        <a href="/admin/teacher-tools-management" class="nav-link"><i class="fas fa-tasks"></i> <span>إدارة أدوات المعلم</span></a>
+        <a href="/admin/advanced-settings" class="nav-link" data-section="advanced_ops"><i class="fas fa-user-shield"></i> <span>إعدادات متقدمة</span></a>
+        <a href="/admin/teacher-tools-management" class="nav-link" data-section="teacher_tools"><i class="fas fa-tasks"></i> <span>إدارة أدوات المعلم</span></a>
 
         <div class="nav-group-title">التنظيم</div>
-        <a href="/admin/timetable" class="nav-link"><i class="fas fa-calendar-alt"></i> <span>الجدول المدرسي</span></a>
+        <a href="/admin/timetable" class="nav-link" data-section="timetable"><i class="fas fa-calendar-alt"></i> <span>الجدول المدرسي</span></a>
         <a href="/admin/settings" class="nav-link"><i class="fas fa-tools"></i> <span>الإعدادات</span></a>
     </nav>
 
@@ -291,54 +291,51 @@
             <h3>بث إعلان جديد</h3>
             <p>إرسال تعاميم إدارية فورية لجميع الطاقم.</p>
         </div>
-
         
 
-        
-
-        <div class="card c-tea" onclick="location.href='/admin/enseignants'">
+        <div class="card c-tea" data-section="manage_teachers" onclick="location.href='/admin/enseignants'">
             <div class="icon-box" style="color:var(--soft-blue);"><i class="fas fa-chalkboard-teacher"></i></div>
             <h3>إدارة المعلمين</h3>
             <p>إضافة المعلمين، التخصصات، وتعديل البيانات.</p>
         </div>
 
-        <div class="card c-sta" onclick="location.href='/admin/stars-management'">
+        <div class="card c-sta" data-section="stars_excellence" onclick="location.href='/admin/stars-management'">
             <div class="icon-box" style="color:#f59e0b;"><i class="fas fa-award"></i></div>
             <h3>نجوم التميز</h3>
             <p>تحفيز المعلمين وإدارة لوحة شرف المدرسة.</p>
         </div>
 
-        <div class="card c-std" onclick="location.href='/admin/eleves'">
+        <div class="card c-std" data-section="manage_students" onclick="location.href='/admin/eleves'">
             <div class="icon-box" style="color:#10b981;"><i class="fas fa-user-graduate"></i></div>
             <h3>إدارة الطلاب</h3>
             <p>تسجيل الطلاب الجدد وتوزيع الفصول.</p>
         </div>
 
-        <div class="card c-abs" onclick="location.href='/admin/absence-profs'">
+        <div class="card c-abs" data-section="teacher_absence" onclick="location.href='/admin/absence-profs'">
             <div class="icon-box" style="color:#ef4444;"><i class="fas fa-user-clock"></i></div>
             <h3>الاحتياط والغياب</h3>
             <p>رصد غياب المعلمين وتعيين حصص الاحتياط.</p>
         </div>
 
-        <div class="card c-rep" onclick="location.href='/admin/rapport-absences-eleves'">
+        <div class="card c-rep" data-section="student_absence" onclick="location.href='/admin/rapport-absences-eleves'">
             <div class="icon-box" style="color:#06b6d4;"><i class="fas fa-chart-line"></i></div>
             <h3>غياب الطلاب</h3>
             <p>كشوفات الغياب اليومية والتقارير الإحصائية.</p>
         </div>
 
-        <div class="card c-beh" onclick="location.href='/admin/behavior-reports'">
+        <div class="card c-beh" data-section="behavior_reports" onclick="location.href='/admin/behavior-reports'">
             <div class="icon-box" style="color:#8b5cf6;"><i class="fas fa-clipboard-list"></i></div>
             <h3>تقارير السلوك</h3>
             <p>متابعة ملاحظات المعلمين حول سلوكيات الطلاب.</p>
         </div>
 
-        <div class="card" style="border-bottom-color: var(--soft-blue);" onclick="location.href='/admin/student-reports-list'">
+        <div class="card" data-section="academic_eval" style="border-bottom-color: var(--soft-blue);" onclick="location.href='/admin/student-reports-list'">
             <div class="icon-box" style="color:var(--soft-blue);"><i class="fas fa-file-signature"></i></div>
             <h3>نتائج التقييمات</h3>
             <p>مراجعة تقييمات المعلمين للمستوى الأكاديمي.</p>
         </div>
 
-        <div class="card" onclick="location.href='/admin/timetable'">
+        <div class="card" data-section="timetable" onclick="location.href='/admin/timetable'">
             <div class="icon-box" style="color:#8b5cf6;"><i class="fas fa-calendar-alt"></i></div>
             <h3>الجدول المدرسي</h3>
             <p>تنظيم الحصص الأسبوعية وتوزيع المهام.</p>
@@ -349,13 +346,14 @@
             <h3>إعدادات النظام</h3>
             <p>ضبط الشعب، توقيت الحصص، والمواد.</p>
         </div>
-        <div class="card c-tools" onclick="location.href='/admin/teacher-tools-management'">
+
+        <div class="card c-tools" data-section="teacher_tools" onclick="location.href='/admin/teacher-tools-management'">
             <div class="icon-box" style="color:#0ea5e9;"><i class="fas fa-tasks"></i></div>
             <h3>أقسام المعلمين</h3>
             <p>إدارة وتفعيل الأدوات في واجهة المعلم.</p>
         </div>
 
-        <div class="card c-adv" onclick="location.href='/admin/advanced-settings'">
+        <div class="card c-adv" data-section="advanced_ops" onclick="location.href='/admin/advanced-settings'">
             <div class="icon-box" style="color:#f43f5e;"><i class="fas fa-user-shield"></i></div>
             <h3>إعدادات متقدمة</h3>
             <p>إعادة ضبط البيانات، الحذف، والعمليات الحساسة.</p>
@@ -363,26 +361,27 @@
     </div>
 </main>
 
-<div id="announcementModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-paper-plane" style="color:var(--accent-gold);"></i> إرسال إعلان جديد</h3>
-            <i class="fas fa-times" onclick="closeAnnModal()" style="cursor:pointer; color:var(--text-muted);"></i>
-        </div>
-        <form action="/admin/announcements/add" method="POST">
-            <div class="modal-body">
-                <label>عنوان الإعلان</label>
-                <input type="text" name="title" placeholder="أدخل عنواناً واضحاً..." required>
-                <label>محتوى التعميم الإداري</label>
-                <textarea name="content" rows="5" placeholder="اكتب تفاصيل الإعلان هنا..." required></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn-send"><i class="fas fa-share-square"></i> إرسال الآن للجميع</button>
-                <button type="button" class="btn-close-text" onclick="closeAnnModal()">إلغاء وإغلاق</button>
-            </div>
-        </form>
-    </div>
-</div>
+<script>
+    function applyVisibilitySettings() {
+        // جلب الإعدادات من LocalStorage (المتصفح)
+        const savedSettings = JSON.parse(localStorage.getItem('admin_dashboard_visibility') || '{}');
+        
+        // البحث عن كل عنصر يمتلك وسم data-section
+        document.querySelectorAll('[data-section]').forEach(element => {
+            const sectionName = element.getAttribute('data-section');
+            
+            // إذا كان القسم مسجلاً بأنه "false" (مخفي)، نقوم بإزالته من العرض
+            if (savedSettings[sectionName] === false) {
+                element.style.display = 'none';
+            } else {
+                element.style.display = ''; // إظهار إذا كان مفعل أو غير محدد
+            }
+        });
+    }
+
+    // تنفيذ الإخفاء فور تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', applyVisibilitySettings);
+</script>
 
 <script>
     // تفعيل زر تسجيل الخروج مع التنبيه
@@ -437,6 +436,65 @@
         if (event.target == modal) closeAnnModal();
     }
 </script>
+<div id="announcementModal" style="display:none; position:fixed; z-index:9999; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; backdrop-filter: blur(4px); font-family: 'Segoe UI', sans-serif;">
+    <div style="background:white; width:95%; max-width:500px; padding:30px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,0.3); direction: rtl;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+            <h3 style="margin:0; font-weight:800; color:#1e293b;">نشر تعميم إداري</h3>
+            <button id="btnCloseAnn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#ef4444;">&times;</button>
+        </div>
+        
+        <form action="/admin/announcements/add" method="POST">
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:8px; font-weight:700;">عنوان التعميم</label>
+                <input type="text" name="title" required style="width:100%; padding:12px; border:2px solid #eee; border-radius:12px; box-sizing:border-box;">
+            </div>
 
+            <select name="priority" style="width:100%; padding:10px; border-radius:8px;">
+    <option value="normal">عادي (Normal)</option>
+    <option value="high">هام جداً (High)</option>
+    <option value="urgent">عاجل جداً (Urgent)</option>
+</select>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; margin-bottom:8px; font-weight:700;">نص الإعلان</label>
+                <textarea name="content" rows="4" required style="width:100%; padding:12px; border:2px solid #eee; border-radius:12px; font-family:inherit; resize:none; box-sizing:border-box;"></textarea>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <button type="submit" style="flex:2; background:#2563eb; color:white; border:none; padding:14px; border-radius:12px; cursor:pointer; font-weight:bold;">نشر الآن</button>
+                <button type="button" id="btnCancelAnn" style="flex:1; background:#f1f5f9; border:none; padding:14px; border-radius:12px; cursor:pointer;">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('announcementModal');
+    const openBtn = document.getElementById('btnOpenAnn');
+    const closeBtn = document.getElementById('btnCloseAnn');
+    const cancelBtn = document.getElementById('btnCancelAnn');
+
+    if (openBtn) {
+        openBtn.addEventListener('click', function() {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+    // إغلاق عند الضغط خارج النافذة
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) closeModal();
+    });
+});
+</script>
 </body>
 </html>

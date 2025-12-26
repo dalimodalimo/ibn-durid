@@ -462,27 +462,41 @@ const today = new Intl.DateTimeFormat('en-CA', {
     // --- [ 7. إدارة الطلاب ] ---
 
     app.get('/admin/eleves', async (req, res) => {
-        try {
-            const eleves = (await pool.query("SELECT * FROM students ORDER BY classe, section, nom")).rows;
-            const classes = (await pool.query("SELECT * FROM school_classes")).rows;
-            res.render('gestion_eleves', { eleves, classes, titre: "إدارة سجلات الطلاب" });
-        } catch (e) { res.status(500).send("خطأ في تحميل سجل الطلاب"); }
-    });
+    try {
+        // تم تغيير students إلى eleves لتطابق قاعدة بياناتك
+        const eleves = (await pool.query("SELECT * FROM students ORDER BY classe, section, nom")).rows;
+        
+        const classes = (await pool.query("SELECT * FROM school_classes")).rows;
+        
+        // تأكد أن اسم الملف gestion_eleves.ejs هو الاسم الصحيح لملف التصميم
+        res.render('gestion_eleves', { 
+            eleves, 
+            classes, 
+            titre: "إدارة سجلات الطلاب" 
+        });
+    } catch (e) { 
+        console.error("Error loading students:", e.message);
+        res.status(500).send("خطأ في تحميل سجل الطلاب"); 
+    }
+});
 
-    app.post('/admin/eleves/ajouter', async (req, res) => {
-        try {
-            const { nom, class_info, parent_phone } = req.body;
-            const [classe, section] = class_info.split('|');
-            await pool.query("INSERT INTO eleves (nom, classe, section, parent_phone) VALUES ($1, $2, $3, $4)", [nom, classe, section, parent_phone]);
-            res.redirect('/admin/eleves?success=added');
-        } catch (e) { res.redirect('/admin/eleves?error=add_failed'); }
-    });
+   app.post('/admin/eleves/ajouter', async (req, res) => {
+    try {
+        const { nom, class_info, parent_phone } = req.body;
+        const [classe, section] = class_info.split('|');
+        // الإضافة في students
+        await pool.query("INSERT INTO students (nom, classe, section, parent_phone) VALUES ($1, $2, $3, $4)", [nom, classe, section, parent_phone]);
+        res.redirect('/admin/eleves?success=added');
+    } catch (e) {
+        res.redirect('/admin/eleves?error=add_failed');
+    }
+});
 
     app.post('/admin/eleves/modifier', async (req, res) => {
         try {
             const { id, nom, class_info, parent_phone } = req.body;
             const [classe, section] = class_info.split('|');
-            await pool.query("UPDATE eleves SET nom = $1, classe = $2, section = $3, parent_phone = $4 WHERE id = $5", [nom, classe, section, parent_phone, id]);
+            await pool.query("UPDATE students SET nom = $1, classe = $2, section = $3, parent_phone = $4 WHERE id = $5", [nom, classe, section, parent_phone, id]);
             res.redirect('/admin/eleves?success=updated');
         } catch (e) { res.redirect('/admin/eleves?error=update_failed'); }
     });
@@ -923,9 +937,21 @@ app.delete('/admin/timetable/supprimer-json/:id', isAdmin, async (req, res) => {
         }
     });
 
-    app.get('/admin/students', (req, res) => res.redirect('/admin/eleves'));
+    // توحيد المسارات
+app.get('/admin/students', (req, res) => res.redirect('/admin/eleves'));
 
-
+app.get('/admin/eleves', async (req, res) => {
+    try {
+        // نستخدم students لأنه الجدول المرتبط بالغياب والسلوك
+        const students = (await pool.query("SELECT * FROM students ORDER BY classe, section, nom")).rows;
+        const classes = (await pool.query("SELECT * FROM school_classes")).rows;
+        
+        // نرسل البيانات تحت اسم 'eleves' لكي لا نغير أي شيء في ملف الـ EJS
+        res.render('gestion_eleves', { eleves: students, classes, titre: "إدارة سجلات الطلاب" });
+    } catch (e) {
+        res.status(500).send("خطأ في تحميل سجل الطلاب");
+    }
+});
 
 
 
@@ -1155,32 +1181,41 @@ app.post('/teacher/update-my-password', async (req, res) => {
 });
 
 // 7. تحديث توقيت الحصص المدرسية
-app.post('/admin/settings/periods/update', isAdmin, async (req, res) => {
+// --- Route: الاعتماد النهائي ونقل البيانات للجدول الرسمي ---
+app.post('/admin/settings/periods/update', async (req, res) => {
+    // استلام مصفوفات الأوقات من النموذج (Form)
+    let { start_time, end_time } = req.body;
+
     try {
-        // البيانات تصل كمصفوفات بسبب استخدام [] في أسماء الحقول في الـ EJS
-        const { id, start_time, end_time } = req.body;
+        await pool.query("BEGIN");
 
-        // التأكد من وجود بيانات
-        if (id && Array.isArray(id)) {
-            for (let i = 0; i < id.length; i++) {
-                const periodId = id[i];
-                const start = start_time[i];
-                const end = end_time[i];
+        // 1. مسح التوقيت الرسمي القديم
+        await pool.query("DELETE FROM school_periods");
 
-                // نستخدم UPSERT (إدخال أو تحديث) لضمان وجود التوقيت في قاعدة البيانات
-                await pool.query(`
-                    INSERT INTO school_periods (id, start_time, end_time)
-                    VALUES ($1, $2, $3)
-                    ON CONFLICT (id) 
-                    DO UPDATE SET start_time = EXCLUDED.start_time, end_time = EXCLUDED.end_time
-                `, [periodId, start, end]);
+        // 2. التأكد أن البيانات مصفوفة (حتى لو أرسل المتصفح قيمة واحدة)
+        if (!Array.isArray(start_time)) start_time = [start_time];
+        if (!Array.isArray(end_time)) end_time = [end_time];
+
+        // 3. إدخال الأوقات الجديدة في الجدول الرسمي school_periods
+        for (let i = 0; i < start_time.length; i++) {
+            if (start_time[i] && end_time[i]) {
+                await pool.query(
+                    "INSERT INTO school_periods (id, start_time, end_time) VALUES ($1, $2, $3)",
+                    [i + 1, start_time[i], end_time[i]]
+                );
             }
         }
 
-        res.redirect('/admin/settings?success=periods_updated');
-    } catch (e) {
-        console.error("Error updating periods:", e);
-        res.status(500).send("خطأ في تحديث توقيت الحصص");
+        await pool.query("COMMIT");
+        
+        // إعادة التوجيه مع رسالة نجاح (إذا كنت تستخدم flash)
+        // أو ببساطة العودة لصفحة الإعدادات
+        res.redirect('/admin/settings?success=updated');
+
+    } catch (err) {
+        await pool.query("ROLLBACK");
+        console.error("خطأ أثناء اعتماد التوقيت الرسمي:", err.message);
+        res.status(500).send("فشل تحديث التوقيت الرسمي في قاعدة البيانات");
     }
 });
 // 8. التحقق من بيانات دخول المعلم
@@ -1623,31 +1658,13 @@ app.get('/admin/enseignants/supprimer/:id', async (req, res) => {
 });
 
 app.get('/admin/eleves/supprimer/:id', async (req, res) => {
-    const { id } = req.params;
     try {
-        // 1. حذف غياب الطالب (تأكد هل العمود student_id أم eleve_id)
-        // سنستخدم الاسم الأكثر شيوعاً في جداولك وهو student_id أو eleve_id
-        await pool.query("DELETE FROM student_absences WHERE student_id = $1", [id]).catch(() => {});
-        
-        // 2. حذف سجلات السلوك
-        await pool.query("DELETE FROM behavior_logs WHERE student_id = $1", [id]).catch(() => {});
-        
-        // 3. حذف التقييمات (هنا الجدول بالفرنسية، غالباً العمود eleve_id)
-        await pool.query("DELETE FROM academic_evaluations WHERE student_id = $1", [id]).catch(async () => {
-             await pool.query("DELETE FROM academic_evaluations WHERE eleve_id = $1", [id]);
-        });
-
-        await pool.query("DELETE FROM evaluation_requests WHERE eleve_id = $1", [id]).catch(() => {});
-
-        // 4. حذف الطالب من جدول eleves (المفتاح الأساسي هو id)
+        const { id } = req.params;
+        // الحذف من students
         await pool.query("DELETE FROM students WHERE id = $1", [id]);
-
-        console.log(`✅ تم حذف الطالب بنجاح`);
-        res.redirect('/admin/eleves');
-
+        res.redirect('/admin/eleves?success=deleted');
     } catch (e) {
-        console.error("❌ خطأ أثناء الحذف:", e.message);
-        res.status(500).send("حدث خطأ أثناء الحذف: " + e.message);
+        res.redirect('/admin/eleves?error=delete_failed');
     }
 });
 
@@ -1751,6 +1768,48 @@ app.get('/admin/reset/:target', isAdmin, async (req, res) => {
     }
 });
 
+// time shemas -----------
+// --- Route: جلب بيانات مخطط معين من قاعدة البيانات ---
+app.get('/api/get-scheme/:id', async (req, res) => {
+    const schemeId = req.params.id;
+    try {
+        // نستخدم pool هنا لأنك عرفتها في بداية الملف
+        const result = await pool.query(
+            "SELECT period_num, start_time, end_time FROM time_schemes WHERE scheme_id = $1 ORDER BY period_num", 
+            [schemeId]
+        );
+        res.json(result.rows); 
+    } catch (err) {
+        console.error("خطأ في جلب المخطط:", err.message);
+        res.status(500).json({ error: "خطأ في الاتصال بقاعدة البيانات" });
+    }
+});
+
+// --- Route: حفظ المخطط الحالي إلى قاعدة البيانات ---
+app.post('/api/save-scheme', async (req, res) => {
+    const { schemeId, periods } = req.body;
+    try {
+        await pool.query("BEGIN"); // بدء Transaction
+        
+        // 1. حذف البيانات القديمة لهذا المخطط
+        await pool.query("DELETE FROM time_schemes WHERE scheme_id = $1", [schemeId]);
+        
+        // 2. إدخال البيانات الجديدة
+        for (const p of periods) {
+            await pool.query(
+                "INSERT INTO time_schemes (scheme_id, period_num, start_time, end_time) VALUES ($1, $2, $3, $4)",
+                [schemeId, p.period_num, p.start, p.end]
+            );
+        }
+        
+        await pool.query("COMMIT");
+        res.json({ success: true });
+    } catch (err) {
+        await pool.query("ROLLBACK");
+        console.error("خطأ في حفظ المخطط:", err.message);
+        res.status(500).json({ error: "فشل حفظ البيانات" });
+    }
+});
     // --- [ تشغيل الخادم ] ---
     app.listen(PORT, () => {
         console.log(`🚀 نظام مدرسة ابن دريد يعمل على: http://localhost:${PORT}`);

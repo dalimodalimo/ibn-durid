@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titre %> - مدرسة ابن دريد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/settings_style.css">
-    <link rel="stylesheet" href="/css/eleves_style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --sidebar-width: 260px;
@@ -14,137 +13,171 @@
             --accent: #2563eb;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
             --bg-body: #f8fafc;
         }
 
-        body { display: flex; min-height: 100vh; background-color: var(--bg-body); margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: var(--bg-body); margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; color: var(--primary); }
 
         /* Sidebar & Layout */
         .sidebar { width: var(--sidebar-width); transition: 0.3s; right: 0; position: fixed; height: 100vh; background: var(--primary); color: white; z-index: 1000; }
         .sidebar.collapsed { right: calc(var(--sidebar-width) * -1); }
-        .main-content { flex: 1; margin-right: var(--sidebar-width); transition: 0.3s; padding: 25px; padding-top: 80px; width: 100%; }
+        .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-nav a { padding: 15px 25px; color: #cbd5e1; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.05); color: white; border-right: 4px solid var(--accent); }
+
+        .main-content { flex: 1; margin-right: var(--sidebar-width); transition: 0.3s; padding: 30px; width: 100%; box-sizing: border-box; }
         .main-content.expanded { margin-right: 0; }
         .sidebar-toggle { position: fixed; top: 15px; right: 15px; z-index: 1100; background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
 
-        /* Table UI */
-        .badge-blue { background: #dbeafe; color: #1e40af; padding: 5px 12px; border-radius: 6px; font-weight: bold; }
-        .phone-tag { color: var(--success); text-decoration: none; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
-        .btn-action { border: none; background: none; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
-        .btn-edit { color: var(--accent); }
-        .btn-delete { color: var(--danger); }
-
-        /* Toast & Modal */
-        #toastContainer { position: fixed; top: 20px; left: 20px; z-index: 9999; }
-        .toast { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); margin-bottom: 10px; border-right: 6px solid var(--success); display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease; }
-        .toast.error { border-right-color: var(--danger); }
+        /* Stats & Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; border-bottom: 4px solid var(--accent); }
         
-        .modal { display: none; position: fixed; z-index: 2000; top: 0; right: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 400px; box-shadow: 0 20px 25px rgba(0,0,0,0.2); position: relative; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eef2f6; }
+        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #f8fafc; padding-bottom: 15px; }
 
-        @keyframes slideIn { from { transform: translateX(-120%); } to { transform: translateX(0); } }
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        input, select { padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s; width: 100%; box-sizing: border-box; }
+        input:focus { border-color: var(--accent); }
+
+        /* Table */
+        .table-wrapper { overflow-x: auto; border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; padding: 15px; text-align: right; color: #64748b; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        .badge-blue { background: #dbeafe; color: #1e40af; padding: 5px 12px; border-radius: 6px; font-weight: bold; }
+
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; justify-content: center; text-decoration: none; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 450px; box-shadow: 0 20px 25px rgba(0,0,0,0.2); }
+
         @media (max-width: 768px) { .sidebar { right: calc(var(--sidebar-width) * -1); } .sidebar.active { right: 0; } .main-content { margin-right: 0; } }
     </style>
 </head>
 <body>
 
-<div id="toastContainer"></div>
-
 <button class="sidebar-toggle" id="toggleSidebar"><i class="fas fa-bars"></i></button>
 
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header" style="padding: 20px; text-align: center;">
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
         <h2><i class="fas fa-user-graduate"></i> شؤون الطلاب</h2>
     </div>
-    <div class="sidebar-nav">
-        <div class="nav-label" style="padding: 10px 20px; opacity: 0.6; font-size: 0.8rem;">الأساسيات</div>
-        <a href="/admin/dashboard" style="display: block; color: white; padding: 12px 20px; text-decoration: none;"><i class="fas fa-home"></i> الرئيسية</a>
-        <a href="#section-add-student" style="display: block; color: white; padding: 12px 20px; text-decoration: none;"><i class="fas fa-plus-circle"></i> تسجيل طالب</a>
-        <a href="#section-list" style="display: block; color: white; padding: 12px 20px; text-decoration: none;"><i class="fas fa-users"></i> قائمة الطلاب</a>
-    </div>
-</div>
+    <nav class="sidebar-nav">
+        <a href="/admin/dashboard"><i class="fas fa-home"></i> الرئيسية</a>
+        <a href="#section-add"><i class="fas fa-plus-circle"></i> تسجيل طالب</a>
+        <a href="#section-list"><i class="fas fa-users"></i> قائمة الطلاب</a>
+    </nav>
+</aside>
 
-<div class="main-content" id="main-content">
-    <header class="page-header" style="margin-bottom: 30px;">
+<main class="main-content" id="main-content">
+    <header style="margin-bottom: 30px; margin-top: 20px;">
         <h1><i class="fas fa-users-cog"></i> إدارة سجلات الطلاب</h1>
     </header>
 
-    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-        <div class="card" style="padding: 20px; text-align: center; border-bottom: 4px solid var(--accent); background: white; border-radius: 12px;">
-            <i class="fas fa-user-graduate fa-2x" style="color: var(--accent); margin-bottom: 10px;"></i>
-            <h3><%= eleves.length %></h3>
-            <p style="color: #64748b;">إجمالي الطلاب</p>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-user-graduate" style="color: var(--accent); font-size: 2rem;"></i>
+            <div>
+                <h3><%= eleves.length %></h3>
+                <p style="color: #64748b; margin: 0;">إجمالي الطلاب</p>
+            </div>
         </div>
-        <div class="card" style="padding: 20px; text-align: center; border-bottom: 4px solid var(--success); background: white; border-radius: 12px;">
-            <i class="fas fa-school fa-2x" style="color: var(--success); margin-bottom: 10px;"></i>
-            <h3><%= classes.length %></h3>
-            <p style="color: #64748b;">عدد الصفوف</p>
+        <div class="stat-card" style="border-bottom-color: var(--success);">
+            <i class="fas fa-school" style="color: var(--success); font-size: 2rem;"></i>
+            <div>
+                <h3><%= classes.length %></h3>
+                <p style="color: #64748b; margin: 0;">عدد الصفوف</p>
+            </div>
+        </div>
+        <div class="stat-card" style="border-bottom-color: var(--warning);">
+            <i class="fas fa-layer-group" style="color: var(--warning); font-size: 2rem;"></i>
+            <div>
+                <% let totalSections = 0; classes.forEach(c => totalSections += parseInt(c.num_sections)); %>
+                <h3><%= totalSections %></h3>
+                <p style="color: #64748b; margin: 0;">إجمالي الشعب</p>
+            </div>
+        </div>
+        <div class="stat-card" style="border-bottom-color: var(--danger);">
+            <i class="fas fa-check-circle" style="color: var(--danger); font-size: 2rem;"></i>
+            <div>
+                <h3><%= classes.length %></h3>
+                <p style="color: #64748b; margin: 0;">صفوف نشطة</p>
+            </div>
         </div>
     </div>
 
-    <section class="card" id="section-add-student" style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <h3 style="margin-bottom: 20px;"><i class="fas fa-plus-circle" style="color: var(--success);"></i> تسجيل طالب جديد</h3>
-        <form action="/admin/eleves/ajouter" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: end;">
-            <div class="input-group">
-                <label style="display: block; margin-bottom: 8px;">اسم الطالب</label>
-                <input type="text" name="nom" placeholder="الاسم الكامل" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <section class="card" id="section-add">
+        <div class="card-title"><i class="fas fa-user-plus" style="color: var(--success);"></i> تسجيل طالب جديد</div>
+        <form action="/admin/eleves/ajouter" method="POST" id="addStudentForm">
+            <div class="input-grid">
+                <div>
+                    <label style="display:block; margin-bottom:8px;">اسم الطالب</label>
+                    <input type="text" name="nom" placeholder="الاسم الكامل" required>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px;">هاتف ولي الأمر</label>
+                    <input type="tel" name="parent_phone" placeholder="9xxxxxxx" required>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px;">الصف والشعبة</label>
+                    <select name="class_info" required>
+                        <option value="" disabled selected>اختر الصف - الشعبة</option>
+                        <% classes.forEach(c => { %>
+                            <% for(let i=1; i <= c.num_sections; i++) { %>
+                                <option value="<%= c.class_name %>|<%= i %>"><%= c.class_name %> - شعبة <%= i %></option>
+                            <% } %>
+                        <% }) %>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success" id="submitBtn"><i class="fas fa-save"></i> حفظ الطالب</button>
             </div>
-            <div class="input-group">
-                <label style="display: block; margin-bottom: 8px;">هاتف ولي الأمر</label>
-                <input type="tel" name="parent_phone" placeholder="XXXXXXXX" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            </div>
-            <div class="input-group">
-                <label style="display: block; margin-bottom: 8px;">الصف والشعبة</label>
-                <select name="class_info" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <option value="" disabled selected>اختر الوجهة</option>
-                    <% classes.forEach(c => { %>
-                        <% for(let i=1; i <= c.num_sections; i++) { %>
-                            <option value="<%= c.class_name %>|<%= i %>"><%= c.class_name %> - شعبة <%= i %></option>
-                        <% } %>
-                    <% }) %>
-                </select>
-            </div>
-            <button type="submit" style="background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                <i class="fas fa-save"></i> حفظ الطالب
-            </button>
         </form>
     </section>
 
-    <section class="card" id="section-list" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-            <h3><i class="fas fa-list-ul"></i> سجل الطلاب المقيّدين</h3>
-            <div style="display: flex; gap: 10px; flex: 1; max-width: 500px;">
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="ابحث بالاسم أو الهاتف..." style="flex: 2; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <select id="classFilter" onchange="filterTable()" style="flex: 1; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <option value="">كل الصفوف</option>
-                    <% classes.forEach(c => { %><option value="<%= c.class_name %>"><%= c.class_name %></option><% }) %>
-                </select>
-            </div>
+    <section class="card" id="section-list">
+        <div class="card-title"><i class="fas fa-list-ul" style="color: var(--accent);"></i> سجل الطلاب المقيّدين</div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="ابحث بالاسم أو الهاتف..." style="flex: 2;">
+            <select id="classFilter" onchange="filterTable()" style="flex: 1;">
+                <option value="">كل الصفوف</option>
+                <% classes.forEach(c => { %><option value="<%= c.class_name %>"><%= c.class_name %></option><% }) %>
+            </select>
         </div>
 
-        <div class="table-responsive">
-            <table id="studentsTable" style="width: 100%; border-collapse: collapse;">
-                <thead style="background: #f1f5f9; text-align: right;">
+        <div class="table-wrapper">
+            <table id="studentsTable">
+                <thead>
                     <tr>
-                        <th style="padding: 15px;">اسم الطالب</th>
-                        <th style="padding: 15px;">الصف والشعبة</th>
-                        <th style="padding: 15px;">ولي الأمر</th>
-                        <th style="padding: 15px;">الإجراءات</th>
+                        <th>الاسم</th>
+                        <th>الصف</th>
+                        <th>الشعبة</th>
+                        <th>ولي الأمر</th>
+                        <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% eleves.forEach(st => { %>
-                    <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;">
-                        <td style="padding: 15px; font-weight: 500;"><%= st.nom %></td>
-                        <td style="padding: 15px;">
-                            <span class="badge-blue"><%= st.classe %></span>
-                            <span style="color: #64748b; margin-right: 5px;">ش <%= st.section %></span>
+                    <tr>
+                        <td style="font-weight: 600;"><%= st.nom %></td>
+                        <td><span class="badge-blue"><%= st.classe %></span></td>
+                        <td><span style="font-weight: bold; color: var(--accent);">شعبة <%= st.section %></span></td>
+                        <td>
+                            <a href="tel:<%= st.parent_phone %>" style="text-decoration:none; color:var(--success); font-weight: bold;">
+                                <i class="fas fa-phone-alt"></i> <%= st.parent_phone %>
+                            </a>
                         </td>
-                        <td style="padding: 15px;">
-                            <a href="tel:<%= st.parent_phone %>" class="phone-tag"><i class="fas fa-phone-alt"></i> <%= st.parent_phone %></a>
-                        </td>
-                        <td style="padding: 15px;">
-                            <button onclick="openEditModal('<%= st.id %>', '<%= st.nom %>', '<%= st.parent_phone %>')" class="btn-action btn-edit" title="تعديل"><i class="fas fa-edit"></i></button>
-                            <a href="/admin/eleves/supprimer/<%= st.id %>" class="btn-action btn-delete" onclick="return confirm('حذف الطالب؟')" title="حذف"><i class="fas fa-trash"></i></a>
+                        <td>
+                            <div style="display:flex; gap:8px">
+                                <button onclick="openEditModal('<%= st.id %>', '<%= st.nom %>', '<%= st.parent_phone %>')" class="btn btn-primary" style="padding: 5px 12px;"><i class="fas fa-edit"></i></button>
+                                <button onclick="confirmDelete('/admin/eleves/supprimer/<%= st.id %>')" class="btn btn-danger" style="padding: 5px 12px;"><i class="fas fa-trash"></i></button>
+                            </div>
                         </td>
                     </tr>
                     <% }) %>
@@ -152,34 +185,34 @@
             </table>
         </div>
     </section>
-</div>
+</main>
 
 <div class="modal" id="editModal">
     <div class="modal-content">
         <h3 style="margin-bottom: 20px;"><i class="fas fa-user-edit"></i> تعديل بيانات الطالب</h3>
         <form action="/admin/eleves/modifier" method="POST">
             <input type="hidden" name="id" id="edit_id">
-            <div class="input-group" style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px;">الاسم</label>
-                <input type="text" name="nom" id="edit_nom" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            <div style="margin-bottom: 15px;">
+                <label>الاسم</label>
+                <input type="text" name="nom" id="edit_nom" required>
             </div>
-            <div class="input-group" style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px;">هاتف ولي الأمر</label>
-                <input type="tel" name="parent_phone" id="edit_phone" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            <div style="margin-bottom: 15px;">
+                <label>الهاتف</label>
+                <input type="tel" name="parent_phone" id="edit_phone" required>
             </div>
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px;">الصف والشعبة</label>
-                <select name="class_info" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            <div style="margin-bottom: 20px;">
+                <label>الصف والشعبة</label>
+                <select name="class_info" required>
                     <% classes.forEach(c => { %>
                         <% for(let i=1; i <= c.num_sections; i++) { %>
-                            <option value="<%= c.class_name %>|<%= i %>"><%= c.class_name %> - <%= i %></option>
+                            <option value="<%= c.class_name %>|<%= i %>"><%= c.class_name %> - شعبة <%= i %></option>
                         <% } %>
                     <% }) %>
                 </select>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button type="submit" style="flex: 1; background: var(--success); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">تحديث</button>
-                <button type="button" onclick="closeModal()" style="flex: 1; background: #94a3b8; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">إلغاء</button>
+                <button type="submit" class="btn btn-success" style="flex: 1;">تحديث</button>
+                <button type="button" onclick="closeModal()" class="btn btn-danger" style="flex: 1; background: #94a3b8;">إلغاء</button>
             </div>
         </form>
     </div>
@@ -189,20 +222,33 @@
     // --- UI Controls ---
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.getElementById('main-content');
-    document.getElementById('toggleSidebar').onclick = () => {
-        if (window.innerWidth <= 768) sidebar.classList.toggle('active');
-        else { sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('expanded'); }
-    };
+    const toggleBtn = document.getElementById('toggleSidebar');
 
-    // --- Search Logic ---
+    if(toggleBtn) {
+        toggleBtn.onclick = () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            }
+        };
+    }
+
+    // --- Search & Filter ---
     function filterTable() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const classVal = document.getElementById('classFilter').value;
+        const classFilter = document.getElementById('classFilter').value;
         const rows = document.querySelectorAll('#studentsTable tbody tr');
+
         rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            const matches = text.includes(query) && (classVal === "" || row.innerHTML.includes(classVal));
-            row.style.display = matches ? "" : "none";
+            const name = row.cells[0].innerText.toLowerCase();
+            const phone = row.cells[3].innerText.toLowerCase();
+            const className = row.cells[1].innerText;
+            
+            const matchesSearch = name.includes(query) || phone.includes(query);
+            const matchesClass = classFilter === "" || className.includes(classFilter);
+            row.style.display = (matchesSearch && matchesClass) ? "" : "none";
         });
     }
 
@@ -215,19 +261,43 @@
     }
     function closeModal() { document.getElementById('editModal').style.display = 'none'; }
 
-    // --- Toast Notifications ---
-    function showToast(msg, type = 'success') {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':'fa-exclamation-triangle'}"></i><span>${msg}</span>`;
-        container.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
+    // --- Notifications & Confirmations ---
+    function confirmDelete(url) {
+        Swal.fire({
+            title: 'هل أنت متأكد؟',
+            text: "لن تتمكن من استعادة بيانات الطالب بعد الحذف!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'نعم، احذف السجل',
+            cancelButtonText: 'إلغاء'
+        }).then((result) => {
+            if (result.isConfirmed) window.location.href = url;
+        });
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.has('success')) showToast('تمت العملية بنجاح');
-    if(urlParams.has('error')) showToast('حدث خطأ في معالجة البيانات', 'error');
+    // إدارة رسائل النجاح والخطأ من الرابط
+    window.onload = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            Swal.fire({ icon: 'success', title: 'تمت العملية بنجاح', timer: 2000, showConfirmButton: false });
+            // تنظيف الرابط بعد العرض
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (urlParams.has('error')) {
+            Swal.fire({ icon: 'error', title: 'فشلت العملية', text: 'يرجى التأكد من صحة البيانات أو مراجعة السيرفر' });
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    };
+
+    // منع الإرسال المتكرر وتجمد الصفحة
+    const addForm = document.getElementById('addStudentForm');
+    if(addForm) {
+        addForm.onsubmit = function() {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            return true;
+        };
+    }
 </script>
 </body>
 </html>

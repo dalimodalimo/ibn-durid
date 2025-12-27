@@ -21,7 +21,7 @@
             --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --header-height: 75px;
+            --header-height: 90px;
             --radius-xl: 24px;
             --radius-lg: 16px;
             --radius-md: 12px;
@@ -35,81 +35,106 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 15px; display: flex; flex-direction: column; gap: 20px; }
         .hidden { display: none !important; }
 
-        /* HEADER */
+        /* HEADER - Nom en premier, élégant */
         .edu-header {
             background: var(--card-bg);
             height: var(--header-height);
             position: sticky; top: 0; z-index: 1000;
             border-bottom: 2px solid #f1f5f9;
             display: flex; align-items: center; padding: 0 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
-        .header-container { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .teacher-profile { display: flex; align-items: center; gap: 15px; }
-        .profile-icon { width: 45px; height: 45px; background: #f8fafc; color: var(--primary); border: 1px solid #e2e8f0; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
-        .system-tag { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: -2px; }
-        .profile-info h1 { font-size: 1.15rem; color: #0f172a; margin: 0; font-weight: 800; }
+        .header-container {
+            width: 100%; max-width: 1200px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .teacher-profile {
+            display: flex; align-items: center; gap: 18px;
+        }
+        .profile-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            color: var(--primary);
+            border: 3px solid var(--primary-light);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 6px 16px rgba(59,130,246,0.2);
+        }
+        .profile-info {
+            display: flex; flex-direction: column;
+        }
+        .profile-info h1 {
+            font-size: 1.5rem; color: var(--text-main); margin: 0; font-weight: 900; line-height: 1.2;
+        }
+        .system-tag {
+            font-size: 0.85rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.6px;
+        }
 
-        .header-tools { display: flex; align-items: center; gap: 15px; }
-        .star-counter { 
-            background: var(--gold-light); border: 1px solid #fef3c7; color: #b45309; 
-            padding: 6px 14px; border-radius: 10px; display: flex; align-items: center; gap: 8px; 
-            font-weight: 800; position: relative; overflow: hidden; 
+        .header-tools { display: flex; align-items: center; gap: 18px; }
+        .star-counter {
+            background: var(--gold-light); border: 1px solid #fde68a; color: #b45309;
+            padding: 10px 18px; border-radius: 14px; display: flex; align-items: center; gap: 10px;
+            font-weight: 800; font-size: 1.1rem; position: relative; overflow: hidden;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.25);
         }
-        .star-counter i { color: var(--warning); filter: drop-shadow(0 0 4px rgba(255,215,0,0.4)); animation: shine 2s infinite; }
+        .star-counter i { color: var(--warning); filter: drop-shadow(0 0 6px rgba(255,215,0,0.5)); animation: shine 2s infinite; }
 
         .notif-box {
-            position: relative; width: 40px; height: 40px; border-radius: 10px;
+            position: relative; width: 48px; height: 48px; border-radius: 14px;
             background: #f1f5f9; color: #475569; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: var(--transition);
         }
         .notif-box:hover { background: #e2e8f0; color: var(--primary); }
         .notif-box.urgent { background: #fef2f2; color: var(--accent); animation: pulse 2s infinite; }
-        #urgent-dot { position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; background: var(--accent); border: 2px solid #fff; border-radius: 50%; }
+        #urgent-dot { position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; background: var(--accent); border: 3px solid #fff; border-radius: 50%; }
 
-        .vertical-divider { width: 1px; height: 30px; background: #e2e8f0; margin: 0 5px; }
-        .exit-btn { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.9rem; padding: 8px 12px; border-radius: 8px; transition: var(--transition); }
-        .exit-btn:hover { background: #fff1f2; color: #e11d48; }
+        .vertical-divider { width: 1px; height: 40px; background: #e2e8f0; }
+        .exit-btn {
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+            color: var(--text-muted); font-weight: 700; font-size: 1rem;
+            padding: 10px 18px; border-radius: 12px; transition: var(--transition);
+        }
+        .exit-btn:hover { background: #fef2f2; color: #dc2626; }
 
         /* PANELS */
-        .panel { background: var(--card-bg); border-radius: var(--radius-xl); padding: 20px; box-shadow: var(--shadow); }
+        .panel { background: var(--card-bg); border-radius: var(--radius-xl); padding: 24px; box-shadow: var(--shadow); }
 
-        /* لوحة التميز والإنجازات - قابلة للطي */
+        /* لوحة التميز - قابلة للطي */
         .excellence-panel {
             background: linear-gradient(135deg, #fffbeb 0%, #fefce8 100%);
             border-radius: var(--radius-xl);
-            padding: 24px;
+            padding: 28px;
             box-shadow: var(--shadow-soft);
             border: 1px solid #fde68a;
             position: relative;
             overflow: hidden;
         }
         .excellence-panel::before {
-            content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px;
-            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            content: ''; position: absolute; top: -60px; right: -60px; width: 220px; height: 220px;
+            background: radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%);
             pointer-events: none;
         }
         .excellence-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
-            cursor: pointer;
-            user-select: none;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
+            cursor: pointer; user-select: none;
         }
         .excellence-title {
-            font-size: 1.3rem; font-weight: 900; color: #92400e;
-            display: flex; align-items: center; gap: 12px;
+            font-size: 1.4rem; font-weight: 900; color: #92400e;
+            display: flex; align-items: center; gap: 14px;
         }
-        .excellence-title i { color: var(--gold); font-size: 1.8rem; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); animation: shine 3s infinite; }
-        #excellence-chevron { transition: transform 0.4s ease; }
+        .excellence-title i { color: var(--gold); font-size: 2rem; filter: drop-shadow(0 0 10px rgba(255,215,0,0.4)); animation: shine 3s infinite; }
+        #excellence-chevron { transition: transform 0.4s ease; font-size: 1.2rem; color: #92400e; }
         .level-badge {
             background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white; padding: 8px 16px; border-radius: 30px; font-weight: 800; font-size: 0.9rem;
-            box-shadow: 0 4px 10px rgba(245,158,11,0.3);
+            color: white; padding: 10px 20px; border-radius: 30px; font-weight: 800; font-size: 1rem;
+            box-shadow: 0 6px 14px rgba(245,158,11,0.3);
         }
         .excellence-content {
             transition: max-height 0.6s ease, opacity 0.5s ease, padding 0.4s ease;
             overflow: hidden;
-            max-height: 800px;
+            max-height: 1000px;
         }
         .excellence-content.collapsed {
             max-height: 0;
@@ -118,114 +143,158 @@
             padding-bottom: 0;
         }
         .stars-display {
-            text-align: center; font-size: 2.5rem; font-weight: 900; color: var(--gold);
-            margin: 15px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5);
+            text-align: center; font-size: 3rem; font-weight: 900; color: var(--gold);
+            margin: 20px 0; text-shadow: 0 0 12px rgba(255,215,0,0.6);
         }
         .stars-display i { animation: twinkle 1.5s infinite alternate; }
         .history-list {
-            max-height: 300px; overflow-y: auto; margin-top: 15px;
+            max-height: 320px; overflow-y: auto; margin-top: 20px;
         }
         .history-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px; background: white; border-radius: 12px; margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-right: 4px solid var(--gold);
+            padding: 16px; background: white; border-radius: 14px; margin-bottom: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06); border-right: 5px solid var(--gold);
         }
-        .history-item .reason { font-weight: 700; color: #78350f; }
-        .history-item .date { font-size: 0.8rem; color: var(--text-muted); }
-        .history-item .points { color: var(--success); font-weight: 900; font-size: 1.1rem; }
+        .history-item .reason { font-weight: 700; color: #78350f; font-size: 1.05rem; }
+        .history-item .date { font-size: 0.85rem; color: var(--text-muted); }
+        .history-item .points { color: var(--success); font-weight: 900; font-size: 1.3rem; }
 
-        @keyframes shine { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes shine { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
         @keyframes twinkle { from { opacity: 0.7; } to { opacity: 1; } }
 
         /* STATS GRID */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         .stat-card {
-            background: var(--card-bg); padding: 15px; border-radius: var(--radius-lg);
-            box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px;
-            border-bottom: 4px solid var(--primary); transition: var(--transition);
+            background: var(--card-bg); padding: 20px; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px;
+            border-bottom: 5px solid var(--primary);
         }
-        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #eff6ff; color: var(--primary); }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #eff6ff; color: var(--primary); font-size: 1.4rem; }
 
         /* DAYS SLIDER */
-        .days-slider-container { overflow-x: auto; scrollbar-width: none; padding: 10px 0; }
+        .days-slider-container { overflow-x: auto; scrollbar-width: none; padding: 12px 0; }
         .days-slider-container::-webkit-scrollbar { display: none; }
-        .days-slider { display: flex; gap: 12px; justify-content: center; }
+        .days-slider { display: flex; gap: 14px; justify-content: center; }
         .day-tab {
-            min-width: 90px; padding: 10px 16px; background: #f1f5f9; color: var(--text-muted);
-            border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
-            transition: var(--transition); white-space: nowrap; text-align: center; flex-shrink: 0;
+            min-width: 100px; padding: 12px 20px; background: #f1f5f9; color: var(--text-muted);
+            border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: var(--transition); text-align: center; flex-shrink: 0;
         }
-        .day-tab.active { background: var(--primary); color: white; }
+        .day-tab.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(30,58,138,0.3); }
         .day-tab:hover:not(.active) { background: #e2e8f0; }
 
-        /* SCHEDULE & ATTENDANCE */
-        .banner-container { background: #e2e8f0; padding: 20px 10px; border-radius: 25px; overflow: hidden; }
-        .banner-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 5px; scrollbar-width: none; }
+        /* SCHEDULE */
+        .banner-container { background: #e2e8f0; padding: 24px 12px; border-radius: 28px; overflow: hidden; }
+        .banner-scroll { display: flex; gap: 18px; overflow-x: auto; padding: 8px; scrollbar-width: none; }
         .period-card {
-            min-width: 130px; background: var(--card-bg); border-radius: 18px; padding: 15px; text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex-shrink: 0; border: 1px solid #f1f5f9;
-            display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+            min-width: 140px; background: var(--card-bg); border-radius: 20px; padding: 18px; text-align: center;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08); flex-shrink: 0; border: 1px solid #f1f5f9;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
             transition: var(--transition);
         }
-        .period-card.active-now { border: 2px solid var(--accent); background: #fff1f2; transform: scale(1.02); }
-        .p-num { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; }
-        .session-title { font-size: 1.2rem; color: var(--primary); min-height: 1.5em; font-weight: 700; }
-        .p-time { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 4px; justify-content: center; }
-        .live-badge { font-size: 0.7rem; background: #fef2f2; color: var(--accent); padding: 4px 10px; border-radius: 20px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
-        .live-badge i { font-size: 0.5rem; animation: blink 1s infinite; }
-
-        .active-class-banner {
-            background: #f0f7ff; padding: 15px 20px; border-radius: var(--radius-md);
-            border-right: 5px solid var(--primary); display: flex; align-items: center; gap: 12px;
-            margin-bottom: 20px;
+        .period-card.active-now { border: 3px solid var(--accent); background: #fff1f2; transform: scale(1.05); box-shadow: 0 8px 20px rgba(239,68,68,0.2); }
+        .period-card.substitute {
+            border: 3px solid #f59e0b !important;
+            background: #fffbeb !important;
+            box-shadow: 0 8px 20px rgba(245,158,11,0.4);
         }
-        .student-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+        .sub-badge {
+            background: #f59e0b; color: white; padding: 6px 12px; border-radius: 10px;
+            font-size: 0.8rem; font-weight: 800;
+        }
+        .p-num { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; }
+        .session-title { font-size: 1.3rem; color: var(--primary); font-weight: 800; }
+        .p-time { font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; justify-content: center; }
+        .live-badge { font-size: 0.8rem; background: #fef2f2; color: var(--accent); padding: 6px 12px; border-radius: 20px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .live-badge i { font-size: 0.6rem; animation: blink 1s infinite; }
+
+        /* ATTENDANCE */
+        .active-class-banner {
+            background: #f0f7ff; padding: 18px 24px; border-radius: var(--radius-md);
+            border-right: 6px solid var(--primary); display: flex; align-items: center; gap: 14px;
+            margin-bottom: 24px; box-shadow: 0 4px 12px rgba(30,58,138,0.1);
+        }
+        .student-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 24px; }
         .student-card {
-            background: var(--card-bg); padding: 14px 18px; border-radius: var(--radius-md);
+            background: var(--card-bg); padding: 16px 20px; border-radius: var(--radius-md);
             display: flex; justify-content: space-between; align-items: center;
             border: 1px solid #f1f5f9; transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .student-card:hover { border-color: #cbd5e1; background: #f8fafc; }
+        .student-card:hover { border-color: var(--primary-light); background: #f0f9ff; }
 
         /* BUTTONS */
         .btn-submit {
-            width: 100%; background: var(--primary); color: white; border: none; padding: 15px;
-            border-radius: 15px; font-weight: 700; cursor: pointer; transition: var(--transition);
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 4px 12px rgba(30,58,138,0.2);
+            width: 100%; background: var(--primary); color: white; border: none; padding: 18px;
+            border-radius: 16px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            box-shadow: 0 6px 16px rgba(30,58,138,0.3);
+            transition: var(--transition);
         }
+        .btn-submit:hover { background: var(--primary-light); transform: translateY(-2px); }
         .btn-submit::before { content: '\f0c7'; font-family: "Font Awesome 6 Free"; font-weight: 900; }
+
+        /* تأمين الحساب - Champ mot de passe centré et plus grand */
+        #secure-content input[type="password"] {
+            width: 100%;
+            padding: 22px 20px 22px 60px !important;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            font-size: 1.3rem !important;
+            text-align: center;
+            letter-spacing: 1.2px;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
+        }
+        #secure-content input[type="password"]::placeholder {
+            color: #94a3b8;
+            opacity: 0.8;
+        }
+        #secure-content input[type="password"]:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(30,58,138,0.15);
+        }
+        #secure-content .fas.fa-key {
+            position: absolute; left: 20px; top: 24px; color: var(--primary); font-size: 1.5rem;
+        }
+        #secure-content button[type="button"] {
+            position: absolute; right: 20px; top: 20px; background: none; border: none; cursor: pointer; font-size: 1.5rem; color: var(--text-muted);
+        }
 
         /* BOTTOM NAV */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; background: white;
-            display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); border-top: 1px solid #edf2f7;
+            display: flex; justify-content: space-around; padding: 14px 0; z-index: 1000;
+            box-shadow: 0 -6px 20px rgba(0,0,0,0.08); border-top: 1px solid #edf2f7;
         }
-        .nav-item { text-decoration: none; color: #94a3b8; text-align: center; font-size: 0.7rem; font-weight: 600; }
-        .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        .nav-item { text-decoration: none; color: #94a3b8; text-align: center; font-size: 0.8rem; font-weight: 600; }
+        .nav-item i { font-size: 1.5rem; display: block; margin-bottom: 4px; }
         .nav-item.active { color: var(--primary); }
 
-        @keyframes blink { 50% { opacity: 0.3; } }
-        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes blink { 50% { opacity: 0.4; } }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 
-        /* Animation nouvelle étoile */
+        /* Animation étoiles */
         @keyframes starPop {
             0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            60% { transform: scale(1.4) rotate(180deg); opacity: 1; }
+            60% { transform: scale(1.5) rotate(180deg); opacity: 1; }
             100% { transform: scale(1) rotate(360deg); opacity: 1; }
         }
         .new-star {
-            position: absolute; font-size: 1.6rem; color: var(--gold); pointer-events: none;
-            animation: starPop 0.9s ease-out forwards;
-            text-shadow: 0 0 10px rgba(255,215,0,0.8);
+            position: absolute; font-size: 1.8rem; color: var(--gold); pointer-events: none;
+            animation: starPop 1s ease-out forwards;
+            text-shadow: 0 0 12px rgba(255,215,0,0.9);
         }
 
         @media (max-width: 600px) {
-            .exit-btn span, .system-tag { display: none; }
-            .edu-header { padding: 0 15px; }
-            .teacher-profile { gap: 10px; }
-            .profile-info h1 { font-size: 1rem; }
+            .edu-header { height: 80px; padding: 0 15px; }
+            .profile-icon { width: 50px; height: 50px; font-size: 1.6rem; }
+            .profile-info h1 { font-size: 1.2rem; }
+            .system-tag { font-size: 0.75rem; }
+            .star-counter { padding: 8px 14px; font-size: 1rem; }
+            .notif-box { width: 42px; height: 42px; }
+            .exit-btn span { display: none; }
+            #secure-content input[type="password"] { padding: 20px 18px 20px 55px !important; font-size: 1.2rem !important; }
         }
     </style>
 </head>
@@ -237,8 +306,8 @@
             <div class="teacher-profile">
                 <div class="profile-icon"><i class="fas fa-user-tie"></i></div>
                 <div class="profile-info">
-                    <span class="system-tag">بوابة المعلم الذكية</span>
                     <h1>أ/ <%= prof.nom %></h1>
+                    <span class="system-tag">بوابة المعلم الذكية</span>
                 </div>
             </div>
 
@@ -263,35 +332,38 @@
 
     <div class="container">
 
-        <!-- إشعارات التقييم والحصص الاحتياطية -->
+        <!-- طلبات التقييم والحصص الاحتياطية -->
         <% if (evaluation_requests && evaluation_requests.length > 0) { %>
-            <div style="margin: 0 15px 20px;">
+            <div style="margin-bottom: 20px;">
                 <% evaluation_requests.forEach(req => { %>
-                    <div style="background:#fdf2f8; border-right:6px solid #db2777; padding:15px; border-radius:15px; margin-bottom:10px; display:flex; align-items:center; gap:12px;">
-                        <i class="fas fa-star" style="color:#db2777; font-size:1.2rem;"></i>
+                    <div style="background:#fdf2f8; border-right:6px solid #db2777; padding:18px; border-radius:16px; margin-bottom:12px; display:flex; align-items:center; gap:14px; box-shadow:0 4px 12px rgba(219,39,119,0.1);">
+                        <i class="fas fa-star" style="color:#db2777; font-size:1.4rem;"></i>
                         <div style="flex:1;">
-                            <div style="font-weight:800; color:#9d174d;">طلب تقييم أكاديمي</div>
-                            <div>الطالب: <strong><%= req.student_name %></strong> - <%= req.classe %></div>
+                            <div style="font-weight:800; color:#9d174d; font-size:1.1rem;">طلب تقييم أكاديمي</div>
+                            <div style="margin-top:4px;">الطالب: <strong><%= req.student_name %></strong> - <%= req.classe %></div>
                         </div>
-                        <a href="/teacher/evaluate/<%= req.id %>/<%= req.eleve_id %>" style="background:#db2777; color:white; padding:8px 15px; border-radius:8px; text-decoration:none;">تقييم الآن</a>
+                        <a href="/teacher/evaluate/<%= req.id %>/<%= req.eleve_id %>" style="background:#db2777; color:white; padding:10px 18px; border-radius:10px; text-decoration:none; font-weight:700;">تقييم الآن</a>
                     </div>
                 <% }) %>
             </div>
         <% } %>
 
         <% if (substitute_logs && substitute_logs.some(s => s.status === 'pending')) { %>
-            <div style="margin: 0 15px 20px;">
+            <div style="margin-bottom: 20px;">
                 <% substitute_logs.filter(s => s.status === 'pending').forEach(sub => { %>
-                    <div style="background:#fffbeb; border-right:6px solid #f59e0b; padding:15px; border-radius:15px; display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <i class="fas fa-clock" style="color:#f59e0b; font-size:1.5rem;"></i>
-                            <div><strong>حصة احتياط</strong><br>الحصة <%= sub.periode %> | الفصل <%= sub.classe %>-<%= sub.section %></div>
+                    <div style="background:#fffbeb; border-right:6px solid #f59e0b; padding:18px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 12px rgba(245,158,11,0.15);">
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <i class="fas fa-clock" style="color:#f59e0b; font-size:1.8rem;"></i>
+                            <div>
+                                <strong style="font-size:1.1rem;">حصة احتياط</strong><br>
+                                الحصة <%= sub.periode %> | الفصل <%= sub.classe %>-<%= sub.section %>
+                            </div>
                         </div>
-                        <form action="/teacher/substitute/respond" method="POST">
+                        <form action="/teacher/substitute/respond" method="POST" class="accept-sub-form">
                             <input type="hidden" name="sub_id" value="<%= sub.id %>">
                             <input type="hidden" name="action" value="accept">
                             <input type="hidden" name="teacher_id" value="<%= prof.id %>">
-                            <button type="submit" style="background:#22c55e; color:white; border:none; padding:8px 15px; border-radius:8px;">قبول الحصة</button>
+                            <button type="submit" style="background:#22c55e; color:white; border:none; padding:12px 20px; border-radius:12px; font-weight:800; font-size:1rem;">قبول الحصة</button>
                         </form>
                     </div>
                 <% }) %>
@@ -301,27 +373,27 @@
         <!-- الإعلانات -->
         <div class="announcements-list panel" id="ann-container">
             <% announcements.forEach(ann => { %>
-                <% let cardStyle = ann.priority === 'urgent' ? 'border-right:5px solid #ef4444; background:#fef2f2;' : ann.priority === 'high' ? 'border-right:5px solid #f59e0b; background:#fffbeb;' : 'border-right:5px solid #3b82f6; background:#f0f9ff;'; %>
-                <div class="announcement-card" id="teacher-ann-<%= ann.id %>" style="<%= cardStyle %> padding:20px; margin-bottom:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); position:relative;">
+                <% let cardStyle = ann.priority === 'urgent' ? 'border-right:6px solid #ef4444; background:#fef2f2;' : ann.priority === 'high' ? 'border-right:6px solid #f59e0b; background:#fffbeb;' : 'border-right:6px solid #3b82f6; background:#f0f9ff;'; %>
+                <div class="announcement-card" id="teacher-ann-<%= ann.id %>" style="<%= cardStyle %> padding:24px; margin-bottom:18px; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,0.08); position:relative;">
                     <div style="display:flex; justify-content:space-between;">
                         <div style="flex:1;">
-                            <h4 style="margin:0 0 10px; color:#1e293b;"><%= ann.title %></h4>
-                            <p style="margin:0; color:#475569;"><%= ann.content %></p>
+                            <h4 style="margin:0 0 12px; color:#1e293b; font-size:1.2rem; font-weight:800;"><%= ann.title %></h4>
+                            <p style="margin:0; color:#475569; font-size:1rem;"><%= ann.content %></p>
                         </div>
-                        <button onclick="hideAnnouncement('<%= ann.id %>')" style="background:none; border:none; color:#64748b; cursor:pointer;">
+                        <button onclick="hideAnnouncement('<%= ann.id %>')" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:1.4rem;">
                             <i class="fas fa-times-circle"></i>
                         </button>
                     </div>
-                    <div style="margin-top:15px; padding-top:12px; border-top:1px solid rgba(0,0,0,0.05); font-size:0.8rem; display:flex; justify-content:space-between;">
+                    <div style="margin-top:18px; padding-top:14px; border-top:1px solid rgba(0,0,0,0.08); font-size:0.9rem; display:flex; justify-content:space-between; color:#64748b;">
                         <span><%= ann.priority === 'urgent' ? 'عاجل' : ann.priority === 'high' ? 'مهم' : 'عادي' %></span>
                         <span><%= ann.date %></span>
                     </div>
                 </div>
             <% }) %>
             <% if (announcements.length === 0) { %>
-                <div style="text-align:center; padding:30px; color:#94a3b8;">
-                    <i class="fas fa-check-double" style="font-size:2rem;"></i>
-                    <p>لا توجد إعلانات جديدة</p>
+                <div style="text-align:center; padding:50px; color:#94a3b8;">
+                    <i class="fas fa-check-double" style="font-size:3rem; margin-bottom:16px;"></i>
+                    <p style="font-size:1.1rem;">لا توجد إعلانات جديدة</p>
                 </div>
             <% } %>
         </div>
@@ -330,22 +402,28 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-tasks"></i></div>
-                <div><h3 id="todo-count">0</h3><p>مهام</p></div>
+                <div>
+                    <h3 id="todo-count" style="font-size:1.8rem; margin:0;">0</h3>
+                    <p style="margin:4px 0 0; color:var(--text-muted);">مهام معلقة</p>
+                </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon" style="background:#ecfdf5; color:var(--success);"><i class="fas fa-check-double"></i></div>
-                <div><h3 id="marked-sessions">0</h3><p>حصص مرصودة</p></div>
+                <div class="stat-icon" style="background:#ecfdf5;"><i class="fas fa-check-double"></i></div>
+                <div>
+                    <h3 id="marked-sessions" style="font-size:1.8rem; margin:0;">0</h3>
+                    <p style="margin:4px 0 0; color:var(--text-muted);">حصص مرصودة اليوم</p>
+                </div>
             </div>
         </div>
 
-        <!-- لوحة التميز والإنجازات (قابلة للطي) -->
+        <!-- لوحة التميز والإنجازات -->
         <section class="excellence-panel">
             <div class="excellence-header" onclick="toggleExcellencePanel()">
                 <div class="excellence-title">
                     <i class="fas fa-trophy"></i>
                     لوحة التميز والإنجازات
                 </div>
-                <div style="display:flex; align-items:center; gap:12px;">
+                <div style="display:flex; align-items:center; gap:16px;">
                     <div class="level-badge">
                         <%= (prof.stars_count || 0) >= 100 ? 'معلم قدير ✨' : (prof.stars_count || 0) >= 50 ? 'معلم متميز 🌟' : 'معلم مبادر ⭐' %>
                     </div>
@@ -370,15 +448,15 @@
                             </div>
                         <% }) %>
                     <% } else { %>
-                        <p style="text-align:center; color:#94a3b8; padding:20px;">ابدأ رحلتك نحو التميز! 🌟</p>
+                        <p style="text-align:center; color:#94a3b8; padding:30px; font-size:1.1rem;">ابدأ رحلتك نحو التميز اليوم! 🌟</p>
                     <% } %>
                 </div>
             </div>
         </section>
 
-        <!-- جدول الأيام مع Slider -->
+        <!-- جدول الأيام -->
         <section id="section-schedule" class="panel">
-            <div style="margin-bottom: 20px; text-align: center;">
+            <div style="margin-bottom: 24px; text-align: center;">
                 <div class="days-slider-container">
                     <div class="days-slider" id="days-slider">
                         <div class="day-tab active" data-day="الأحد">الأحد</div>
@@ -390,12 +468,12 @@
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="color:var(--primary); margin:0; font-size:1.1rem; font-weight:800;">
-                    <i class="fas fa-calendar-check" style="margin-left:8px;"></i>جدول يوم: 
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="color:var(--primary); margin:0; font-size:1.3rem; font-weight:800;">
+                    <i class="fas fa-calendar-check" style="margin-left:10px;"></i>جدول يوم: 
                     <span id="selected-day-name" style="color:var(--text-muted); font-weight:600;"></span>
                 </h3>
-                <span class="live-badge" id="live-badge-today"><i class="fas fa-circle"></i> مباشر (اليوم)</span>
+                <span class="live-badge" id="live-badge-today"><i class="fas fa-circle"></i> مباشر اليوم</span>
             </div>
 
             <div class="banner-container">
@@ -414,17 +492,19 @@
 
         <!-- رصد الغياب -->
         <section id="section-attendance" class="panel">
-            <div id="no-session-msg" style="text-align:center; padding:40px; color:#94a3b8;">
-                <i class="fas fa-hourglass-start" style="font-size:2.5rem; margin-bottom:15px; display:block;"></i>
-                <h3 style="font-size:1.1rem; font-weight:700;">لا توجد حصة نشطة حالياً</h3>
-                <p style="font-size:0.85rem; margin-top:5px;">سيظهر نموذج الغياب تلقائياً عند بدء الحصة.</p>
+            <div id="no-session-msg" style="text-align:center; padding:60px; color:#94a3b8;">
+                <i class="fas fa-hourglass-start" style="font-size:3.5rem; margin-bottom:20px; display:block;"></i>
+                <h3 style="font-size:1.3rem; font-weight:700;">لا توجد حصة نشطة حالياً</h3>
+                <p style="font-size:1rem; margin-top:10px;">سيظهر نموذج رصد الغياب تلقائياً عند بدء الحصة التالية.</p>
             </div>
 
-            <div id="attendance-active" class="hidden" style="animation:fadeIn 0.4s ease-out;">
+            <div id="attendance-active" class="hidden">
                 <div class="active-class-banner">
-                    <i class="fas fa-chalkboard-teacher" style="color:var(--primary);"></i>
-                    <strong>رصد غياب فصل:</strong> 
-                    <span id="active-class-title">--</span>
+                    <i class="fas fa-chalkboard-teacher" style="font-size:1.8rem;"></i>
+                    <div>
+                        <strong style="font-size:1.1rem;">رصد غياب فصل:</strong>
+                        <span id="active-class-title" style="font-size:1.3rem; font-weight:800; display:block; margin-top:4px;">--</span>
+                    </div>
                 </div>
                 
                 <form action="/teacher/absences/mark" method="POST">
@@ -443,20 +523,20 @@
 
         <!-- ملاحظة سلوكية -->
         <section id="section-behavior" class="panel">
-            <h3 style="color:var(--primary);"><i class="fas fa-user-shield"></i> ملاحظة سلوكية</h3>
-            <div style="display:flex; flex-direction:column; gap:10px;">
+            <h3 style="color:var(--primary); font-size:1.3rem; font-weight:800; margin-bottom:20px;"><i class="fas fa-user-shield" style="margin-left:10px;"></i> ملاحظة سلوكية</h3>
+            <div style="display:flex; flex-direction:column; gap:16px;">
                 <div style="position:relative;">
-                    <input type="text" id="studentSearchInput" placeholder="🔍 ابحث عن الطالب..." style="width:100%; padding:12px; border-radius:10px; border:2px solid var(--primary);">
-                    <div id="searchResultsList" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:10px; box-shadow:var(--shadow); max-height:200px; overflow-y:auto; z-index:10; display:none;"></div>
+                    <input type="text" id="studentSearchInput" placeholder="🔍 ابحث عن اسم الطالب..." style="width:100%; padding:16px; border-radius:14px; border:2px solid var(--primary); font-size:1rem;">
+                    <div id="searchResultsList" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:14px; box-shadow:var(--shadow); max-height:240px; overflow-y:auto; z-index:10; display:none; margin-top:6px;"></div>
                 </div>
-                <div id="selectedStudentBadge" style="display:none; padding:8px; background:#e3f2fd; border-radius:8px;">
+                <div id="selectedStudentBadge" style="display:none; padding:12px; background:#e3f2fd; border-radius:12px; font-weight:700;">
                     تم اختيار: <strong id="selectedStudentName"></strong>
-                    <i class="fas fa-times" style="margin-right:10px; cursor:pointer; color:red;" onclick="clearStudentSelection()"></i>
+                    <i class="fas fa-times" style="margin-right:12px; cursor:pointer; color:#dc2626;" onclick="clearStudentSelection()"></i>
                 </div>
                 <form action="/teacher/behavior/add" method="POST">
                     <input type="hidden" name="teacher_id" value="<%= prof.id %>">
                     <input type="hidden" name="student_id" id="hiddenStudentId" required>
-                    <textarea name="event" placeholder="وصف الملاحظة..." required style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; height:80px;"></textarea>
+                    <textarea name="event" placeholder="اكتب وصف الملاحظة السلوكية هنا..." required style="width:100%; padding:16px; border-radius:14px; border:1px solid #ddd; height:100px; font-size:1rem;"></textarea>
                     <button type="submit" class="btn-submit">إرسال الملاحظة</button>
                 </form>
             </div>
@@ -464,36 +544,36 @@
 
         <!-- قائمة المهام -->
         <section id="section-todo" class="panel">
-            <h3 style="color:var(--primary);"><i class="fas fa-list-check"></i> قائمة المهام</h3>
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="todo-input" placeholder="أضف مهمة جديدة..." style="flex:1; padding:12px; border-radius:12px; border:2px solid #f1f5f9;">
-                <button onclick="addTodo()" style="background:var(--primary); color:white; border:none; width:45px; height:45px; border-radius:12px; cursor:pointer;">
+            <h3 style="color:var(--primary); font-size:1.3rem; font-weight:800; margin-bottom:20px;"><i class="fas fa-list-check" style="margin-left:10px;"></i> قائمة المهام اليومية</h3>
+            <div style="display:flex; gap:12px; margin-bottom:20px;">
+                <input type="text" id="todo-input" placeholder="أضف مهمة جديدة..." style="flex:1; padding:16px; border-radius:14px; border:2px solid #f1f5f9; font-size:1rem;">
+                <button onclick="addTodo()" style="background:var(--primary); color:white; border:none; width:56px; height:56px; border-radius:14px; cursor:pointer; font-size:1.4rem;">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
-            <ul id="todo-list" style="list-style:none; margin-top:15px;"></ul>
+            <ul id="todo-list" style="list-style:none;"></ul>
         </section>
 
         <!-- تأمين الحساب -->
         <div class="panel">
-            <div onclick="toggleSecureSection()" style="padding:20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <i class="fas fa-user-lock" style="color:var(--primary);"></i>
-                    <h3 style="margin:0;">تأمين الحساب</h3>
+            <div onclick="toggleSecureSection()" style="padding:24px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <i class="fas fa-user-lock" style="color:var(--primary); font-size:1.8rem;"></i>
+                    <h3 style="margin:0; font-size:1.3rem; font-weight:800;">تأمين الحساب</h3>
                 </div>
-                <i class="fas fa-chevron-down" id="secure-chevron" style="transition:0.3s;"></i>
+                <i class="fas fa-chevron-down" id="secure-chevron" style="font-size:1.2rem; transition:0.3s;"></i>
             </div>
-            <div id="secure-content" style="max-height:0; overflow:hidden; transition:all 0.4s ease; padding:0 20px;">
-                <p style="color:#64748b;">غيّر كلمة المرور الافتراضية لتعزيز الأمان.</p>
+            <div id="secure-content" style="max-height:0; overflow:hidden; transition:all 0.5s ease; padding:0 24px;">
+                <p style="color:#64748b; margin-bottom:24px; font-size:1.1rem; text-align:center;">يُرجى تغيير كلمة المرور الافتراضية لضمان أمان حسابك.</p>
                 <form action="/teacher/update-my-password" method="POST">
-                    <div style="position:relative; margin-bottom:10px;">
-                        <i class="fas fa-key" style="position:absolute; left:12px; top:14px; color:var(--primary);"></i>
-                        <input type="password" name="new_password" id="teacher_secret_input" placeholder="كلمة مرور جديدة" required style="width:100%; padding:12px 12px 12px 40px; border-radius:10px; border:1px solid #ddd;">
-                        <button type="button" onclick="handleTeacherView()" style="position:absolute; right:10px; top:10px; background:none; border:none; cursor:pointer;">
+                    <div style="position:relative; margin-bottom:24px;">
+                        <i class="fas fa-key"></i>
+                        <input type="password" name="new_password" id="teacher_secret_input" placeholder="أدخل كلمة مرور جديدة قوية" required>
+                        <button type="button" onclick="handleTeacherView()">
                             <i class="fas fa-eye" id="teacher_eye_icon"></i>
                         </button>
                     </div>
-                    <button type="submit" class="btn-submit">حفظ</button>
+                    <button type="submit" class="btn-submit">تحديث كلمة المرور</button>
                 </form>
             </div>
         </div>
@@ -559,11 +639,14 @@
                 const subSession = SUBSTITUTIONS.find(s => Number(s.periode) === p.id);
 
                 if (subSession) {
-                    content.innerHTML = `<span style="background:#fffbeb;padding:2px 8px;border-radius:6px;font-size:0.8rem;">احتياط</span><br>${subSession.classe}-${subSession.section}`;
+                    content.innerHTML = `<div class="sub-badge">احتياط</div>${subSession.classe}-${subSession.section}`;
+                    card.classList.add('substitute');
                 } else if (normalSession) {
                     content.innerHTML = `${normalSession.classe}-${normalSession.section}`;
+                    card.classList.remove('substitute');
                 } else {
-                    content.innerHTML = '<span style="opacity:0.3">استراحة</span>';
+                    content.innerHTML = '<span style="opacity:0.4">استراحة</span>';
+                    card.classList.remove('substitute');
                 }
 
                 if (isToday) {
@@ -613,15 +696,15 @@
             const isLocked = classLocks.some(l => String(l.classe) === String(session.classe) && String(l.section) === String(session.section) && Number(l.periode) === period.id);
 
             if (isLocked) {
-                container.innerHTML = `<div style="text-align:center; padding:40px;">
-                    <div style="background:#22c55e; color:white; width:60px; height:60px; line-height:60px; border-radius:50%; margin:0 auto 15px; font-size:2rem;">
+                container.innerHTML = `<div style="text-align:center; padding:60px;">
+                    <div style="background:#22c55e; color:white; width:80px; height:80px; line-height:80px; border-radius:50%; margin:0 auto 20px; font-size:3rem;">
                         <i class="fas fa-check"></i>
                     </div>
-                    <h4 style="color:#15803d;">تم رصد الغياب بنجاح</h4>
-                    <p style="color:#166534;">تم تحديث رصيد نجومك</p>
+                    <h4 style="color:#15803d; font-size:1.4rem;">تم رصد الغياب بنجاح!</h4>
+                    <p style="color:#166534; font-size:1.1rem; margin-top:10px;">تم تحديث رصيد نجومك</p>
                 </div>`;
                 activeArea.querySelector('.btn-submit').style.display = 'none';
-                triggerStarGain(1); // Animation d'étoiles après rصد
+                triggerStarGain(1);
             } else {
                 activeArea.querySelector('.btn-submit').style.display = 'flex';
                 renderStudents(session.classe, session.section);
@@ -637,14 +720,14 @@
 
             const students = ELEVES.filter(s => String(s.classe) === String(classe) && String(s.section) === String(section));
             if (students.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding:30px; color:#94a3b8;">لا يوجد طلاب في هذا الفصل</p>';
+                container.innerHTML = '<p style="text-align:center; padding:40px; color:#94a3b8; font-size:1.1rem;">لا يوجد طلاب مسجلين في هذا الفصل</p>';
                 return;
             }
 
             students.forEach(student => {
                 container.innerHTML += `
                     <div class="student-card">
-                        <span class="student-name">${student.nom}</span>
+                        <span style="font-weight:700; font-size:1.1rem;">${student.nom}</span>
                         <label class="switch">
                             <input type="checkbox" name="eleve_ids[]" value="${student.id}">
                             <span class="slider"></span>
@@ -653,7 +736,13 @@
             });
         }
 
-        // Animation gain d'étoiles
+        // +3 étoiles lors de l'acceptation d'une séance احتياط
+        document.querySelectorAll('.accept-sub-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                triggerStarGain(3);
+            });
+        });
+
         function triggerStarGain(points = 1) {
             const headerCount = document.getElementById('header-stars');
             const panelCount = document.getElementById('panel-stars');
@@ -664,10 +753,10 @@
             panelCount.innerHTML = newTotal + ' <i class="fas fa-star"></i>';
 
             confetti({
-                particleCount: 120,
-                spread: 70,
+                particleCount: 150,
+                spread: 80,
                 origin: { y: 0.6 },
-                colors: ['#ffd700', '#ffed4e', '#facc15', '#fbbf24']
+                colors: ['#ffd700', '#ffed4e', '#facc15', '#fbbf24', '#f59e0b']
             });
 
             const counter = document.querySelector('.star-counter');
@@ -686,8 +775,8 @@
             const list = document.getElementById('todo-list');
             if (!input.value.trim()) return;
             const li = document.createElement('li');
-            li.style = "background:white; padding:10px 15px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #f1f5f9;";
-            li.innerHTML = `<span>${input.value}</span><button onclick="this.parentElement.remove(); updateTodoCounter()" style="background:none; border:none; color:#94a3b8; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>`;
+            li.style = "background:white; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; border:1px solid #f1f5f9; box-shadow:0 2px 8px rgba(0,0,0,0.05);";
+            li.innerHTML = `<span style="font-size:1.1rem;">${input.value}</span><button onclick="this.parentElement.remove(); updateTodoCounter()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.4rem;"><i class="fas fa-trash-alt"></i></button>`;
             list.appendChild(li);
             input.value = '';
             updateTodoCounter();
@@ -711,8 +800,10 @@
             if (matches.length > 0) {
                 matches.forEach(s => {
                     const div = document.createElement('div');
-                    div.style = "padding:10px; border-bottom:1px solid #eee; cursor:pointer;";
-                    div.innerHTML = `<strong>${s.nom}</strong><br><small>${s.classe}-${s.section}</small>`;
+                    div.style = "padding:14px; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.2s;";
+                    div.innerHTML = `<strong style="font-size:1.1rem;">${s.nom}</strong><br><small style="color:#64748b;">${s.classe}-${s.section}</small>`;
+                    div.onmouseover = () => div.style.background = '#f0f9ff';
+                    div.onmouseout = () => div.style.background = 'white';
                     div.onclick = () => {
                         hiddenId.value = s.id;
                         badgeName.textContent = s.nom;
@@ -772,7 +863,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('success') && urlParams.get('success') === 'evaluated') {
             triggerStarGain(1);
-            confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors: ['#ffd700', '#1e3a8a', '#22c55e'] });
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#ffd700', '#1e3a8a', '#22c55e'] });
             history.replaceState({}, '', location.pathname);
         }
 
@@ -811,69 +902,34 @@
     <% if (activePopup) { %>
     <div id="global-popup-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:10000; backdrop-filter:blur(8px); transition: opacity 0.4s ease;">
         <div style="position:relative; width:85%; max-width:350px; animation:popupAppear 0.5s cubic-bezier(0.175,0.885,0.32,1.275);">
-            <button class="popup-close-x" onclick="closeGlobalPopup()">×</button>
-            <div class="image-wrapper">
-                <img src="<%= activePopup.image_url %>" alt="الإعلان">
+            <button style="position:absolute; top:-18px; left:-18px; width:40px; height:40px; background:#dc2626; color:white; border:none; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.4);">×</button>
+            <div style="width:100%; aspect-ratio:9/16; overflow:hidden; border-radius:24px; border:4px solid rgba(255,255,255,0.3); box-shadow:0 24px 60px rgba(0,0,0,0.6);">
+                <img src="<%= activePopup.image_url %>" alt="الإعلان" style="width:100%; height:100%; object-fit:cover;">
             </div>
-            <button class="popup-action-btn" onclick="closeGlobalPopup()">متابعة الجلسة</button>
+            <button onclick="closeGlobalPopup()" style="width:100%; margin-top:24px; padding:18px; border-radius:16px; background:linear-gradient(135deg,#22c55e,#16a34a); color:white; border:none; font-weight:900; font-size:1.2rem; cursor:pointer; box-shadow:0 6px 16px rgba(34,197,94,0.3);">متابعة الجلسة</button>
         </div>
     </div>
-
     <style>
-        .popup-close-x {
-            position: absolute; top: -15px; left: -15px; width: 35px; height: 35px;
-            background: #ff4757; color: white; border: none; border-radius: 50%;
-            font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .image-wrapper {
-            width: 100%; aspect-ratio: 9 / 16; overflow: hidden;
-            border-radius: 20px; border: 3px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .image-wrapper img {
-            width: 100%; height: 100%; object-fit: cover;
-        }
-        .popup-action-btn {
-            width: 100%; margin-top: 20px; padding: 15px; border-radius: 12px;
-            background: linear-gradient(135deg, #2ed573, #218c74); color: white;
-            border: none; font-family: 'Cairo', sans-serif; font-weight: bold;
-            font-size: 1.1rem; cursor: pointer; transition: transform 0.2s;
-        }
-        .popup-action-btn:active { transform: scale(0.95); }
-
-        @keyframes popupAppear {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
+        @keyframes popupAppear { from { transform:scale(0.6); opacity:0; } to { transform:scale(1); opacity:1; } }
     </style>
-
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const overlay = document.getElementById('global-popup-overlay');
             if (!overlay) return;
-
-            const currentImageId = overlay.querySelector('img').src;
-            const lastSeenImage = localStorage.getItem('last_seen_announcement_url');
-            
-            if (lastSeenImage === currentImageId) {
+            const currentImage = overlay.querySelector('img').src;
+            if (localStorage.getItem('last_seen_announcement_url') === currentImage) {
                 overlay.style.display = 'none';
-            } else {
-                overlay.style.display = 'flex';
             }
         });
-
         function closeGlobalPopup() {
             const overlay = document.getElementById('global-popup-overlay');
             if (overlay) {
-                const currentImageId = overlay.querySelector('img').src;
-                localStorage.setItem('last_seen_announcement_url', currentImageId);
-                
+                localStorage.setItem('last_seen_announcement_url', overlay.querySelector('img').src);
                 overlay.style.opacity = '0';
                 setTimeout(() => overlay.remove(), 400);
             }
         }
     </script>
     <% } %>
-
 </body>
 </html>

@@ -190,6 +190,38 @@
             .btn-exit span { display: none; }
             .main-content { margin-right: 75px; width: calc(100% - 75px); }
         }
+
+        /* تنسيق الـ Modal */
+.admin-modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); z-index: 9999; backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+}
+.admin-modal-card {
+    background: white; width: 90%; max-width: 400px; padding: 25px;
+    border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    animation: fadeInScale 0.3s ease;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.close-btn { font-size: 28px; cursor: pointer; color: #999; }
+
+/* منطقة الرفع */
+.upload-zone {
+    border: 2px dashed #ddd; border-radius: 12px; padding: 20px;
+    text-align: center; cursor: pointer; transition: 0.3s; background: #fafafa;
+}
+.upload-zone:hover { border-color: #ff9f43; background: #fffcf9; }
+#imagePreview { width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; }
+
+/* الأزرار */
+.modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+.btn-save { flex: 1; padding: 12px; background: #2ed573; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.btn-cancel { padding: 12px; background: #f1f2f6; color: #57606f; border: none; border-radius: 8px; cursor: pointer; }
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
     </style>
 </head>
 <body>
@@ -346,7 +378,11 @@
             <h3>إعدادات النظام</h3>
             <p>ضبط الشعب، توقيت الحصص، والمواد.</p>
         </div>
-        
+        <div class="card" data-section="announcement" style="border-bottom-color: #ff9f43;" onclick="openPopupModal()">
+            <div class="icon-box" style="color:#ff9f43;"><i class="fas fa-bullhorn"></i></div>
+              <h3>إعلان منبثق جديد</h3>
+           <p>تحديث صورة الترحيب للمعلمين (أبعاد 9:16).</p>
+        </div>
 
         <div class="card c-tools" data-section="teacher_tools" onclick="location.href='/admin/teacher-tools-management'">
             <div class="icon-box" style="color:#0ea5e9;"><i class="fas fa-tasks"></i></div>
@@ -359,6 +395,7 @@
             <h3>إعدادات متقدمة</h3>
             <p>إعادة ضبط البيانات، الحذف، والعمليات الحساسة.</p>
         </div>
+        
     </div>
 </main>
 
@@ -497,22 +534,61 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<section class="admin-section">
-    <h3><i class="fas fa-bullhorn"></i> إدارة الإعلان المنبثق (9:16)</h3>
-    <div class="card">
+<div id="popupConfigModal" class="admin-modal-overlay">
+    <div class="admin-modal-card">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> إعداد الإعلان المنبثق</h3>
+            <span class="close-btn" onclick="closePopupModal()">&times;</span>
+        </div>
+        
         <form action="/admin/update-popup" method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label>اختر صورة الإعلان (يفضل أبعاد 1080x1920):</label>
-                <input type="file" name="popup_image" accept="image/*" required>
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                <div id="previewContainer">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>اضغط لاختيار صورة (1080x1920)</p>
+                </div>
+                <img id="imagePreview" src="#" alt="معاينة" style="display:none;">
+                <input type="file" name="popup_image" id="fileInput" accept="image/*" required onchange="previewImage(this)" style="display:none;">
             </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" name="is_active" checked> تفعيل الإعلان فوراً
+
+            <div class="modal-options">
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="is_active" checked>
+                    <span class="checkmark"></span>
+                    تفعيل الإعلان فوراً
                 </label>
             </div>
-            <button type="submit" class="btn-primary">تحديث الإعلان المنبثق</button>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closePopupModal()">إلغاء</button>
+                <button type="submit" class="btn-save">حفظ وتحديث</button>
+            </div>
         </form>
     </div>
-</section>
+</div>
+<script>
+   function openPopupModal() {
+    document.getElementById('popupConfigModal').style.display = 'flex';
+}
+
+function closePopupModal() {
+    document.getElementById('popupConfigModal').style.display = 'none';
+}
+
+function previewImage(input) {
+    const preview = document.getElementById('imagePreview');
+    const container = document.getElementById('previewContainer');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            container.style.display = 'none';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+} 
+</script>
+
 </body>
 </html>

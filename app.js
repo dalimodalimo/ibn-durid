@@ -1880,11 +1880,10 @@ app.post('/admin/update-popup', upload.single('popup_image'), async (req, res) =
     try {
         if (!req.file) return res.status(400).send("الرجاء اختيار صورة");
 
+        // 1. تجهيز الصورة ورفعها كما فعلنا سابقاً
         const fileName = `popup-${Date.now()}.jpg`;
-        
-        // الرفع إلى Supabase Storage
         const { data, error: uploadError } = await supabase.storage
-            .from('announcements') // تأكد أن هذا الاسم مطابق لما أنشأته في الخطوة السابقة
+            .from('announcements')
             .upload(fileName, req.file.buffer, {
                 contentType: req.file.mimetype,
                 upsert: true
@@ -1892,27 +1891,27 @@ app.post('/admin/update-popup', upload.single('popup_image'), async (req, res) =
 
         if (uploadError) throw uploadError;
 
-        // الحصول على الرابط الحقيقي
         const { data: { publicUrl } } = supabase.storage
             .from('announcements')
             .getPublicUrl(fileName);
 
         const isActive = req.body.is_active === 'on';
 
-        // التحديث في قاعدة البيانات - لاحظ تحديد أسماء الأعمدة (image_url, active)
-        // هذا يمنع خطأ الـ Integer تماماً
-        await pool.query("UPDATE global_announcements SET active = false");
+        // --- التعديل الجديد هنا ---
+        
+        // 2. مسح كافة السجلات القديمة نهائياً
+        await pool.query("DELETE FROM global_announcements");
 
+        // 3. إدخال السجل الجديد (سيكون هو الوحيد في الجدول)
         await pool.query(
             "INSERT INTO global_announcements (image_url, active) VALUES ($1, $2)",
-            [publicUrl, isActive] // هنا نستخدم الرابط الحقيقي المستخرج وليس نصاً مؤقتاً
+            [publicUrl, isActive]
         );
 
-        res.redirect('/admin/dashboard?success=true');
-
+        res.redirect('/admin/dashboard?success=popup_updated');
     } catch (e) {
-        console.error("خطأ أثناء الرفع والتحديث:", e);
-        res.status(500).send("خطأ: " + e.message);
+        console.error(e);
+        res.status(500).send("خطأ في التحديث");
     }
 });
     // --- [ تشغيل الخادم ] ---

@@ -377,18 +377,9 @@
     const ELEVES = <%- JSON.stringify(eleves || []) %>;
     const SUBSTITUTIONS = <%- JSON.stringify(substitute_logs || []) %>;
     const classLocks = <%- JSON.stringify(classLocks || []) %>;
-    // 1. تحديث المصفوفة لتطابق تماماً ما في قاعدة البيانات (مع الهمزات)
-const dayNamesAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const dayNamesAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
-// 2. تعديل دالة cleanAr لتكون أكثر مرونة في إزالة المسافات والهمزات عند المقارنة
-const cleanAr = str => {
-    if (!str) return "";
-    return str.trim()
-        .replace(/[أإآ]/g, 'ا') // تحويل كل الألفات إلى ا
-        .replace(/\s+/g, '');   // إزالة أي مسافات زائدة قد تكون في قاعدة البيانات
-};
-
-   // const cleanAr = str => str ? str.trim().replace(/[أإآ]/g, 'ا') : "";
+    const cleanAr = str => str ? str.trim().replace(/[أإآ]/g, 'ا') : "";
 
     // معرف المعلم الحالي (لجعل إخفاء الإعلانات شخصيًا)
     const PROF_ID = "<%= prof.id %>";
@@ -723,6 +714,79 @@ const cleanAr = str => {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
+<% if (activePopup) { %>
+<div id="global-popup-overlay" class="popup-overlay">
+    <div class="popup-card">
+        <button class="popup-close-x" onclick="closeGlobalPopup()">×</button>
+        <div class="image-wrapper">
+            <img src="<%= activePopup.image_url %>" alt="الإعلان">
+        </div>
+        <button class="popup-action-btn" onclick="closeGlobalPopup()">متابعة الجلسة</button>
+    </div>
+</div>
+<% } %>
 
+<style>
+    .popup-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9); display: flex; align-items: center;
+        justify-content: center; z-index: 10000; backdrop-filter: blur(8px);
+        transition: opacity 0.4s ease;
+    }
+    .popup-card {
+        position: relative; width: 85%; max-width: 350px; /* العرض المثالي للـ 9:16 */
+        animation: popupAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .image-wrapper {
+        width: 100%; aspect-ratio: 9 / 16; overflow: hidden;
+        border-radius: 20px; border: 3px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .image-wrapper img {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+    .popup-close-x {
+        position: absolute; top: -15px; left: -15px; width: 35px; height: 35px;
+        background: #ff4757; color: white; border: none; border-radius: 50%;
+        font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .popup-action-btn {
+        width: 100%; margin-top: 20px; padding: 15px; border-radius: 12px;
+        background: linear-gradient(135deg, #2ed573, #218c74); color: white;
+        border: none; font-family: 'Cairo', sans-serif; font-weight: bold;
+        font-size: 1.1rem; cursor: pointer; transition: transform 0.2s;
+    }
+    .popup-action-btn:active { transform: scale(0.95); }
+
+    @keyframes popupAppear {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const hasSeen = sessionStorage.getItem('announcement_seen');
+        const overlay = document.getElementById('global-popup-overlay');
+        
+        // سجل في الـ Console للتأكد من وصول البيانات
+        console.log("Popup status:", overlay ? "Element exists" : "Element missing");
+
+        if (hasSeen && overlay) {
+            overlay.style.display = 'none';
+        } else if (overlay) {
+            overlay.style.display = 'flex'; // تأكد أنه مرئي
+        }
+    });
+
+    function closeGlobalPopup() {
+        const overlay = document.getElementById('global-popup-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            sessionStorage.setItem('announcement_seen', 'true');
+            setTimeout(() => overlay.remove(), 400);
+        }
+    }
+</script>
 </body>
 </html>

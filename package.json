@@ -11,9 +11,11 @@
   "license": "ISC",
   "description": "نظام إدارة مدرسة ابن دريد",
   "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
     "cookie-parser": "^1.4.7",
     "ejs": "^3.1.10",
     "express": "^5.2.1",
+    "multer": "^2.0.2",
     "pg": "^8.16.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"

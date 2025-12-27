@@ -2,6 +2,9 @@ const express = require('express');
 const { Pool } = require('pg'); // تم التغيير من sqlite3 إلى pg
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const multer = require('multer');
+// تعريف المتغير upload الذي اشتكى السيرفر من عدم وجوده
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * إعدادات التطبيق الأساسية
@@ -1218,29 +1221,29 @@ app.post('/teacher/login', async (req, res) => {
 // app.js
 app.get('/teacher/dashboard/:id', async (req, res) => {
     try {
-        // 1. استخراج المعرف أولاً لاستخدامه في الاستعلامات
         const teacherId = req.params.id;
 
-        // 2. استعلام سجل النجوم (تم وضعه هنا لضمان عمل teacherId)
-      const starHistoryRes = await pool.query(`
-    SELECT * FROM (
-        (SELECT 'تقييم طالب' as reason, date_submission as date, '1+' as points, id FROM academic_evaluations WHERE enseignant_id = $1)
-        UNION ALL
-        (SELECT DISTINCT ON (date, periode) 'رصد غياب حصة' as reason, date as date, '1+' as points, MAX(id) as id 
-         FROM student_absences WHERE enseignant_id = $1 GROUP BY date, periode)
-        UNION ALL
-        (SELECT reason, date, points, id FROM star_logs WHERE enseignant_id = $1)
-    ) AS combined_history
-    ORDER BY date DESC, id DESC 
-    LIMIT 5
-`, [teacherId]);
+        // 1. استعلام سجل النجوم
+        const starHistoryRes = await pool.query(`
+            SELECT * FROM (
+                (SELECT 'تقييم طالب' as reason, date_submission as date, '1+' as points, id FROM academic_evaluations WHERE enseignant_id = $1)
+                UNION ALL
+                (SELECT DISTINCT ON (date, periode) 'رصد غياب حصة' as reason, date as date, '1+' as points, MAX(id) as id 
+                 FROM student_absences WHERE enseignant_id = $1 GROUP BY date, periode)
+                UNION ALL
+                (SELECT reason, date, points, id FROM star_logs WHERE enseignant_id = $1)
+            ) AS combined_history
+            ORDER BY date DESC, id DESC 
+            LIMIT 5
+        `, [teacherId]);
 
-        // التأكد من التاريخ بتوقيت عمان (Asia/Muscat)
+        // 2. ضبط التاريخ بتوقيت عمان
         const today = new Intl.DateTimeFormat('en-CA', {
             timeZone: 'Asia/Muscat',
             year: 'numeric', month: '2-digit', day: '2-digit'
         }).format(new Date());
 
+        // 3. استعلامات البيانات الأساسية
         const profRes = await pool.query("SELECT * FROM enseignants WHERE id = $1", [teacherId]);
         const prof = profRes.rows[0];
 
@@ -1249,23 +1252,22 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
         const elevesRes = await pool.query("SELECT * FROM students ORDER BY nom ASC");
         const annRes = await pool.query("SELECT * FROM announcements ORDER BY id DESC");
         
+        // 4. استعلام الإعلان المنبثق الجديد (Popup)
+        const popupRes = await pool.query(
+            "SELECT image_url FROM global_announcements WHERE active = true ORDER BY created_at DESC LIMIT 1"
+        );
+        const activePopup = popupRes.rows.length > 0 ? popupRes.rows[0] : null;
+
+        // 5. استعلامات طلبات التقييم والغياب
         const evalRes = await pool.query(`
-            SELECT 
-                er.*, 
-                s.nom AS student_name, 
-                s.classe 
+            SELECT er.*, s.nom AS student_name, s.classe 
             FROM evaluation_requests er
             JOIN students s ON er.eleve_id = s.id
             WHERE er.enseignant_id = $1 AND er.status = 'pending'
         `, [teacherId]);
 
         const locksRes = await pool.query(`
-            SELECT DISTINCT 
-                s.classe, 
-                s.section, 
-                e.nom as teacher_name, 
-                sa.enseignant_id,
-                sa.periode
+            SELECT DISTINCT s.classe, s.section, e.nom as teacher_name, sa.enseignant_id, sa.periode
             FROM student_absences sa
             JOIN students s ON sa.eleve_id = s.id
             JOIN enseignants e ON sa.enseignant_id = e.id
@@ -1281,7 +1283,7 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
             [teacherId, today]
         );
 
-        // 3. إرسال كافة البيانات المطلوبة للـ EJS مع إضافة starHistory
+        // 6. ريندر الصفحة مع كل البيانات
         res.render('teacher_dashboard', {
             titre: "لوحة التحكم",
             prof: prof,
@@ -1293,7 +1295,8 @@ app.get('/teacher/dashboard/:id', async (req, res) => {
             substitute_logs: subRes.rows,
             markedPeriods: markedPeriods,
             classLocks: locksRes.rows,
-            starHistory: starHistoryRes.rows // <<< القيمة الجديدة المضافة للـ EJS
+            starHistory: starHistoryRes.rows,
+            activePopup: activePopup // الإعلان المنبثق المضاف حديثاً
         });
 
     } catch (e) {
@@ -1849,6 +1852,67 @@ app.post('/api/save-scheme', async (req, res) => {
         await pool.query("ROLLBACK");
         console.error("خطأ في حفظ المخطط:", err.message);
         res.status(500).json({ error: "فشل حفظ البيانات" });
+    }
+});
+
+
+
+
+//-----------
+
+// 1. استدعاء المكتبة في الأعلى (تأكد من وجود هذا السطر في أول الملف)
+const { createClient } = require('@supabase/supabase-js');
+
+// 2. إعداد الاتصال بـ PostgreSQL (الكود الخاص بك)
+const pool = new Pool({
+    connectionString: "postgresql://postgres.nbtfrxifzctbkswfwoyx:Barhoum307*@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true",
+    ssl: { rejectUnauthorized: false }
+});
+
+// 3. إعداد الاتصال بـ Supabase Client (من أجل رفع الصور)
+// ملاحظة: استبدل الرابط والمفتاح بالقيم الموجودة في Settings -> API في Supabase
+const supabaseUrl = 'https://nbtfrxifzctbkswfwoyx.supabase.co'; 
+const supabaseKey = 'sb_publishable_3CQ7d3WA9qNFqn6K0oX72g_ZOoPrjxj'; // تجد هذا المفتاح في لوحة التحكم (anon public)
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+
+app.post('/admin/update-popup', upload.single('popup_image'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).send("الرجاء اختيار صورة");
+
+        const fileName = `popup-${Date.now()}.jpg`;
+        
+        // الرفع إلى Supabase Storage
+        const { data, error: uploadError } = await supabase.storage
+            .from('announcements') // تأكد أن هذا الاسم مطابق لما أنشأته في الخطوة السابقة
+            .upload(fileName, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: true
+            });
+
+        if (uploadError) throw uploadError;
+
+        // الحصول على الرابط الحقيقي
+        const { data: { publicUrl } } = supabase.storage
+            .from('announcements')
+            .getPublicUrl(fileName);
+
+        const isActive = req.body.is_active === 'on';
+
+        // التحديث في قاعدة البيانات - لاحظ تحديد أسماء الأعمدة (image_url, active)
+        // هذا يمنع خطأ الـ Integer تماماً
+        await pool.query("UPDATE global_announcements SET active = false");
+
+        await pool.query(
+            "INSERT INTO global_announcements (image_url, active) VALUES ($1, $2)",
+            [publicUrl, isActive] // هنا نستخدم الرابط الحقيقي المستخرج وليس نصاً مؤقتاً
+        );
+
+        res.redirect('/admin/dashboard?success=true');
+
+    } catch (e) {
+        console.error("خطأ أثناء الرفع والتحديث:", e);
+        res.status(500).send("خطأ: " + e.message);
     }
 });
     // --- [ تشغيل الخادم ] ---

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>تقرير الطالب - مدرسة ابن دريد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #1e3a8a; --border: #cbd5e1; }
         body { 
@@ -11,7 +12,7 @@
             padding: 20px; 
             color: #333; 
             line-height: 1.4; 
-            font-size: 12px; /* تصغير الخط العام لضمان سعة الصفحة */
+            font-size: 12px; 
             margin: 0;
         }
         .report-header { 
@@ -74,8 +75,11 @@
             gap: 10px; 
             margin-bottom: 20px; 
             background: #fff; 
-            padding: 10px; 
+            padding: 15px; 
             border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         .btn { 
             padding: 8px 15px; 
@@ -86,8 +90,12 @@
             font-weight: bold;
             text-decoration: none;
             font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         .btn-print { background: var(--primary); color: white; }
+        .btn-back { background: #f59e0b; color: white; } /* لون برتقالي للرجوع */
         .btn-exit { background: #64748b; color: white; }
 
         @media print {
@@ -102,7 +110,10 @@
 
     <div class="no-print">
         <button onclick="window.print()" class="btn btn-print">
-            <i class="fas fa-print"></i> طباعة التقرير / حفظ PDF
+            <i class="fas fa-print"></i> طباعة / حفظ PDF
+        </button>
+        <button onclick="history.back()" class="btn btn-back">
+            <i class="fas fa-arrow-right"></i> الرجوع للسابق
         </button>
         <a href="/admin/dashboard" class="btn btn-exit">الخروج من التقرير</a>
     </div>
@@ -123,22 +134,24 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 25%;">المادة / المعلم</th>
-                    <th style="width: 20%;">المستوى الأكاديمي</th>
-                    <th>ملاحظات وتوصيات المعلم</th>
+                    <th style="width: 15%;">المادة</th>
+                    <th style="width: 20%;">المعلم</th>
+                    <th style="width: 15%; text-align: center;">المستوى</th>
+                    <th>ملاحظات وتوصيات المعلم الأكاديمية</th>
                 </tr>
             </thead>
             <tbody>
                 <% if(evaluations.length > 0) { %>
                     <% evaluations.forEach(e => { %>
                         <tr>
+                            <td style="font-weight: bold; color: var(--primary);"><%= e.teacher_subject || 'مادة دراسية' %></td>
                             <td>أ/ <%= e.teacher_name %></td>
                             <td style="text-align: center;"><span class="level-badge"><%= e.level %></span></td>
                             <td><%= e.remark || 'لا توجد ملاحظات إضافية' %></td>
                         </tr>
                     <% }) %>
                 <% } else { %>
-                    <tr><td colspan="3" style="text-align: center;">لا توجد تقييمات مسجلة بعد.</td></tr>
+                    <tr><td colspan="4" style="text-align: center;">لا توجد تقييمات أكاديمية مسجلة بعد.</td></tr>
                 <% } %>
             </tbody>
         </table>
@@ -149,7 +162,7 @@
             <div class="section-title">ثانياً: ملخص الحضور والغياب</div>
             <p style="margin-bottom: 5px;">إجمالي أيام الغياب: <strong><%= absences.length %> أيام</strong></p>
             <table style="font-size: 11px;">
-                <tr><th>التاريخ</th><th>ملاحظات</th></tr>
+                <tr><th>التاريخ</th><th>الحالة</th></tr>
                 <% absences.slice(0, 5).forEach(a => { %>
                     <tr><td><%= a.date %></td><td>غياب بدون عذر</td></tr>
                 <% }) %>
@@ -163,12 +176,18 @@
             <div class="section-title">ثالثاً: السلوك والانضباط</div>
             <% if(behaviors.length > 0) { %>
                 <table>
-                    <tr><th>التاريخ</th><th>الحدث</th></tr>
-                    <% behaviors.slice(0, 5).forEach(b => { %>
-                        <tr><td><%= b.created_at %></td><td><%= b.event_text %></td></tr>
-                    <% }) %>
+                    <thead>
+                        <tr><th style="width: 30%;">التاريخ</th><th>الملاحظة السلوكية</th></tr>
+                    </thead>
+                    <tbody>
+                        <% behaviors.slice(0, 8).forEach(b => { %>
+                            <tr><td><%= b.created_at %></td><td><%= b.event_text %></td></tr>
+                        <% }) %>
+                    </tbody>
                 </table>
-            <% } else { %><p>السلوك منضبط بشكل عام.</p><% } %>
+            <% } else { %>
+                <div style="padding: 10px; border: 1px dashed #ccc; text-align: center;">السلوك منضبط بشكل عام.</div>
+            <% } %>
         </div>
     </div>
 

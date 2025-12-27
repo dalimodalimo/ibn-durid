@@ -377,9 +377,18 @@
     const ELEVES = <%- JSON.stringify(eleves || []) %>;
     const SUBSTITUTIONS = <%- JSON.stringify(substitute_logs || []) %>;
     const classLocks = <%- JSON.stringify(classLocks || []) %>;
-    const dayNamesAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    // 1. تحديث المصفوفة لتطابق تماماً ما في قاعدة البيانات (مع الهمزات)
+const dayNamesAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
-    const cleanAr = str => str ? str.trim().replace(/[أإآ]/g, 'ا') : "";
+// 2. تعديل دالة cleanAr لتكون أكثر مرونة في إزالة المسافات والهمزات عند المقارنة
+const cleanAr = str => {
+    if (!str) return "";
+    return str.trim()
+        .replace(/[أإآ]/g, 'ا') // تحويل كل الألفات إلى ا
+        .replace(/\s+/g, '');   // إزالة أي مسافات زائدة قد تكون في قاعدة البيانات
+};
+
+   // const cleanAr = str => str ? str.trim().replace(/[أإآ]/g, 'ا') : "";
 
     // معرف المعلم الحالي (لجعل إخفاء الإعلانات شخصيًا)
     const PROF_ID = "<%= prof.id %>";

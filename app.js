@@ -646,17 +646,29 @@ app.post('/teacher/absences/mark', async (req, res) => {
     }
 });
 
-    app.post('/teacher/behavior/add', async (req, res) => {
-        const { student_id, teacher_id, event_text } = req.body;
-        const today = new Date().toISOString().split('T')[0];
-        try {
-            await pool.query("INSERT INTO behavior_logs (student_id, teacher_id, event, date) VALUES ($1, $2, $3, $4)", 
-                [student_id, teacher_id, event_text, today]);
-            res.redirect(`/teacher/dashboard/${teacher_id}?success=behavior_added`);
-        } catch (e) {
-            res.status(500).send("خطأ في تسجيل الملاحظة السلوكية");
+  app.post('/teacher/behavior/add', async (req, res) => {
+    // لاحظ التغيير هنا: استخدمنا event ليتطابق مع name="event" في الـ HTML
+    const { student_id, teacher_id, event } = req.body; 
+    
+    const today = new Date().toLocaleDateString('ar-EG');
+
+    try {
+        // التأكد من أن الملاحظة ليست فارغة
+        if (!event || event.trim() === "") {
+            return res.status(400).send("نص الملاحظة مطلوب");
         }
-    });
+
+        await pool.query(
+            "INSERT INTO behavior_logs (student_id, teacher_id, event, date, severity) VALUES ($1, $2, $3, $4, $5)", 
+            [student_id, teacher_id, event, today, 'pending']
+        );
+
+        res.redirect(`/teacher/dashboard/${teacher_id}?success=behavior_added`);
+    } catch (e) {
+        console.error("Error:", e.message);
+        res.status(500).send("خطأ في تسجيل الملاحظة");
+    }
+});
 
     // --- [ الخروج ] ---
 
@@ -826,25 +838,48 @@ app.post('/admin/timetable/ajouter-json', isAdmin, async (req, res) => {
 
     // --- [ التقارير الشاملة ] ---
 
-    app.get('/admin/student/full-report/:id', async (req, res) => {
-        try {
-            const studentId = req.params.id;
-            const student = (await pool.query("SELECT * FROM students WHERE id = $1", [studentId])).rows[0];
-            if (!student) return res.status(404).send("الطالب غير موجود");
+ app.get('/admin/student/full-report/:id', async (req, res) => {
+    try {
+        const studentId = req.params.id;
 
-            const absences = (await pool.query("SELECT * FROM student_absences WHERE eleve_id = $1", [studentId])).rows;
-            const behaviors = (await pool.query("SELECT date AS created_at, event AS event_text FROM behavior_logs WHERE student_id = $1", [studentId])).rows;
-            const evaluations = (await pool.query(`
-                SELECT ae.*, e.nom as teacher_name 
-                FROM academic_evaluations ae
-                JOIN enseignants e ON ae.enseignant_id = e.id
-                WHERE ae.eleve_id = $1`, [studentId])).rows;
+        const studentRes = await pool.query("SELECT * FROM students WHERE id = $1", [studentId]);
+        const student = studentRes.rows[0];
+        if (!student) return res.status(404).send("الطالب غير موجود");
 
-            res.render('student_report', { student, absences, behaviors, evaluations, titre: "تقرير الطالب الشامل" });
-        } catch (e) {
-            res.status(500).send("خطأ أثناء استخراج التقرير");
-        }
-    });
+        const absences = (await pool.query(
+            "SELECT * FROM student_absences WHERE eleve_id = $1 ORDER BY date DESC", 
+            [studentId]
+        )).rows;
+
+        // 1. ملاحظات السلوك المؤكدة (مع جلب اسم المعلم ومادته أيضاً هنا)
+        const behaviors = (await pool.query(`
+            SELECT b.date AS created_at, b.event AS event_text, e.nom AS teacher_name, e.matiere
+            FROM behavior_logs b
+            LEFT JOIN enseignants e ON b.teacher_id = e.id
+            WHERE b.student_id = $1 AND b.severity = 'confirmed' 
+            ORDER BY b.id DESC`, [studentId])).rows;
+
+        // 2. التقييمات الأكاديمية (مع جلب المادة لجدول الدرجات)
+        const evaluations = (await pool.query(`
+            SELECT ae.*, e.nom as teacher_name, e.matiere AS teacher_subject
+            FROM academic_evaluations ae
+            JOIN enseignants e ON ae.enseignant_id = e.id
+            WHERE ae.eleve_id = $1 AND ae.level != 'انضباط سلوكي'
+            ORDER BY ae.date_submission DESC`, [studentId])).rows;
+
+        res.render('student_report', { 
+            student, 
+            absences, 
+            behaviors, 
+            evaluations, 
+            titre: `التقرير الشامل - ${student.nom}` 
+        });
+
+    } catch (e) {
+        console.error("Report Error:", e.message);
+        res.status(500).send("خطأ أثناء استخراج التقرير");
+    }
+});
 
     app.get('/admin/student-reports-list', async (req, res) => {
         try {
@@ -1457,16 +1492,100 @@ app.get('/admin/rapport-absences-eleves', async (req, res) => {
 // 1. مسار عرض التقارير
 
 
+// هذا الكود هو الذي يستقبل الضغطة من لوحة التحكم
+// يجب أن يكون المسار مطابقاً تماماً لما هو مكتوب في الرابط
+app.get('/admin/behavior-reports', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                b.id, 
+                s.nom AS student_name, 
+                s.id AS student_id, 
+                s.classe, 
+                s.section, 
+                b.event AS event_desc, 
+                t.nom AS teacher_name, 
+                t.matiere AS teacher_subject, -- تأكد من أن اسم العمود في جدول المعلمين هو matiere
+                b.date, 
+                b.severity
+            FROM behavior_logs b
+            INNER JOIN students s ON b.student_id = s.id
+            LEFT JOIN enseignants t ON b.teacher_id = t.id
+            ORDER BY b.created_at DESC
+        `);
+
+        res.render('admin_behaviors', { 
+            titre: "سجل السلوك والانضباط",
+            reports: result.rows 
+        });
+    } catch (e) {
+        console.error("Error:", e.message);
+        res.status(500).send("خطأ في جلب البيانات");
+    }
+});
+
+
+app.post('/admin/behavior/confirm/:id', async (req, res) => {
+    const client = await pool.connect(); // استخدام client لضمان تنفيذ العمليتين معاً
+    try {
+        await client.query('BEGIN'); // بدء عملية التحويل (Transaction)
+
+        // 1. جلب بيانات الملاحظة والسلوك
+        const logResult = await client.query(
+            "SELECT student_id, teacher_id, event FROM behavior_logs WHERE id = $1", 
+            [req.params.id]
+        );
+
+        if (logResult.rows.length === 0) {
+            throw new Error("الملاحظة غير موجودة");
+        }
+
+        const { student_id, teacher_id, event } = logResult.rows[0];
+
+        // 2. تحديث حالة الملاحظة في جدول السلوك إلى "confirmed"
+        await client.query(
+            "UPDATE behavior_logs SET severity = 'confirmed' WHERE id = $1", 
+            [req.params.id]
+        );
+
+        // 3. حقن الملاحظة في نظام التقييمات الأكاديمية
+        // سنضع 'سلوك' في خانة level أو نضيفها للملاحظة
+        await client.query(`
+            INSERT INTO academic_evaluations 
+            (eleve_id, enseignant_id, level, remark, date_submission)
+            VALUES ($1, $2, $3, $4, $5)
+        `, [
+            student_id, 
+            teacher_id, 
+            'انضباط سلوكي', // وضعنا نوع التقييم في خانة المستوى (Level)
+            `ملاحظة مؤكدة: ${event}`, 
+            new Date().toLocaleDateString('ar-EG')
+        ]);
+
+        await client.query('COMMIT'); // اعتماد التغييرات في الجدولين
+        res.redirect('/admin/behavior-reports');
+
+    } catch (e) {
+        await client.query('ROLLBACK'); // تراجع عن كل شيء في حال حدوث خطأ
+        console.error("خطأ أثناء الربط الأكاديمي:", e.message);
+        res.status(500).send("فشل في تأكيد الملاحظة وربطها بالتقييم");
+    } finally {
+        client.release();
+    }
+});
+
+
 // 2. مسار حذف ملاحظة سلوكية
 app.post('/admin/behavior/delete/:id', async (req, res) => {
     try {
         await pool.query("DELETE FROM behavior_logs WHERE id = $1", [req.params.id]);
         res.redirect('/admin/behavior-reports');
     } catch (e) {
-        console.error("Error deleting report:", e.message);
-        res.status(500).send("فشل في حذف الملاحظة");
+        res.status(500).send("خطأ أثناء الحذف");
     }
 });
+
+
 app.post('/admin/stars-management/update', async (req, res) => {
     try {
         const { teacher_id, stars_to_add, reason } = req.body;

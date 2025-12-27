@@ -135,28 +135,97 @@ app.post('/teacher/evaluate/submit', async (req, res) => {
         res.status(500).send("خطأ أثناء حفظ التقييم");
     }
 });
+//////---------------------
+app.get('/admin/student-reports-list', async (req, res) => {
+    try {
+        // الاستعلام عن الطلاب الذين لديهم طلبات تقييم مع حساب الإحصائيات
+        const reportsQuery = `
+            SELECT 
+                e.id, e.nom, e.classe, e.section, e.parent_phone,
+                COUNT(er.id) as total_teachers_requested,
+                COUNT(ae.id) as completed_count
+            FROM students e
+            INNER JOIN evaluation_requests er ON e.id = er.eleve_id
+            LEFT JOIN academic_evaluations ae ON (er.eleve_id = ae.eleve_id AND er.enseignant_id = ae.enseignant_id)
+            GROUP BY e.id, e.nom, e.classe, e.section, e.parent_phone
+            ORDER BY e.nom ASC
+        `;
+
+        // جلب قائمة كل الطلاب لعرضهم في النافذة المنبثقة (Modal) عند طلب تقييم جديد
+        const studentsQuery = "SELECT id, nom, classe, section FROM students ORDER BY nom ASC";
+
+        const reports = await pool.query(reportsQuery);
+        const allStudents = await pool.query(studentsQuery);
+
+        res.render('student_reports_list', { 
+            students: reports.rows, 
+            all_students: allStudents.rows 
+        });
+    } catch (e) {
+        console.error("Error in GET reports list:", e);
+        res.status(500).send("حدث خطأ في تحميل البيانات");
+    }
+});
 
 app.post('/admin/students/request-evaluation', async (req, res) => {
     try {
         const { student_id } = req.body;
         if (!student_id) return res.status(400).send("لم يتم اختيار طالب");
 
-        const student = (await pool.query("SELECT * FROM students WHERE id = $1", [parseInt(student_id)])).rows[0];
+        // التأكد من وجود الطالب في جدول eleves
+        const studentRes = await pool.query("SELECT * FROM students WHERE id = $1", [parseInt(student_id)]);
+        const student = studentRes.rows[0];
+        
         if (!student) return res.status(404).send("عذراً، الطالب غير موجود");
 
-        const teachers = (await pool.query("SELECT enseignant_id FROM affectations WHERE classe = $1 AND section = $2", [student.classe, student.section])).rows;
+        // جلب المعلمين المسندين لهذا الفصل والقسم من جدول affectations
+        const teachersRes = await pool.query(
+            "SELECT DISTINCT enseignant_id FROM affectations WHERE classe = $1 AND section = $2", 
+            [student.classe, student.section]
+        );
+        const teachers = teachersRes.rows;
+
+        if (teachers.length === 0) {
+            return res.send("<script>alert('لا يوجد معلمون مسندون لهذا القسم حالياً'); window.history.back();</script>");
+        }
+
         const date_request = new Date().toISOString().split('T')[0];
 
+        // إدخال طلب لكل معلم مع منع التكرار (ON CONFLICT)
         for (const t of teachers) {
-            await pool.query("INSERT INTO evaluation_requests (eleve_id, enseignant_id, date_request, status) VALUES ($1, $2, $3, 'pending')", 
-                [student.id, t.enseignant_id, date_request]);
+            await pool.query(
+                `INSERT INTO evaluation_requests (eleve_id, enseignant_id, date_request, status) 
+                 VALUES ($1, $2, $3, 'pending')
+                 ON CONFLICT DO NOTHING`, 
+                [student.id, t.enseignant_id, date_request]
+            );
         }
+
         res.redirect('/admin/student-reports-list?success=1');
     } catch (e) {
-        console.error(e);
+        console.error("Error in POST request-evaluation:", e);
         res.status(500).send("حدث خطأ أثناء معالجة طلبك");
     }
 });
+
+
+app.delete('/admin/students/request-evaluation/:id', async (req, res) => {
+    try {
+        const studentId = req.params.id;
+
+        // حذف الطلبات من جدول الطلبات (سيتم حذف التقييمات تلقائياً إذا كان هناك ON DELETE CASCADE)
+        await pool.query("DELETE FROM evaluation_requests WHERE eleve_id = $1", [studentId]);
+        
+        // إذا أردت حذف التقييمات الفعلية المكتوبة أيضاً:
+        await pool.query("DELETE FROM academic_evaluations WHERE eleve_id = $1", [studentId]);
+
+        res.sendStatus(200); // إرسال استجابة نجاح للمتصفح
+    } catch (e) {
+        console.error("Error in DELETE request:", e);
+        res.status(500).send("خطأ في عملية الحذف");
+    }
+});
+
 
     // --- [ 1. بوابات الدخول ] ---
 
@@ -1348,59 +1417,41 @@ app.get('/admin/substitute', isAdmin, async (req, res) => {
 });
 
 
+
+
 app.get('/admin/rapport-absences-eleves', async (req, res) => {
     try {
+        let selectedDate = req.query.date;
+        if (!selectedDate) {
+            selectedDate = new Date().toISOString().split('T')[0];
+        }
+
         const query = `
             SELECT 
-                e.id, 
-                e.nom, 
-                e.classe, 
-                e.section, 
-                COUNT(DISTINCT a.date) as total_absences_days 
-            FROM students e
-            -- التغيير هنا: استخدمنا اسم الجدول الصحيح الذي يرسل له المعلم البيانات
-            LEFT JOIN student_absences a ON e.id = a.eleve_id
-            GROUP BY e.id, e.nom, e.classe, e.section
-            ORDER BY total_absences_days DESC, e.classe ASC, e.nom ASC;
+                s.id, 
+                s.nom, 
+                s.classe, 
+                s.section, 
+                (SELECT COUNT(DISTINCT date) FROM student_absences WHERE eleve_id = s.id) as total_absences_days,
+                EXISTS(
+                    SELECT 1 FROM student_absences 
+                    WHERE eleve_id = s.id 
+                    AND TRIM(date) LIKE $1 || '%' 
+                ) as is_absent_today
+            FROM students s
+            ORDER BY s.classe ASC, s.section ASC, s.nom ASC;
         `;
         
-        const result = await pool.query(query);
+        const result = await pool.query(query, [selectedDate]);
         
         res.render('admin_rapport_absences', {
             rapports: result.rows,
+            selectedDate: selectedDate,
             titre: "تقرير متابعة الغياب اليومي"
         });
     } catch (e) {
-        console.error("Error in Absence Report:", e.message);
-        res.status(500).send("خطأ في جلب البيانات");
-    }
-});
-
-app.get('/admin/behavior-reports', async (req, res) => {
-    try {
-        const query = `
-            SELECT 
-                b.id, 
-                e.nom as student_name, 
-                e.classe, 
-                e.section, 
-                b.event as event_desc,
-                p.nom as teacher_name, 
-                b.date as date -- جلب التاريخ مباشرة كونه نص في قاعدة البيانات
-            FROM behavior_logs b
-            JOIN eleves e ON b.student_id = e.id
-            JOIN enseignants p ON b.teacher_id = p.id
-            ORDER BY b.id DESC -- الترتيب حسب المعرف الأحدث
-        `;
-        const result = await pool.query(query);
-       // ابحث عن هذا السطر وقم بتعديله كالتالي:
-res.render('admin_behaviors', {  // حذفنا _reports لتطابق اسم ملفك
-    reports: result.rows,
-    titre: "سجل الانضباط والسلوك"
-});
-    } catch (e) {
-        console.error("خطأ في جلب تقرير السلوك:", e.message);
-        res.status(500).send("خطأ في تحميل سجل الانضباط: " + e.message);
+        console.error("Erreur SQL :", e.message);
+        res.status(500).send("خطأ في الخادم");
     }
 });
 // 1. مسار عرض التقارير

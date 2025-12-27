@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة التقارير الأكاديمية الذكية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* تحسين مظهر البحث ليتناسب مع تصميمك */
+    .select2-container--default .select2-selection--single {
+        height: 50px;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+    }
+    .select2-results__option {
+        text-align: right; /* للغة العربية */
+        font-family: 'Cairo';
+    }
+    .select2-search__field {
+        direction: rtl;
+        font-family: 'Cairo';
+    }
+</style>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #27ae60;
+            --danger: #ef476f;
+            --warning: #ffbe0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* Header Section */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 25px;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.2);
+        }
+
+        .header-title h1 { margin: 0; font-size: 1.8rem; font-weight: 800; }
+        .header-title p { margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem; }
+
+        /* Filters Bar */
+        .filters-bar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Report Cards Grid */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #edf2f7;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .student-avatar {
+            width: 50px;
+            height: 50px;
+            background: #eef2ff;
+            color: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .student-details h3 { margin: 0; font-size: 1.1rem; }
+        .student-details span { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* Progress Bar Section */
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .progress-wrapper {
+            height: 12px;
+            background: #f1f5f9;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .progress-fill { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fill-completed { background: var(--success); }
+        .fill-pending { background: var(--warning); }
+
+        /* Action Buttons */
+        .card-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 15px;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-view { background: #eef2ff; color: var(--primary); }
+        .btn-print { background: #f8fafc; color: #475569; }
+        .btn-send { background: #f0fdf4; color: #16a34a; }
+        .btn-delete { background: #fff1f2; color: var(--danger); }
+
+        .btn:hover { filter: brightness(0.95); transform: scale(0.98); }
+
+        /* Modal Customization */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            display:none; justify-content:center; align-items:center; z-index:2000;
+        }
+
+        .modal-box {
+            background:white; width: 95%; max-width: 500px;
+            padding: 30px; border-radius: 25px; position:relative;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            position: absolute; top: 20px; left: 20px;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold;
+        }
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-waiting { background: #fef9c3; color: #854d0e; }
+        .status-full { background: #e0f2fe; color: #075985; }
+
+        .filter-select {
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            font-family: 'Cairo';
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <header class="page-header">
+        <div class="header-title">
+            <h1><i class="fas fa-file-invoice"></i> نظام التقييمات الأكاديمية</h1>
+            <p>إدارة طلبات تقييم الطلاب ومتابعة استجابات المعلمين</p>
+        </div>
+        <button class="btn" style="background: white; color: var(--primary); font-weight: bold; padding: 12px 25px; border-radius: 12px;" onclick="toggleModal(true)">
+            <i class="fas fa-plus-circle"></i> طلب تقييم جديد
+        </button>
+    </header>
+
+    <div class="filters-bar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="mainSearch" placeholder="ابحث باسم الطالب أو الفصل...">
+        </div>
+        <select class="filter-select" id="classFilter">
+            <option value="">جميع الصفوف</option>
+            </select>
+    </div>
+
+    <div class="reports-grid">
+        <% if(students && students.length > 0) { %>
+            <% students.forEach(student => { 
+                // حسابات ديناميكية للبار
+                const totalReq = parseInt(student.total_teachers_requested) || 1;
+                const done = parseInt(student.completed_count) || 0;
+                const progressPercent = Math.round((done / totalReq) * 100);
+                const pendingPercent = 100 - progressPercent;
+            %>
+                <div class="report-card" data-class="<%= student.classe %>">
+                    <% if(progressPercent === 100) { %>
+                        <span class="status-badge status-full">مكتمل 100%</span>
+                    <% } else { %>
+                        <span class="status-badge status-active">قيد المعالجة</span>
+                    <% } %>
+                    
+                    <div class="student-info">
+                        <div class="student-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="student-details">
+                            <h3><%= student.nom %></h3>
+                            <span><%= student.classe %> - <%= student.section %></span>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>استجابة المعلمين</span>
+                            <span><%= progressPercent %>%</span>
+                        </div>
+                        <div class="progress-wrapper">
+                            <div class="progress-fill fill-completed" style="width: <%= progressPercent %>%"></div>
+                            <div class="progress-fill fill-pending" style="width: <%= (done < totalReq) ? (100-progressPercent) : 0 %>%"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                            <span><i class="fas fa-check-circle" style="color: var(--success)"></i> تم: <%= done %></span>
+                            <span><i class="fas fa-hourglass-half" style="color: var(--warning)"></i> مطلوب: <%= totalReq %></span>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <a href="/admin/student/full-report/<%= student.id %>" class="btn btn-view">
+                            <i class="fas fa-eye"></i> فتح التقرير
+                        </a>
+                        <button class="btn btn-print" onclick="window.print()">
+                            <i class="fas fa-print"></i> طباعة
+                        </button>
+                        <button class="btn btn-send" onclick="sendWhatsApp('<%= student.parent_phone %>', '<%= student.nom %>')">
+                            <i class="fab fa-whatsapp"></i> للأب
+                        </button>
+                        <button class="btn btn-delete" onclick="deleteReportRequest('<%= student.id %>')">
+                            <i class="fas fa-trash-alt"></i> حذف
+                        </button>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div style="grid-column: 1/-1; text-align: center; padding: 80px; background: white; border-radius: 25px;">
+                <img src="https://illustrations.popsy.co/blue/online-registration.svg" style="width: 250px; margin-bottom: 20px;">
+                <h3>لا يوجد طلبات حالية</h3>
+                <p style="color: var(--text-muted)">قم بالضغط على "طلب تقييم جديد" للبدء</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <h2 style="margin-top: 0; font-weight: 800; color: var(--primary);">
+            <i class="fas fa-magic"></i> طلب تقييم ذكي
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">
+            سيقوم النظام تلقائياً بتحديد جميع المعلمين الذين يدرسون الطالب وإرسال طلب تقييم لهم.
+        </p>
+        
+        <form action="/admin/students/request-evaluation" method="POST">
+    <div style="margin-bottom: 25px;">
+        <label style="display: block; margin-bottom: 10px; font-weight: 600;">ابحث عن الطالب (بالاسم، الفصل، أو القسم):</label>
+        <select name="student_id" id="studentSelect" required style="width: 100%;">
+            <option value="" disabled selected>اكتب اسم الطالب أو الفصل...</option>
+            <% all_students.forEach(s => { %>
+                <option value="<%= s.id %>">
+                    <%= s.nom %> | <%= s.classe %> - <%= s.section %>
+                </option>
+            <% }) %>
+        </select>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <button type="submit" class="btn" style="background: var(--primary); color: white; flex: 2; padding: 15px; font-weight: bold; border-radius: 12px;">
+            <i class="fas fa-paper-plane"></i> إرسال الطلبات للمعلمين
+        </button>
+        <button type="button" class="btn" style="background: #f1f5f9; flex: 1; border-radius: 12px;" onclick="toggleModal(false)">إلغاء</button>
+    </div>
+</form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    /* تحسين شكل صندوق البحث Select2 ليتناسب مع تصميم الصفحة */
+    .select2-container--default .select2-selection--single {
+        height: 50px !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        display: flex;
+        align-items: center;
+        font-family: 'Cairo', sans-serif;
+    }
+    .select2-container [dir="rtl"] .select2-selection--single .select2-selection__rendered {
+        text-align: right;
+        padding-right: 15px;
+    }
+    .select2-selection__arrow { height: 50px !important; }
+    .select2-dropdown { border-radius: 12px; border: 2px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+</style>
+
+<script>
+    $(document).ready(function() {
+        // تفعيل البحث الذكي على قائمة الطلاب
+        $('#studentSelect').select2({
+            dir: "rtl",
+            dropdownParent: $('#modalOverlay'), // ضروري ليعمل البحث فوق المودال
+            placeholder: "ابحث بالاسم، الفصل، أو القسم...",
+            allowClear: true,
+            language: {
+                noResults: function() { return "لا يوجد نتائج مطابقة للبحث"; }
+            }
+        });
+    });
+
+    function toggleModal(show) {
+        const modal = document.getElementById('modalOverlay');
+        modal.style.display = show ? 'flex' : 'none';
+        
+        // إعادة ضبط البحث عند فتح المودال أو إغلاقه
+        if (show) {
+            $('#studentSelect').val(null).trigger('change');
+        }
+    }
+
+    // البحث الفوري في البطاقات الرئيسية
+    document.getElementById('mainSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.report-card').forEach(card => {
+            const name = card.querySelector('h3').innerText.toLowerCase();
+            const details = card.querySelector('.student-details span').innerText.toLowerCase();
+            // البحث في الاسم والصف معاً
+            card.style.display = (name.includes(term) || details.includes(term)) ? 'block' : 'none';
+        });
+    });
+
+    // إرسال واتساب لولي الأمر
+    function sendWhatsApp(phone, studentName) {
+        if(!phone || phone === 'null' || phone === '') {
+            alert('خطأ: رقم هاتف ولي الأمر غير مسجل في ملف الطالب.');
+            return;
+        }
+        const msg = encodeURIComponent(`تحية طيبة من مدرسة ابن دريد،\n\nنحيطكم علماً بأن التقرير الأكاديمي الشامل للطالب: ${studentName} قد أصبح جاهزاً للمراجعة.\n\nنتمنى لكم يوماً سعيداً.`);
+        window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    }
+
+    // حذف الطلب
+    async function deleteReportRequest(studentId) {
+        if(confirm('هل أنت متأكد من حذف هذا التقرير؟ سيتم حذف جميع طلبات المعلمين المرتبطة بهذا الطالب.')) {
+            try {
+                const response = await fetch(`/admin/students/request-evaluation/${studentId}`, {
+                    method: 'DELETE'
+                });
+                if(response.ok) {
+                    location.reload();
+                } else {
+                    alert('حدث خطأ أثناء الحذف.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('فشل الاتصال بالسيرفر لحذف التقرير.');
+            }
+        }
+    }
+
+    // إغلاق المودال عند الضغط خارج الصندوق
+    window.onclick = function(event) {
+        const modal = document.getElementById('modalOverlay');
+        if (event.target == modal) toggleModal(false);
+    }
+</script>
+</body>
+</html>

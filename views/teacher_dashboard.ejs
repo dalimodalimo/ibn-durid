@@ -261,6 +261,65 @@
             .stars-big { font-size: 2.6rem; }
             .exit-btn span { display: none; }
         }
+
+        /* ===== POPUP ANNONCE PLEIN ÉCRAN - VERSION FINALE ===== */
+        #global-popup-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: none;
+            align-items: flex-end; /* الزر في الأسفل */
+            justify-content: center;
+        }
+
+        #popup-image {
+            width: 100%;
+            height: auto;
+            max-height: 100vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        #popup-continue-btn {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 36px;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1.5px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50px;
+            color: white;
+            font-size: 1.05rem; /* حجم خط أصغر قليلاً */
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        #popup-continue-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateX(-50%) scale(1.06);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+        }
+
+        #popup-continue-btn i {
+            font-size: 1.2rem;
+            animation: arrowPulse 1.6s infinite;
+        }
+
+        @keyframes arrowPulse {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(6px); }
+        }
     </style>
 </head>
 <body>
@@ -542,7 +601,7 @@
 
         let selectedDay = dayNamesAr[new Date().getDay()];
         let absenceMarkedToday = new Set();
-        let isMarkingAbsence = false; // متغير جديد للتحكم في التحديث التلقائي
+        let isMarkingAbsence = false;
 
         classLocks.forEach(lock => {
             absenceMarkedToday.add(`${lock.classe}-${lock.section}`);
@@ -636,7 +695,7 @@
                 btn.textContent = 'تأكيد الغياب';
                 btn.style.background = 'var(--primary)';
             }
-            isMarkingAbsence = false; // تم إغلاق نموذج الغياب
+            isMarkingAbsence = false;
         }
 
         function manageAttendanceUI(period) {
@@ -671,7 +730,6 @@
                 return;
             }
 
-            // إظهار النموذج والزر
             document.getElementById('no-session-msg').classList.add('hidden');
             document.getElementById('attendance-active').classList.remove('hidden');
             document.getElementById('active-class-title').textContent = `${currentSession.classe}-${currentSession.section}`;
@@ -680,13 +738,12 @@
             document.getElementById('submit-absence-btn').style.display = 'block';
 
             renderStudents(currentSession.classe, currentSession.section);
-            isMarkingAbsence = true; // الآن نحن في وضع رصد الغياب
+            isMarkingAbsence = true;
         }
 
         function renderStudents(classe, section) {
             const container = document.getElementById('student-grid-container');
 
-            // حفظ حالة الـ checkboxes الحالية قبل إعادة البناء
             const currentChecks = {};
             container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                 currentChecks[cb.value] = cb.checked;
@@ -751,7 +808,6 @@
             document.getElementById('selected-day-name').textContent = selectedDay;
             document.querySelector(`.day-tab[data-day="${selectedDay}"]`).classList.add('active');
 
-            // تحديث كل 10 ثواني فقط إذا لم نكن في وضع رصد الغياب
             setInterval(() => {
                 if (isMarkingAbsence) return;
                 if (cleanAr(selectedDay) === cleanAr(dayNamesAr[new Date().getDay()])) {
@@ -891,34 +947,33 @@
     </script>
 
     <% if (activePopup) { %>
-    <div id="global-popup-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:10000; backdrop-filter:blur(8px);">
-        <div style="position:relative; width:85%; max-width:340px;">
-            <button onclick="closeGlobalPopup()" style="position:absolute; top:-16px; left:-16px; width:40px; height:40px; background:#dc2626; color:white; border:none; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.4);">×</button>
-            <div style="border-radius:20px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.6);">
-                <img src="<%= activePopup.image_url %>" alt="إعلان مهم" style="width:100%; display:block;">
-            </div>
-            <button onclick="closeGlobalPopup()" style="width:100%; margin-top:20px; padding:16px; border-radius:16px; background:linear-gradient(135deg,#22c55e,#16a34a); color:white; border:none; font-size:1.2rem; font-weight:900; cursor:pointer;">متابعة الجلسة</button>
-        </div>
+    <div id="global-popup-overlay">
+        <img id="popup-image" src="<%= activePopup.image_url %>" alt="إعلان مهم">
+        <button id="popup-continue-btn">
+            متابعة إلى الحساب <i class="fas fa-arrow-left"></i>
+        </button>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const overlay = document.getElementById('global-popup-overlay');
-            if (!overlay) return;
-            const currentImage = overlay.querySelector('img').src;
-            if (localStorage.getItem('last_seen_popup') === currentImage) {
-                overlay.style.display = 'none';
-            }
-        });
-        function closeGlobalPopup() {
-            const overlay = document.getElementById('global-popup-overlay');
-            if (overlay) {
-                localStorage.setItem('last_seen_popup', overlay.querySelector('img').src);
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.remove(), 400);
-            }
-        }
-    </script>
     <% } %>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const popup = document.getElementById('global-popup-overlay');
+            if (!popup) return;
+
+            const currentImage = popup.querySelector('#popup-image').src;
+            if (localStorage.getItem('last_seen_popup') === currentImage) {
+                popup.style.display = 'none';
+                return;
+            }
+
+            popup.style.display = 'flex';
+
+            document.getElementById('popup-continue-btn').onclick = function() {
+                localStorage.setItem('last_seen_popup', currentImage);
+                popup.style.opacity = '0';
+                setTimeout(() => popup.style.display = 'none', 500);
+            };
+        });
+    </script>
 </body>
 </html>

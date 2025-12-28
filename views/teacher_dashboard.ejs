@@ -464,12 +464,12 @@
                     <div style="font-size:1.1rem; font-weight:800; margin-top:8px;">رصد غياب</div>
                     <div id="active-class-title" style="font-size:1.4rem; font-weight:900; color:var(--primary); margin-top:4px;">--</div>
                 </div>
-                <form action="/teacher/absences/mark" method="POST">
+                <form action="/teacher/absences/mark" method="POST" id="absence-form">
                     <input type="hidden" name="enseignant_id" value="<%= prof.id %>">
                     <input type="hidden" name="date" id="input-date">
                     <input type="hidden" name="periode" id="input-p">
                     <div class="student-grid" id="student-grid-container"></div>
-                    <button type="submit" style="margin-top:20px; background:var(--primary); color:white; padding:14px; border-radius:12px; font-size:1rem;">تأكيد الغياب</button>
+                    <button type="submit" id="submit-absence-btn" style="margin-top:20px; background:var(--primary); color:white; padding:14px; border-radius:12px; font-size:1rem; width:100%;">تأكيد الغياب</button>
                 </form>
             </div>
         </div>
@@ -630,61 +630,55 @@
             if (isToday) {
                 manageAttendanceUI(activePeriod);
             } else {
-                document.getElementById('no-session-msg').classList.remove('hidden');
-                document.getElementById('attendance-active').classList.add('hidden');
+                resetAttendanceSection();
+            }
+        }
+
+        function resetAttendanceSection() {
+            document.getElementById('no-session-msg').classList.remove('hidden');
+            document.getElementById('attendance-active').classList.add('hidden');
+            document.getElementById('student-grid-container').innerHTML = '';
+            document.getElementById('active-class-title').textContent = '--';
+            const btn = document.getElementById('submit-absence-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'تأكيد الغياب';
+                btn.style.background = 'var(--primary)';
             }
         }
 
         function manageAttendanceUI(period) {
-            const noMsg = document.getElementById('no-session-msg');
-            const activeArea = document.getElementById('attendance-active');
-            const container = document.getElementById('student-grid-container');
+            resetAttendanceSection();
 
-            if (!period) {
-                noMsg.classList.remove('hidden');
-                activeArea.classList.add('hidden');
-                return;
-            }
+            if (!period) return;
 
-            // Chercher la séance correspondant exactement à la période active
             const currentPeriode = period.id;
             const currentDay = dayNamesAr[new Date().getDay()];
 
             let currentSession = TIMETABLE.find(s => Number(s.periode) === currentPeriode && cleanAr(s.jour) === cleanAr(currentDay));
-
-            // Si pas de séance normale, vérifier s'il y a une séance احتياط dans cette période
             if (!currentSession) {
                 currentSession = SUBSTITUTIONS.find(s => Number(s.periode) === currentPeriode);
             }
 
-            // Si toujours pas de séance dans cette période → cacher le formulaire
-            if (!currentSession) {
-                noMsg.classList.remove('hidden');
-                activeArea.classList.add('hidden');
-                return;
-            }
+            if (!currentSession) return;
 
             const classKey = `${currentSession.classe}-${currentSession.section}`;
 
-            // Vérifier si cette classe a déjà été marquée absente aujourd'hui
             if (absenceMarkedToday.has(classKey)) {
-                container.innerHTML = `<div style="text-align:center; padding:50px;">
+                document.getElementById('student-grid-container').innerHTML = `<div style="text-align:center; padding:50px;">
                     <div style="background:var(--success); color:white; width:70px; height:70px; line-height:70px; border-radius:50%; margin:0 auto 16px; font-size:2.5rem;">
                         <i class="fas fa-check"></i>
                     </div>
                     <h4 style="color:var(--success); font-size:1.2rem;">تم رصد غياب هذا الفصل اليوم!</h4>
-                    <p style="color:var(--text-muted); margin-top:8px;">(مرة واحدة فقط في اليوم)</p>
+                    <p style="color:var(--text-muted);">مرة واحدة فقط في اليوم</p>
                 </div>`;
-                activeArea.querySelector('button[type="submit"]').style.display = 'none';
-                noMsg.classList.add('hidden');
-                activeArea.classList.remove('hidden');
+                document.getElementById('attendance-active').classList.remove('hidden');
+                document.getElementById('submit-absence-btn').style.display = 'none';
                 return;
             }
 
-            // Afficher le formulaire avec les élèves de la bonne classe
-            noMsg.classList.add('hidden');
-            activeArea.classList.remove('hidden');
-
+            document.getElementById('no-session-msg').classList.add('hidden');
+            document.getElementById('attendance-active').classList.remove('hidden');
             document.getElementById('active-class-title').textContent = `${currentSession.classe}-${currentSession.section}`;
             document.getElementById('input-p').value = currentPeriode;
             document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
@@ -714,12 +708,49 @@
             });
         }
 
-        // Marquer la classe comme absente après envoi
-        document.querySelector('#attendance-active form').addEventListener('submit', function() {
-            const title = document.getElementById('active-class-title').textContent;
-            if (title && title !== '--') {
-                absenceMarkedToday.add(title);
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('absence-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const btn = document.getElementById('submit-absence-btn');
+                    btn.disabled = true;
+                    btn.textContent = 'جاري الإرسال...';
+                    btn.style.background = '#94a3b8';
+
+                    const classTitle = document.getElementById('active-class-title').textContent;
+                    if (classTitle && classTitle !== '--') {
+                        absenceMarkedToday.add(classTitle);
+                    }
+
+                    // Après envoi, on remet à l'état initial (le serveur redirigera normalement)
+                    setTimeout(() => {
+                        resetAttendanceSection();
+                    }, 1500);
+                });
             }
+
+            updateBellStatus();
+            updateTodoCounter();
+            updateSchedule(selectedDay);
+
+            const tabs = document.querySelectorAll('.day-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    selectedDay = tab.dataset.day;
+                    updateSchedule(selectedDay);
+                });
+            });
+
+            document.getElementById('selected-day-name').textContent = selectedDay;
+            document.querySelector(`.day-tab[data-day="${selectedDay}"]`).classList.add('active');
+
+            setInterval(() => {
+                if (cleanAr(selectedDay) === cleanAr(dayNamesAr[new Date().getDay()])) {
+                    updateSchedule(selectedDay);
+                }
+            }, 10000);
         });
 
         document.querySelectorAll('.accept-sub-form').forEach(form => {
@@ -850,31 +881,6 @@
             content.classList.toggle('collapsed');
             chevron.style.transform = content.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            updateBellStatus();
-            updateTodoCounter();
-
-            const tabs = document.querySelectorAll('.day-tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    selectedDay = tab.dataset.day;
-                    updateSchedule(selectedDay);
-                });
-            });
-
-            document.getElementById('selected-day-name').textContent = selectedDay;
-            document.querySelector(`.day-tab[data-day="${selectedDay}"]`).classList.add('active');
-            updateSchedule(selectedDay);
-
-            setInterval(() => {
-                if (cleanAr(selectedDay) === cleanAr(dayNamesAr[new Date().getDay()])) {
-                    updateSchedule(selectedDay);
-                }
-            }, 10000);
-        });
     </script>
 
     <% if (activePopup) { %>

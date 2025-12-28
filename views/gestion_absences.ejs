@@ -3,447 +3,875 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة حصص الاحتياط - مدرسة ابن دريد</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <title>إدارة حصص الاحتياط الذكية - مدرسة ابن دريد</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Select2 + SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         :root {
-            --sidebar-width: 260px;
-            --transition-speed: 0.3s;
-            --primary-color: #1e293b;
-            --success-color: #10b981;
-            --accent-color: #3b82f6;
-            --info-bg: #e0f2fe;
-            --info-border: #0284c7;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --sidebar-bg: #1e293b;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --radius: 16px;
+            --transition: all 0.3s ease;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            display: flex;
+            font-family: 'Cairo', sans-serif;
+            background: #f8fafc;
+            color: var(--text-main);
             min-height: 100vh;
-            overflow-x: hidden;
-            background-color: #f4f7fe;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        /* Sidebar */
         .sidebar {
-            width: var(--sidebar-width);
-            transition: all var(--transition-speed) ease;
-            right: 0;
             position: fixed;
-            height: 100vh;
-            z-index: 2000;
-            background: var(--primary-color);
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            top: 0; right: 0; bottom: 0;
+            width: 280px;
+            background: var(--sidebar-bg);
+            color: white;
+            z-index: 1000;
+            transition: var(--transition);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+            overflow-y: auto;
         }
-
         .sidebar.collapsed {
-            right: calc(var(--sidebar-width) * -1);
+            right: -280px;
+        }
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(59,130,246,0.25);
+            color: white;
+            padding-right: 34px;
+        }
+        .sidebar-nav i {
+            margin-left: 14px;
+            font-size: 1.3rem;
         }
 
+        /* Main Content */
         .main-content {
-            flex: 1;
-            margin-right: var(--sidebar-width);
-            transition: all var(--transition-speed) ease;
-            width: 100%;
-            padding: 20px;
-            padding-top: 80px;
+            margin-right: 280px;
+            padding: 30px;
+            transition: var(--transition);
+            min-height: 100vh;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
         }
-
         .main-content.expanded {
             margin-right: 0;
         }
 
+        /* Toggle Button */
         .sidebar-toggle {
             position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 2100;
-            background: var(--primary-color);
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            background: var(--primary);
             color: white;
             border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 8px;
+            width: 54px; height: 54px;
+            border-radius: 14px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow);
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+        .sidebar-toggle:hover {
+            background: var(--primary-light);
+            transform: scale(1.08);
         }
 
-        /* تنسيقات بطاقات التغطية المحدثة */
-        .recap-banner {
-            background: var(--info-bg); 
-            border-right: 5px solid var(--info-border);
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 25px;
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
         }
-
-        .recap-grid {
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 15px; 
-            margin-top: 15px;
+        .page-header h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 10px;
         }
-
-        .recap-item {
-            background: white; 
-            padding: 15px; 
-            border-radius: 12px;
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .badge-periode {
-            background: var(--primary-color); 
-            color: white;
-            padding: 4px 10px; 
-            border-radius: 6px; 
-            font-weight: bold;
-            font-size: 0.85rem;
-        }
-
-        .btn-retirer {
-            background: none; 
-            border: none; 
-            color: var(--danger-color);
-            cursor: pointer; 
-            padding: 5px; 
+        .page-header p {
+            color: var(--text-muted);
             font-size: 1.2rem;
-            transition: 0.2s;
-        }
-        .btn-retirer:hover { transform: scale(1.1); color: #b91c1c; }
-
-        .arrow-icon {
-            color: var(--success-color);
-            font-size: 1.2rem;
-            margin: 0 15px;
         }
 
-        .absent-item-card {
-            background: white; border-radius: 12px; padding: 15px;
-            margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-right: 5px solid var(--warning-color);
-        }
-
-        .distribution-options {
-            display: flex; gap: 10px; margin-top: 12px;
-            padding-top: 12px; border-top: 1px solid #f1f5f9;
-        }
-
-        .btn-auto {
-            background-color: var(--success-color); color: white; border: none;
-            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
-        }
-
-        .btn-manual {
-            background-color: white; color: var(--accent-color);
-            border: 1px solid var(--accent-color); padding: 8px 16px;
-            border-radius: 6px; cursor: pointer; font-size: 0.85rem;
-        }
-
-        .manual-suggestions-table {
-            width: 100%; margin-top: 10px; border-collapse: collapse; display: none;
-            background: #f8fafc; border-radius: 8px; overflow: hidden;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar { right: calc(var(--sidebar-width) * -1); }
-            .sidebar.active { right: 0; }
-            .main-content { margin-right: 0 !important; }
-            .recap-grid { grid-template-columns: 1fr; }
-        }
-
-        /* تحسين حاوية البطاقة العامة */
+        /* Cards */
         .card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-            border: 1px solid #edf2f7;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 35px;
         }
-
         .card h3 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 1.2rem;
+            gap: 12px;
         }
 
-        /* تنسيق نموذج تسجيل الغياب الجديد */
+        /* زر التوزيع الجماعي */
+        .bulk-assign-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn-bulk-assign {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 14px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .btn-bulk-assign:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Recap Banner (للشاشة فقط) */
+        .recap-banner {
+            background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+            border-right: 7px solid var(--info);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 40px;
+        }
+        .recap-banner h3 {
+            color: var(--info);
+            margin-bottom: 24px;
+            font-size: 1.3rem;
+        }
+        .recap-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+        }
+        .recap-item {
+            background: white;
+            padding: 22px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: var(--transition);
+            border-right: 6px solid #cbd5e1;
+        }
+        .recap-item:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        }
+        .recap-item.accepted {
+            border-right: 7px solid var(--success) !important;
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+        }
+        .recap-actions button {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+        .recap-actions button:hover {
+            background: #fee2e2;
+            transform: scale(1.1);
+        }
+        .arrow-icon {
+            color: #64748b;
+            font-size: 1.8rem;
+            margin: 0 30px;
+        }
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-top: 8px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-badge.confirmed {
+            background: var(--success);
+            color: white;
+        }
+
+        /* زر الطباعة */
+        .print-section {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .btn-print-report {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            border-radius: 14px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+        }
+        .btn-print-report:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+        }
+
+        /* Form تسجيل غياب */
         .form-abs-grid {
             display: grid;
-            grid-template-columns: 1fr 1.5fr auto; /* توزيع الأعمدة */
-            gap: 15px;
-            align-items: center;
+            grid-template-columns: 1fr 1.5fr auto;
+            gap: 24px;
+            align-items: end;
             background: #f8fafc;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 30px;
+            border-radius: 16px;
         }
-
-        .input-group-custom {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
         .input-group-custom label {
-            font-size: 0.85rem;
             font-weight: 600;
-            color: #64748b;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-size: 1rem;
         }
-
-        /* تحسين مظهر Select2 ليتناسب مع تصميمك */
-        .select2-container--default .select2-selection--single {
-            height: 48px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
+        .select2-container, input[type="text"] {
+            width: 100% !important;
         }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 46px;
+        .select2-selection, input[type="text"] {
+            height: 56px !important;
+            border: 2px solid var(--border) !important;
+            border-radius: 12px !important;
+            padding: 0 18px !important;
+            font-size: 1.05rem;
         }
-
-        .form-abs-grid select, 
-        .form-abs-grid input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            background: white;
+        .select2-selection__rendered {
+            line-height: 54px !important;
         }
-
-        .form-abs-grid select:focus, 
-        .form-abs-grid input:focus {
-            border-color: var(--accent-color);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        .select2-selection__arrow {
+            height: 54px !important;
         }
-
-        /* تحسين الزر */
+        input:focus, .select2-container--focus .select2-selection {
+            border-color: var(--primary-light) !important;
+            box-shadow: 0 0 0 5px rgba(59,130,246,0.15);
+        }
         .btn-submit-abs {
-            background: var(--primary-color);
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 0 36px;
+            height: 56px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            height: 48px; /* توحيد الطول مع الحقول */
+            transition: var(--transition);
+        }
+        .btn-submit-abs:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+        }
+
+        /* Sessions needing substitute */
+        .absent-item-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border-right: 7px solid var(--warning);
+            transition: var(--transition);
+        }
+        .absent-item-card:hover {
+            transform: translateY(-5px);
+        }
+        .session-info {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .badge-periode {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .badge-subject {
+            background: #f1f5f9;
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .distribution-options {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .btn-auto, .btn-manual {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+        .btn-auto {
+            background: var(--success);
+            color: white;
+        }
+        .btn-auto:hover {
+            background: #059669;
+            transform: translateY(-3px);
+        }
+        .btn-manual {
+            background: white;
+            color: var(--primary-light);
+            border: 2.5px solid var(--primary-light);
+        }
+        .btn-manual:hover {
+            background: #eff6ff;
+            transform: translateY(-3px);
         }
 
-        .btn-submit-abs:hover {
-            background: #334155;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        /* Manual suggestions */
+        .manual-suggestions {
+            margin-top: 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, padding 0.5s ease;
+            background: #f8fafc;
+            border-radius: 14px;
+        }
+        .manual-suggestions.open {
+            max-height: 600px;
+            padding: 20px;
+        }
+        .manual-suggestions table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .manual-suggestions td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        .manual-suggestions tr:last-child td {
+            border: none;
+        }
+        .assign-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .assign-btn:hover {
+            background: var(--primary-light);
         }
 
-        /* التجاوب مع الجوال */
-        @media (max-width: 992px) {
-            .form-abs-grid {
-                grid-template-columns: 1fr;
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 30px;
+            color: var(--text-muted);
+        }
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 24px;
+            opacity: 0.6;
+        }
+        .empty-state h3 {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+        }
+
+        /* جدول الطباعة فقط - غير مرئي على الشاشة */
+        #printable-table-area {
+            display: none;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
             }
-            .btn-submit-abs {
+            #printable-table-area, #printable-table-area * {
+                visibility: visible;
+            }
+            #printable-table-area {
+                display: block;
+                position: absolute;
+                left: 0;
+                top: 0;
                 width: 100%;
+                padding: 40px 20px;
             }
+            .no-print, .sidebar, .sidebar-toggle, .recap-banner, .print-section {
+                display: none !important;
+            }
+
+            /* تنسيق احترافي وثابت للجدول */
+            .print-report-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12pt;
+                direction: rtl;
+                margin-top: 40px;
+            }
+            .print-report-table th {
+                background: #1e40af;
+                color: white;
+                padding: 12px 10px;
+                text-align: center;
+                font-weight: 900;
+                font-size: 13pt;
+                border: 1.5px solid #000;
+                min-width: 120px;
+                height: 50px;
+            }
+            .print-report-table td {
+                padding: 12px 10px;
+                border: 1.5px solid #000;
+                text-align: center;
+                vertical-align: middle;
+                min-height: 60px;
+                height: 60px;
+                min-width: 120px;
+                word-break: break-word;
+            }
+            .print-report-table tr:nth-child(even) {
+                background: #f8fafc;
+            }
+            .print-report-table .teacher-cell {
+                font-weight: bold;
+                background: #e0f2fe;
+            }
+            .print-report-table .subject-cell {
+                font-style: italic;
+                color: #64748b;
+                font-size: 11pt;
+            }
+            .print-report-table .status-confirmed {
+                background: #10b981;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-weight: bold;
+            }
+            .print-report-table .status-pending {
+                background: #fef3c7;
+                color: #92400e;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-weight: bold;
+            }
+
+            /* عنوان الكشف واسم المدرسة */
+            body::before {
+                content: "مدرسة ابن دريد";
+                display: block;
+                text-align: center;
+                font-size: 28pt;
+                font-weight: 900;
+                color: #1e40af;
+                margin: 20px 0 10px 0;
+            }
+            body::after {
+                content: "كشف توزيع حصص الاحتياط اليومي — التاريخ: <%= today %>";
+                display: block;
+                text-align: center;
+                font-size: 18pt;
+                font-weight: bold;
+                color: #1e293b;
+                margin-top: 50px;
+                padding-top: 20px;
+                border-top: 4px double #1e40af;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .recap-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 992px) {
+            .form-abs-grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 1.8rem; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { right: -280px; }
+            .sidebar.active { right: 0; }
+            .main-content { margin-right: 0 !important; padding: 20px; }
+            .session-info { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
 
-<button class="sidebar-toggle" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+    <button class="sidebar-toggle" id="toggleSidebar">
+        <i class="fas fa-bars"></i>
+    </button>
 
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header" style="padding: 20px; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">
-        <h2><i class="fas fa-user-clock"></i> الاحتياط</h2>
-    </div>
-    <div class="sidebar-nav" style="padding: 10px;">
-        <a href="/admin/dashboard" style="display: block; padding: 12px; color: white; text-decoration: none; border-radius: 8px; margin-bottom: 5px;">
-            <i class="fas fa-home" style="margin-left: 10px;"></i> الرئيسية
-        </a>
-        <a href="/admin/settings" style="display: block; padding: 12px; color: white; text-decoration: none; border-radius: 8px;">
-            <i class="fas fa-cog" style="margin-left: 10px;"></i> الإعدادات
-        </a>
-    </div>
-</div>
+    <aside class="sidebar collapsed" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-user-clock"></i> الاحتياط</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard"><i class="fas fa-home"></i> الرئيسية</a>
+            <a href="/admin/substitute" class="active"><i class="fas fa-exchange-alt"></i> إدارة الاحتياط</a>
+            <a href="/admin/settings"><i class="fas fa-cog"></i> الإعدادات</a>
+        </nav>
+    </aside>
 
-<div class="main-content" id="mainContent">
-    <header class="page-header">
-        <h1>إدارة حصص الاحتياط الذكية</h1>
-        <p>اليوم: <strong><%= today %></strong></p>
-    </header>
+    <main class="main-content" id="mainContent">
+        <header class="page-header">
+            <h1>إدارة حصص الاحتياط الذكية</h1>
+            <p>اليوم: <strong><%= today %></strong></p>
+        </header>
 
-   <% if (recapSubstitutions && recapSubstitutions.length > 0) { %>
-    <section class="recap-banner">
-        <h3 style="margin:0; color: var(--info-border); margin-bottom: 15px;">
-            <i class="fas fa-check-circle"></i> حصص تم تغطيتها بنجاح
-        </h3>
-        <div class="recap-grid">
-            <% recapSubstitutions.forEach(r => { %>
-                <div class="recap-item">
-                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-                        
-                        <a href="/admin/substitute/delete/<%= r.id %>" class="btn-retirer" title="إلغاء لإعادة التعيين" onclick="return confirm('إلغاء هذا التعيين وإعادة الحصة لقائمة الاحتياج؟')">
-                            <i class="fas fa-times-circle" style="color: var(--danger-color);"></i>
-                        </a>
+        <% if (ghaibeen.length > 0) { %>
+        <div class="bulk-assign-container">
+            <form action="/admin/substitute/assign-all" method="POST" style="display:inline;">
+                <button type="submit" class="btn-bulk-assign">
+                    <i class="fas fa-bolt"></i>
+                    توزيع جميع الحصص تلقائيًا دفعة واحدة
+                </button>
+            </form>
+        </div>
+        <% } %>
 
-                        <a href="/admin/substitute/delete/<%= r.id %>?reason=present" class="btn-retirer" title="المعلم حضر" onclick="return confirm('تأكيد حضور المعلم الغائب وإلغاء الاحتياط؟')">
-                            <i class="fas fa-user-check" style="color: var(--success-color);"></i>
-                        </a>
+        <% if (recapSubstitutions && recapSubstitutions.length > 0) { %>
+        <!-- عرض البطاقات على الشاشة فقط -->
+        <section class="recap-banner">
+            <h3><i class="fas fa-check-double"></i> حصص تم تغطيتها بنجاح اليوم</h3>
+            <div class="recap-grid" id="recap-grid">
+                <% recapSubstitutions.forEach(r => { %>
+                <div class="recap-item <%= r.status === 'accepted' ? 'accepted' : '' %>" id="sub-<%= r.id %>">
+                    <div class="recap-actions no-print">
+                        <button title="المعلم حضر" onclick="confirmAction('/admin/substitute/delete/<%= r.id %>?reason=present', 'تأكيد حضور المعلم الأصلي؟')">
+                            <i class="fas fa-user-check" style="color:var(--success);"></i>
+                        </button>
+                        <button title="إلغاء التعيين" onclick="confirmAction('/admin/substitute/delete/<%= r.id %>', 'إلغاء هذا التعيين؟')">
+                            <i class="fas fa-times" style="color:var(--danger);"></i>
+                        </button>
+                    </div>
 
-                        <div style="display: flex; flex-direction: column; margin-right: 5px;">
-                            <span class="badge-periode">ح <%= r.periode %></span>
-                            <span style="font-size: 0.85rem; margin-top: 4px; font-weight: bold;"><%= r.absent_name %></span>
-                        </div>
+                    <div style="flex:1;">
+                        <div class="badge-periode">الحصة <%= r.periode %></div>
+                        <strong style="font-size:1.1rem;"><%= r.absent_name %></strong>
+                        <small style="color:var(--text-muted); display:block;"><%= r.matiere || '' %></small>
                     </div>
 
                     <div class="arrow-icon">
                         <i class="fas fa-arrow-left"></i>
                     </div>
 
-                    <div style="flex: 1; text-align: right;">
-                        <strong style="color: var(--success-color); font-size: 0.95rem;"><%= r.substitute_name %></strong>
-                        <small style="display:block; color: #64748b; font-size:0.75rem;"><%= r.classe %> - <%= r.section %></small>
+                    <div style="flex:1; text-align:right;">
+                        <strong style="color:var(--success); font-size:1.1rem;"><%= r.substitute_name %></strong>
+                        <small style="display:block; color:var(--text-muted);"><%= r.classe %> - <%= r.section %></small>
+                        <% if (r.status === 'accepted') { %>
+                            <span class="status-badge confirmed">تمت الموافقة على الحصة</span>
+                        <% } else { %>
+                            <span class="status-badge pending">في انتظار الموافقة</span>
+                        <% } %>
                     </div>
                 </div>
-            <% }) %>
+                <% }) %>
+            </div>
+        </section>
+
+        <!-- جدول الطباعة المنظم - غير مرئي على الشاشة -->
+        <div id="printable-table-area">
+            <table class="print-report-table">
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>الفصل - القسم</th>
+                        <th>المعلم الغائب<br><small style="font-weight:normal;">(المادة)</small></th>
+                        <th>رقم الحصة</th>
+                        <th>المعلم البديل</th>
+                        <th>الحالة</th>
+                        <th>ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% 
+                    let currentTeacher = '';
+                    let currentSubject = '';
+                    let currentClassSection = '';
+                    let counter = 1;
+                    recapSubstitutions.forEach((r, index) => { 
+                        const isNewTeacher = r.absent_name !== currentTeacher || r.classe + '-' + r.section !== currentClassSection;
+                        const rowspan = recapSubstitutions
+                            .filter(s => s.absent_name === r.absent_name && s.classe === r.classe && s.section === r.section)
+                            .length;
+                    %>
+                        <tr>
+                            <% if (isNewTeacher) { %>
+                                <td rowspan="<%= rowspan %>" class="teacher-cell">
+                                    <%= counter %>
+                                </td>
+                                <td rowspan="<%= rowspan %>" class="teacher-cell">
+                                    <strong><%= r.classe %> - <%= r.section %></strong>
+                                </td>
+                                <td rowspan="<%= rowspan %>" class="teacher-cell">
+                                    <strong><%= r.absent_name %></strong><br>
+                                    <span class="subject-cell">(<%= r.matiere || '-' %>)</span>
+                                </td>
+                            <% counter++; %>
+                            <% } %>
+                            <td><%= r.periode %></td>
+                            <td><strong><%= r.substitute_name %></strong></td>
+                            <td>
+                                <% if (r.status === 'accepted') { %>
+                                    <span class="status-confirmed">تمت الموافقة</span>
+                                <% } else { %>
+                                    <span class="status-pending">في الانتظار</span>
+                                <% } %>
+                            </td>
+                            <td></td>
+                        </tr>
+                    <% 
+                        currentTeacher = r.absent_name;
+                        currentSubject = r.matiere;
+                        currentClassSection = r.classe + '-' + r.section;
+                    }) %>
+                </tbody>
+            </table>
         </div>
-    </section>
-<% } %>
 
-    <section class="card">
-        <h3><i class="fas fa-user-plus"></i> تسجيل معلم غائب (يوم كامل)</h3>
-        <form action="/admin/absences/ajouter" method="POST" class="form-abs-grid">
-            <div class="input-group-custom" style="flex: 1;">
-                <label>بحث بالاسم أو المادة:</label>
-                <select name="enseignant_id" id="searchTeacher" required>
-                    <option value="">-- اختر المعلم الغائب --</option>
-                    <% enseignants.forEach(e => { %> 
-                        <option value="<%= e.id %>"><%= e.nom %> (<%= e.matiere %>)</option> 
-                    <% }) %>
-                </select>
-            </div>
-            <div class="input-group-custom" style="flex: 1.5;">
-                <label>سبب الغياب:</label>
-                <input type="text" name="reason" placeholder="سبب الغياب (اختياري)...">
-                <input type="hidden" name="date" value="<%= today %>">
-            </div>
-            <button type="submit" class="btn-submit-abs">تفعيل الغياب</button>
-        </form>
-    </section>
-
-    <section class="card">
-        <h3><i class="fas fa-chalkboard-teacher"></i> حصص تحتاج إلى بدلاء</h3>
-        
-        <% if (ghaibeen.length === 0) { %>
-            <div style="text-align:center; padding:30px; color:#64748b;">
-                <i class="fas fa-mug-hot fa-3x"></i>
-                <p>كل الحصص مغطاة حالياً أو لا يوجد غيابات مسجلة.</p>
-            </div>
+        <div class="print-section no-print">
+            <button class="btn-print-report" onclick="window.print()">
+                <i class="fas fa-print"></i>
+                طباعة كشف توزيع الاحتياط اليومي الشامل
+            </button>
+        </div>
         <% } else { %>
-            <% ghaibeen.forEach(session => { %>
+        <div class="empty-state">
+            <i class="fas fa-check-circle" style="color:var(--success);"></i>
+            <h3>لا توجد حصص مغطاة اليوم</h3>
+            <p>كل الحصص تعمل بشكل طبيعي حتى الآن.</p>
+        </div>
+        <% } %>
+
+        <section class="card">
+            <h3><i class="fas fa-user-slash"></i> تسجيل غياب معلم (يوم كامل)</h3>
+            <form action="/admin/absences/ajouter" method="POST" class="form-abs-grid" id="absenceForm">
+                <div class="input-group-custom">
+                    <label>المعلم الغائب</label>
+                    <select name="enseignant_id" id="searchTeacher" required>
+                        <option value="">-- اختر المعلم --</option>
+                        <% enseignants.forEach(e => { %>
+                            <option value="<%= e.id %>"><%= e.nom %> (<%= e.matiere %>)</option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="input-group-custom">
+                    <label>سبب الغياب (اختياري)</label>
+                    <input type="text" name="reason" placeholder="مثال: مرض، إذن رسمي...">
+                    <input type="hidden" name="date" value="<%= today %>">
+                </div>
+                <button type="submit" class="btn-submit-abs">
+                    <i class="fas fa-paper-plane"></i> تفعيل الغياب
+                </button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h3><i class="fas fa-chalkboard-teacher"></i> الحصص التي تحتاج إلى تغطية</h3>
+
+            <% if (ghaibeen.length === 0) { %>
+                <div class="empty-state">
+                    <i class="fas fa-coffee"></i>
+                    <h3>لا توجد حصص تحتاج إلى تغطية حالياً</h3>
+                    <p>كل شيء مغطى! استمتع بيوم هادئ ☕</p>
+                </div>
+            <% } else { %>
+                <% ghaibeen.forEach(session => { %>
                 <div class="absent-item-card">
                     <div class="session-info">
-                        <span class="badge-periode">الحصة <%= session.periode %></span>
                         <div>
-                            <strong style="font-size: 1.1rem;"><%= session.nom %></strong>
-                            <span class="badge-subject" style="margin-right:10px;"><%= session.matiere %></span>
+                            <div class="badge-periode">الحصة <%= session.periode %></div>
+                            <strong style="font-size:1.3rem; margin:10px 0; display:block;"><%= session.nom %></strong>
+                            <span class="badge-subject"><%= session.matiere %></span>
                         </div>
-                        <div style="margin-right: auto; background: #f1f5f9; padding: 5px 12px; border-radius: 20px;">
-                            <i class="fas fa-users"></i> القسم: <strong><%= session.classe %> - <%= session.section %></strong>
+                        <div style="background:#f1f5f9; padding:10px 20px; border-radius:30px;">
+                            <i class="fas fa-users"></i> <%= session.classe %> - <%= session.section %>
                         </div>
                     </div>
 
                     <div class="distribution-options">
-                        <form action="/admin/substitute/assign-session" method="POST">
+                        <form action="/admin/substitute/assign-session" method="POST" style="display:inline;">
                             <input type="hidden" name="absent_id" value="<%= session.teacher_id %>">
                             <input type="hidden" name="periode" value="<%= session.periode %>">
                             <input type="hidden" name="classe" value="<%= session.classe %>">
                             <input type="hidden" name="section" value="<%= session.section %>">
-                            <button type="submit" class="btn-auto">توزيع تلقائي</button>
+                            <button type="submit" class="btn-auto">
+                                <i class="fas fa-magic"></i> توزيع تلقائي
+                            </button>
                         </form>
-                        <button class="btn-manual" onclick="toggleManual('m_<%= session.teacher_id %>_<%= session.periode %>')">اختيار يدوي</button>
+                        <button type="button" class="btn-manual" onclick="toggleManual('manual_<%= session.teacher_id %>_<%= session.periode %>')">
+                            <i class="fas fa-hand-pointer"></i> اختيار يدوي
+                        </button>
                     </div>
 
-                    <div id="m_<%= session.teacher_id %>_<%= session.periode %>" class="manual-suggestions-table">
-                        <table style="width: 100%;">
+                    <div id="manual_<%= session.teacher_id %>_<%= session.periode %>" class="manual-suggestions">
+                        <table>
                             <tbody>
-                                <% suggestions.slice(0, 6).forEach(s => { %>
-                                    <tr>
-                                        <td><strong><%= s.nom %></strong> <small>(<%= s.reserve_this_month %> حصة هذا الشهر)</small></td>
-                                        <td style="text-align: left;">
-                                            <form action="/admin/substitute/assign-session" method="POST">
-                                                <input type="hidden" name="substitute_id" value="<%= s.id %>">
-                                                <input type="hidden" name="absent_id" value="<%= session.teacher_id %>">
-                                                <input type="hidden" name="periode" value="<%= session.periode %>">
-                                                <input type="hidden" name="classe" value="<%= session.classe %>">
-                                                <input type="hidden" name="section" value="<%= session.section %>">
-                                                <button type="submit" class="btn-submit-abs" style="padding: 4px 10px;">تعيين</button>
-                                            </form>
-                                        </td>
-                                    </tr>
+                                <% suggestions.slice(0, 8).forEach(s => { %>
+                                <tr>
+                                    <td>
+                                        <strong><%= s.nom %></strong>
+                                        <small style="color:var(--text-muted); margin-right:10px;">
+                                            (<%= s.reserve_this_month || 0 %> حصة احتياط هذا الشهر)
+                                        </small>
+                                    </td>
+                                    <td style="text-align:left;">
+                                        <form action="/admin/substitute/assign-session" method="POST">
+                                            <input type="hidden" name="substitute_id" value="<%= s.id %>">
+                                            <input type="hidden" name="absent_id" value="<%= session.teacher_id %>">
+                                            <input type="hidden" name="periode" value="<%= session.periode %>">
+                                            <input type="hidden" name="classe" value="<%= session.classe %>">
+                                            <input type="hidden" name="section" value="<%= session.section %>">
+                                            <button type="submit" class="assign-btn">تعيين</button>
+                                        </form>
+                                    </td>
+                                </tr>
                                 <% }) %>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            <% }) %>
-        <% } %>
-    </section>
-</div>
+                <% }) %>
+            <% } %>
+        </section>
+    </main>
 
-<script>
-    $(document).ready(function() {
-        // تفعيل ميزة البحث السريع في القائمة المنسدلة
-        $('#searchTeacher').select2({
-            placeholder: '-- ابحث بالاسم أو المادة --',
-            allowClear: true,
-            dir: "rtl"
-        });
+    <script>
+        $(document).ready(function() {
+            $('#searchTeacher').select2({
+                placeholder: "🔍 ابحث بالاسم أو المادة...",
+                allowClear: true,
+                dir: "rtl",
+                width: '100%'
+            });
 
-        const toggleBtn = document.getElementById('toggleSidebar');
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebar');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
 
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function() {
+            toggleBtn.addEventListener('click', () => {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
                 sidebar.classList.toggle('active');
             });
-        }
-    });
 
-    function toggleManual(id) {
-        const area = document.getElementById(id);
-        if(area) {
-            area.style.display = (area.style.display === 'table') ? 'none' : 'table';
-        }
-    }
-</script>
+            window.confirmAction = function(url, message) {
+                Swal.fire({
+                    title: 'تأكيد العملية',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'نعم',
+                    cancelButtonText: 'إلغاء'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            };
 
+            $('#absenceForm').on('submit', function() {
+                $(this).find('.btn-submit-abs')
+                    .html('<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...')
+                    .prop('disabled', true);
+            });
+
+            setInterval(function() {
+                $.get('/admin/absence-profs/recap', function(data) {
+                    $('#recap-grid').html(data);
+                });
+            }, 15000);
+        });
+
+        function toggleManual(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('open');
+        }
+    </script>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+    <script>Swal.fire('تم بنجاح!', '<%= success %>', 'success');</script>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+    <script>Swal.fire('خطأ', '<%= error %>', 'error');</script>
+    <% } %>
 </body>
 </html>

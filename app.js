@@ -3,6 +3,7 @@ const { Pool } = require('pg'); // تم التغيير من sqlite3 إلى pg
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
+
 // تعريف المتغير upload الذي اشتكى السيرفر من عدم وجوده
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -1388,6 +1389,117 @@ app.post('/admin/substitute/assign-session', isAdmin, async (req, res) => {
         res.redirect('/admin/absence-profs?error=db_error');
     }
 });
+app.get('/admin/absence-profs/recap', isAdmin, async (req, res) => {
+    try {
+        const todayDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Muscat' }).format(new Date());
+        const recapRes = await pool.query(`
+            SELECT sl.*, sub.nom as substitute_name, abs_p.nom as absent_name, sl.status, abs_p.matiere 
+            FROM substitute_logs sl 
+            LEFT JOIN enseignants sub ON sl.substitute_id = sub.id 
+            LEFT JOIN enseignants abs_p ON sl.absent_id = abs_p.id
+            WHERE sl.date = $1 
+            ORDER BY sl.periode ASC`, [todayDate]);
+        res.send(require('ejs').render(require('fs').readFileSync(__dirname + '/views/partials/recap_grid.ejs', 'utf8'), { recapSubstitutions: recapRes.rows }));
+    } catch (e) {
+        res.status(500).send('');
+    }
+});
+
+// --- [ مسار جديد: توزيع جميع الحصص تلقائيًا لكل المعلمين الغائبين دفعة واحدة ] ---
+app.post('/admin/substitute/assign-all', isAdmin, async (req, res) => {
+    try {
+        // 1. ضبط التاريخ واليوم بتوقيت عمان (مثل باقي الكود)
+        const todayDate = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Muscat',
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+
+        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const localDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Muscat" }));
+        const todayName = days[localDate.getDay()];
+
+        // 2. جلب جميع الحصص التي تحتاج إلى تغطية (مثل ما في صفحة gestion_absences)
+        const ghaibeen = (await pool.query(`
+            SELECT DISTINCT e.id as teacher_id, e.nom, e.matiere, t.periode, t.classe, t.section
+            FROM absences a 
+            JOIN enseignants e ON a.enseignant_id = e.id 
+            JOIN timetable t ON e.id = t.enseignant_id
+            WHERE a.date = $1 
+            AND (t.jour = $2 OR t.jour = REPLACE($2, 'إ', 'ا'))
+            AND NOT EXISTS (
+                SELECT 1 FROM substitute_logs sl 
+                WHERE sl.absent_id = e.id 
+                AND sl.date = a.date 
+                AND sl.periode = t.periode 
+                AND sl.status IN ('accepted', 'pending')
+            ) 
+            ORDER BY t.periode ASC`, [todayDate, todayName])).rows;
+
+        // إذا لا توجد حصص تحتاج تغطية
+        if (ghaibeen.length === 0) {
+            return res.redirect('/admin/absence-profs?info=no_sessions_to_assign');
+        }
+
+        let assignedCount = 0;
+
+        // 3. معالجة كل حصة على حدة (نفس منطق التوزيع التلقائي في assign-session)
+        for (const session of ghaibeen) {
+            // البحث عن معلم بديل متاح (ليس لديه حصة في هذه الفترة، وليس غائبًا)
+            const autoRes = await pool.query(`
+                SELECT e.id 
+                FROM enseignants e
+                WHERE e.id NOT IN (SELECT enseignant_id FROM absences WHERE date = $1)
+                AND e.id != $2
+                AND NOT EXISTS (
+                    SELECT 1 FROM timetable t 
+                    WHERE t.enseignant_id = e.id 
+                    AND t.periode = $3 
+                    AND (t.jour = $4 OR t.jour = REPLACE($4, 'إ', 'ا'))
+                )
+                ORDER BY 
+                    (SELECT COUNT(*) FROM substitute_logs 
+                     WHERE substitute_id = e.id 
+                     AND EXTRACT(MONTH FROM TO_DATE(date, 'YYYY-MM-DD')) = EXTRACT(MONTH FROM CURRENT_DATE)) ASC,
+                    e.weekly_load ASC
+                LIMIT 1`, 
+                [todayDate, session.teacher_id, session.periode, todayName]
+            );
+
+            if (autoRes.rows.length > 0) {
+                const substitute_id = autoRes.rows[0].id;
+
+                // إدخال سجل الاحتياط
+                await pool.query(`
+                    INSERT INTO substitute_logs 
+                    (absent_id, substitute_id, periode, classe, section, date, status) 
+                    VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+                `, [session.teacher_id, substitute_id, session.periode, session.classe, session.section, todayDate]);
+
+                // زيادة عداد الحصص الاحتياطية الشهرية للمعلم البديل
+                await pool.query(
+                    "UPDATE enseignants SET monthly_reserve = COALESCE(monthly_reserve, 0) + 1 WHERE id = $1", 
+                    [substitute_id]
+                );
+
+                assignedCount++;
+            }
+        }
+
+        // 4. إعادة توجيه مع رسالة نجاح
+        if (assignedCount === ghaibeen.length) {
+            res.redirect('/admin/absence-profs?success=all_assigned');
+        } else if (assignedCount > 0) {
+            res.redirect('/admin/absence-profs?success=partial_assign&count=' + assignedCount);
+        } else {
+            res.redirect('/admin/absence-profs?error=no_teacher_available');
+        }
+
+    } catch (e) {
+        console.error("خطأ في التوزيع الجماعي:", e);
+        res.redirect('/admin/absence-profs?error=bulk_assign_failed');
+    }
+});
+
 
 app.get('/admin/substitute', isAdmin, async (req, res) => {
     try {

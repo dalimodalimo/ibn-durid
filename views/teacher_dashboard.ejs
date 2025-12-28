@@ -205,16 +205,6 @@
             text-shadow: 0 0 10px rgba(255,215,0,0.8);
         }
 
-        /* Champ mot de passe centré */
-        #secure-content input[type="password"] {
-            width: 100%; padding: 20px 20px 20px 56px !important;
-            border-radius: 14px; border: 2px solid #e2e8f0;
-            font-size: 1.2rem !important; text-align: center;
-            letter-spacing: 1px;
-        }
-        #secure-content .fas.fa-key { left: 18px; top: 22px; font-size: 1.4rem; }
-        #secure-content button[type="button"] { right: 18px; top: 18px; font-size: 1.4rem; }
-
         /* TOGGLE SWITCH */
         .switch {
             position: relative;
@@ -399,7 +389,7 @@
                     <i class="fas fa-chevron-down" id="excellence-toggle"></i>
                 </div>
             </div>
-            <div class="excellence-content" id="excellence-content">
+            <div class="excellence-content collapsed" id="excellence-content">
                 <div class="stars-big" id="panel-stars">
                     <%= prof.stars_count || 0 %> <i class="fas fa-star"></i>
                 </div>
@@ -552,6 +542,7 @@
 
         let selectedDay = dayNamesAr[new Date().getDay()];
         let absenceMarkedToday = new Set();
+        let isMarkingAbsence = false; // متغير جديد للتحكم في التحديث التلقائي
 
         classLocks.forEach(lock => {
             absenceMarkedToday.add(`${lock.classe}-${lock.section}`);
@@ -645,6 +636,7 @@
                 btn.textContent = 'تأكيد الغياب';
                 btn.style.background = 'var(--primary)';
             }
+            isMarkingAbsence = false; // تم إغلاق نموذج الغياب
         }
 
         function manageAttendanceUI(period) {
@@ -673,21 +665,33 @@
                     <p style="color:var(--text-muted);">مرة واحدة فقط في اليوم</p>
                 </div>`;
                 document.getElementById('attendance-active').classList.remove('hidden');
+                document.getElementById('no-session-msg').classList.add('hidden');
                 document.getElementById('submit-absence-btn').style.display = 'none';
+                isMarkingAbsence = false;
                 return;
             }
 
+            // إظهار النموذج والزر
             document.getElementById('no-session-msg').classList.add('hidden');
             document.getElementById('attendance-active').classList.remove('hidden');
             document.getElementById('active-class-title').textContent = `${currentSession.classe}-${currentSession.section}`;
             document.getElementById('input-p').value = currentPeriode;
             document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('submit-absence-btn').style.display = 'block';
 
             renderStudents(currentSession.classe, currentSession.section);
+            isMarkingAbsence = true; // الآن نحن في وضع رصد الغياب
         }
 
         function renderStudents(classe, section) {
             const container = document.getElementById('student-grid-container');
+
+            // حفظ حالة الـ checkboxes الحالية قبل إعادة البناء
+            const currentChecks = {};
+            container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                currentChecks[cb.value] = cb.checked;
+            });
+
             container.innerHTML = '';
 
             const students = ELEVES.filter(s => String(s.classe) === String(classe) && String(s.section) === String(section));
@@ -697,11 +701,13 @@
             }
 
             students.forEach(student => {
+                const isChecked = currentChecks[student.id] || false;
+                const checkedAttr = isChecked ? 'checked' : '';
                 container.innerHTML += `
                     <div style="background:white; padding:14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                         <span style="font-weight:700; font-size:1rem;">${student.nom}</span>
                         <label class="switch">
-                            <input type="checkbox" name="eleve_ids[]" value="${student.id}">
+                            <input type="checkbox" name="eleve_ids[]" value="${student.id}" ${checkedAttr}>
                             <span class="slider"></span>
                         </label>
                     </div>`;
@@ -722,7 +728,6 @@
                         absenceMarkedToday.add(classTitle);
                     }
 
-                    // Après envoi, on remet à l'état initial (le serveur redirigera normalement)
                     setTimeout(() => {
                         resetAttendanceSection();
                     }, 1500);
@@ -746,7 +751,9 @@
             document.getElementById('selected-day-name').textContent = selectedDay;
             document.querySelector(`.day-tab[data-day="${selectedDay}"]`).classList.add('active');
 
+            // تحديث كل 10 ثواني فقط إذا لم نكن في وضع رصد الغياب
             setInterval(() => {
+                if (isMarkingAbsence) return;
                 if (cleanAr(selectedDay) === cleanAr(dayNamesAr[new Date().getDay()])) {
                     updateSchedule(selectedDay);
                 }

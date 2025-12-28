@@ -31,7 +31,7 @@
         .container { max-width: 420px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 16px; }
         .hidden { display: none !important; }
 
-        /* HEADER */
+        /* HEADER avec bouton خروج */
         .header {
             background: var(--card-bg);
             position: sticky; top: 0; z-index: 1000;
@@ -77,6 +77,14 @@
         }
         .notif-icon.urgent { background: #fee2e2; color: var(--accent); animation: pulse 2s infinite; }
         #notif-dot { position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; background: var(--accent); border: 2px solid white; border-radius: 50%; }
+
+        .exit-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: #fef2f2; color: #dc2626; padding: 8px 14px;
+            border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        .exit-btn:hover { background: #fee2e2; }
 
         /* CARDS */
         .card {
@@ -207,6 +215,51 @@
         #secure-content .fas.fa-key { left: 18px; top: 22px; font-size: 1.4rem; }
         #secure-content button[type="button"] { right: 18px; top: 18px; font-size: 1.4rem; }
 
+        /* TOGGLE SWITCH */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 54px;
+            height: 30px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Recherche élève */
+        #searchResultsList > div {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #searchResultsList > div:hover {
+            background: #f0f9ff;
+        }
+
         @media (max-width: 480px) {
             .container { padding: 10px; }
             .header { padding: 12px; }
@@ -216,12 +269,13 @@
             .card { padding: 16px; }
             .excellence-title { font-size: 1.15rem; }
             .stars-big { font-size: 2.6rem; }
+            .exit-btn span { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
+    <!-- HEADER avec bouton خروج -->
     <header class="header">
         <div class="header-content">
             <div class="profile-section">
@@ -240,6 +294,9 @@
                     <i class="fas fa-bell"></i>
                     <span id="notif-dot"></span>
                 </div>
+                <a href="/logout" class="exit-btn">
+                    <i class="fas fa-sign-out-alt"></i> <span>خروج</span>
+                </a>
             </div>
         </div>
     </header>
@@ -412,7 +469,7 @@
                     <input type="hidden" name="date" id="input-date">
                     <input type="hidden" name="periode" id="input-p">
                     <div class="student-grid" id="student-grid-container"></div>
-                    <button type="submit" class="btn-submit" style="margin-top:20px; background:var(--primary); padding:14px; font-size:1rem;">تأكيد الغياب</button>
+                    <button type="submit" style="margin-top:20px; background:var(--primary); color:white; padding:14px; border-radius:12px; font-size:1rem;">تأكيد الغياب</button>
                 </form>
             </div>
         </div>
@@ -421,25 +478,28 @@
         <div class="card">
             <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:14px;"><i class="fas fa-user-shield" style="margin-left:8px;"></i> ملاحظة سلوكية</h3>
             <div style="display:flex; flex-direction:column; gap:14px;">
-                <input type="text" id="studentSearchInput" placeholder="🔍 ابحث عن الطالب..." style="padding:14px; border-radius:12px; border:2px solid var(--primary); font-size:1rem;">
-                <div id="selectedStudentBadge" style="display:none; padding:10px; background:#e3f2fd; border-radius:10px; font-weight:700;">
+                <div style="position:relative;">
+                    <input type="text" id="studentSearchInput" placeholder="🔍 ابحث عن اسم الطالب..." style="width:100%; padding:14px; border-radius:12px; border:2px solid var(--primary); font-size:1rem;">
+                    <div id="searchResultsList" style="position:absolute; top:100%; left:0; right:0; background:white; border-radius:12px; box-shadow:var(--shadow); max-height:240px; overflow-y:auto; z-index:10; display:none; margin-top:6px; border:1px solid #eee;"></div>
+                </div>
+                <div id="selectedStudentBadge" style="display:none; padding:12px; background:#e3f2fd; border-radius:12px; font-weight:700; color:var(--primary);">
                     تم اختيار: <strong id="selectedStudentName"></strong>
-                    <i class="fas fa-times" style="margin-right:10px; cursor:pointer; color:#dc2626;" onclick="clearStudentSelection()"></i>
+                    <i class="fas fa-times" style="margin-right:12px; cursor:pointer; color:#dc2626;" onclick="clearStudentSelection()"></i>
                 </div>
                 <form action="/teacher/behavior/add" method="POST">
                     <input type="hidden" name="teacher_id" value="<%= prof.id %>">
                     <input type="hidden" name="student_id" id="hiddenStudentId" required>
-                    <textarea name="event" placeholder="وصف الملاحظة..." required style="padding:14px; border-radius:12px; border:1px solid #ddd; height:90px; font-size:1rem;"></textarea>
-                    <button type="submit" style="background:var(--primary); color:white; padding:14px; border-radius:12px; font-weight:700;">إرسال</button>
+                    <textarea name="event" placeholder="اكتب وصف الملاحظة السلوكية هنا..." required style="width:100%; padding:14px; border-radius:12px; border:1px solid #ddd; height:100px; font-size:1rem; resize:none;"></textarea>
+                    <button type="submit" style="background:var(--primary); color:white; padding:14px; border-radius:12px; font-weight:700;">إرسال الملاحظة</button>
                 </form>
             </div>
         </div>
 
         <!-- قائمة المهام -->
         <div class="card">
-            <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:14px;"><i class="fas fa-list-check" style="margin-left:8px;"></i> المهام</h3>
+            <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:14px;"><i class="fas fa-list-check" style="margin-left:8px;"></i> قائمة المهام</h3>
             <div style="display:flex; gap:10px; margin-bottom:14px;">
-                <input type="text" id="todo-input" placeholder="مهمة جديدة..." style="flex:1; padding:14px; border-radius:12px; border:1px solid #ddd; font-size:1rem;">
+                <input type="text" id="todo-input" placeholder="أضف مهمة جديدة..." style="flex:1; padding:14px; border-radius:12px; border:1px solid #ddd; font-size:1rem;">
                 <button onclick="addTodo()" style="background:var(--primary); color:white; width:50px; height:50px; border-radius:12px; font-size:1.3rem;"><i class="fas fa-plus"></i></button>
             </div>
             <ul id="todo-list" style="list-style:none;"></ul>
@@ -455,14 +515,16 @@
                 <i class="fas fa-chevron-down" id="secure-chevron" style="font-size:1.2rem;"></i>
             </div>
             <div id="secure-content" style="max-height:0; overflow:hidden; transition:all 0.5s ease;">
-                <p style="text-align:center; color:var(--text-muted); margin:16px 0; font-size:0.95rem;">غيّر كلمة المرور لأمان أكبر</p>
+                <p style="text-align:center; color:var(--text-muted); margin:16px 0; font-size:0.95rem;">يُرجى تغيير كلمة المرور الافتراضية لضمان أمان حسابك.</p>
                 <form action="/teacher/update-my-password" method="POST">
                     <div style="position:relative; margin-bottom:20px;">
                         <i class="fas fa-key"></i>
-                        <input type="password" name="new_password" id="teacher_secret_input" placeholder="كلمة مرور جديدة" required>
-                        <button type="button" onclick="handleTeacherView()"><i class="fas fa-eye" id="teacher_eye_icon"></i></button>
+                        <input type="password" name="new_password" id="teacher_secret_input" placeholder="أدخل كلمة مرور جديدة قوية" required>
+                        <button type="button" onclick="handleTeacherView()">
+                            <i class="fas fa-eye" id="teacher_eye_icon"></i>
+                        </button>
                     </div>
-                    <button type="submit" style="width:100%; background:var(--primary); color:white; padding:14px; border-radius:12px; font-weight:700;">حفظ</button>
+                    <button type="submit" style="width:100%; background:var(--primary); color:white; padding:14px; border-radius:12px; font-weight:700;">تحديث كلمة المرور</button>
                 </form>
             </div>
         </div>
@@ -489,6 +551,11 @@
         const STORAGE_KEY = `teacher_hidden_anns_${PROF_ID}`;
 
         let selectedDay = dayNamesAr[new Date().getDay()];
+        let absenceMarkedToday = new Set();
+
+        classLocks.forEach(lock => {
+            absenceMarkedToday.add(`${lock.classe}-${lock.section}`);
+        });
 
         function hideAnnouncement(annId) {
             const card = document.getElementById('teacher-ann-' + annId);
@@ -506,8 +573,8 @@
         }
 
         function updateBellStatus() {
-            const visibleCards = document.querySelectorAll('.announcement-card');
-            const hasUrgent = Array.from(visibleCards).some(card => card.textContent.includes('عاجل'));
+            const visibleCards = document.querySelectorAll('.card[id^="teacher-ann-"]');
+            const hasUrgent = Array.from(visibleCards).some(card => card.style.borderRightColor === 'rgb(239, 68, 68)');
             const notifBox = document.querySelector('.notif-icon');
             const dot = document.getElementById('notif-dot');
             notifBox.classList.toggle('urgent', hasUrgent);
@@ -579,45 +646,54 @@
                 return;
             }
 
-            const session = TIMETABLE.find(s => Number(s.periode) === period.id && cleanAr(s.jour) === cleanAr(dayNamesAr[new Date().getDay()])) 
-                          || SUBSTITUTIONS.find(s => Number(s.periode) === period.id);
+            // Chercher la séance correspondant exactement à la période active
+            const currentPeriode = period.id;
+            const currentDay = dayNamesAr[new Date().getDay()];
 
-            if (!session) {
+            let currentSession = TIMETABLE.find(s => Number(s.periode) === currentPeriode && cleanAr(s.jour) === cleanAr(currentDay));
+
+            // Si pas de séance normale, vérifier s'il y a une séance احتياط dans cette période
+            if (!currentSession) {
+                currentSession = SUBSTITUTIONS.find(s => Number(s.periode) === currentPeriode);
+            }
+
+            // Si toujours pas de séance dans cette période → cacher le formulaire
+            if (!currentSession) {
                 noMsg.classList.remove('hidden');
                 activeArea.classList.add('hidden');
                 return;
             }
 
-            noMsg.classList.add('hidden');
-            activeArea.classList.remove('hidden');
+            const classKey = `${currentSession.classe}-${currentSession.section}`;
 
-            document.getElementById('active-class-title').textContent = `${session.classe}-${session.section}`;
-            document.getElementById('input-p').value = period.id;
-            document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
-
-            const isLocked = classLocks.some(l => String(l.classe) === String(session.classe) && String(l.section) === String(session.section) && Number(l.periode) === period.id);
-
-            if (isLocked) {
+            // Vérifier si cette classe a déjà été marquée absente aujourd'hui
+            if (absenceMarkedToday.has(classKey)) {
                 container.innerHTML = `<div style="text-align:center; padding:50px;">
                     <div style="background:var(--success); color:white; width:70px; height:70px; line-height:70px; border-radius:50%; margin:0 auto 16px; font-size:2.5rem;">
                         <i class="fas fa-check"></i>
                     </div>
-                    <h4 style="color:var(--success); font-size:1.2rem;">تم الرصد بنجاح!</h4>
-                    <p style="color:var(--text-muted); margin-top:8px;">تم إضافة نجمة</p>
+                    <h4 style="color:var(--success); font-size:1.2rem;">تم رصد غياب هذا الفصل اليوم!</h4>
+                    <p style="color:var(--text-muted); margin-top:8px;">(مرة واحدة فقط في اليوم)</p>
                 </div>`;
                 activeArea.querySelector('button[type="submit"]').style.display = 'none';
-                triggerStarGain(1);
-            } else {
-                activeArea.querySelector('button[type="submit"]').style.display = 'block';
-                renderStudents(session.classe, session.section);
+                noMsg.classList.add('hidden');
+                activeArea.classList.remove('hidden');
+                return;
             }
+
+            // Afficher le formulaire avec les élèves de la bonne classe
+            noMsg.classList.add('hidden');
+            activeArea.classList.remove('hidden');
+
+            document.getElementById('active-class-title').textContent = `${currentSession.classe}-${currentSession.section}`;
+            document.getElementById('input-p').value = currentPeriode;
+            document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+
+            renderStudents(currentSession.classe, currentSession.section);
         }
 
         function renderStudents(classe, section) {
             const container = document.getElementById('student-grid-container');
-            const key = `${classe}-${section}`;
-            if (container.dataset.currentClass === key) return;
-            container.dataset.currentClass = key;
             container.innerHTML = '';
 
             const students = ELEVES.filter(s => String(s.classe) === String(classe) && String(s.section) === String(section));
@@ -629,15 +705,22 @@
             students.forEach(student => {
                 container.innerHTML += `
                     <div style="background:white; padding:14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-                        <span style="font-weight:700;">${student.nom}</span>
-                        <label style="position:relative; display:inline-block; width:50px; height:30px;">
-                            <input type="checkbox" name="eleve_ids[]" value="${student.id}" style="opacity:0; width:0; height:0;">
-                            <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; border-radius:30px; transition:0.4s;"></span>
-                            <span style="position:absolute; content:''; height:26px; width:26px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s;"></span>
+                        <span style="font-weight:700; font-size:1rem;">${student.nom}</span>
+                        <label class="switch">
+                            <input type="checkbox" name="eleve_ids[]" value="${student.id}">
+                            <span class="slider"></span>
                         </label>
                     </div>`;
             });
         }
+
+        // Marquer la classe comme absente après envoi
+        document.querySelector('#attendance-active form').addEventListener('submit', function() {
+            const title = document.getElementById('active-class-title').textContent;
+            if (title && title !== '--') {
+                absenceMarkedToday.add(title);
+            }
+        });
 
         document.querySelectorAll('.accept-sub-form').forEach(form => {
             form.addEventListener('submit', () => triggerStarGain(3));
@@ -685,6 +768,57 @@
         function updateTodoCounter() {
             document.getElementById('todo-count').textContent = document.getElementById('todo-list').children.length;
         }
+
+        const searchInput = document.getElementById('studentSearchInput');
+        const resultsList = document.getElementById('searchResultsList');
+        const hiddenId = document.getElementById('hiddenStudentId');
+        const badge = document.getElementById('selectedStudentBadge');
+        const badgeName = document.getElementById('selectedStudentName');
+
+        function clearStudentSelection() {
+            hiddenId.value = '';
+            badge.style.display = 'none';
+            searchInput.value = '';
+            resultsList.style.display = 'none';
+        }
+
+        searchInput.addEventListener('input', () => {
+            const term = searchInput.value.trim();
+            if (term.length < 2) {
+                resultsList.style.display = 'none';
+                resultsList.innerHTML = '';
+                return;
+            }
+
+            const lowerTerm = term.toLowerCase();
+            const matches = ELEVES.filter(s => s.nom.toLowerCase().includes(lowerTerm));
+
+            resultsList.innerHTML = '';
+            if (matches.length > 0) {
+                matches.forEach(s => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<strong style="font-size:1rem;">${s.nom}</strong><br><small style="color:var(--text-muted);">${s.classe}-${s.section}</small>`;
+                    div.onclick = () => {
+                        hiddenId.value = s.id;
+                        badgeName.textContent = s.nom;
+                        badge.style.display = 'block';
+                        searchInput.value = '';
+                        resultsList.style.display = 'none';
+                    };
+                    resultsList.appendChild(div);
+                });
+                resultsList.style.display = 'block';
+            } else {
+                resultsList.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">لا توجد نتائج</div>';
+                resultsList.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !resultsList.contains(e.target)) {
+                resultsList.style.display = 'none';
+            }
+        });
 
         function toggleSecureSection() {
             const content = document.getElementById('secure-content');
@@ -748,9 +882,9 @@
         <div style="position:relative; width:85%; max-width:340px;">
             <button onclick="closeGlobalPopup()" style="position:absolute; top:-16px; left:-16px; width:40px; height:40px; background:#dc2626; color:white; border:none; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.4);">×</button>
             <div style="border-radius:20px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.6);">
-                <img src="<%= activePopup.image_url %>" alt="إعلان" style="width:100%; display:block;">
+                <img src="<%= activePopup.image_url %>" alt="إعلان مهم" style="width:100%; display:block;">
             </div>
-            <button onclick="closeGlobalPopup()" style="width:100%; margin-top:20px; padding:16px; border-radius:16px; background:linear-gradient(135deg,#22c55e,#16a34a); color:white; border:none; font-size:1.2rem; font-weight:900; cursor:pointer;">متابعة</button>
+            <button onclick="closeGlobalPopup()" style="width:100%; margin-top:20px; padding:16px; border-radius:16px; background:linear-gradient(135deg,#22c55e,#16a34a); color:white; border:none; font-size:1.2rem; font-weight:900; cursor:pointer;">متابعة الجلسة</button>
         </div>
     </div>
     <script>

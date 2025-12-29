@@ -41,7 +41,6 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             position: fixed;
             top: 0; right: 0; bottom: 0;
@@ -53,516 +52,173 @@
             box-shadow: -4px 0 20px rgba(0,0,0,0.15);
             overflow-y: auto;
         }
-        .sidebar.collapsed {
-            right: -280px;
-        }
-        .sidebar-header {
-            padding: 30px 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .sidebar-header h2 {
-            font-size: 1.5rem;
-            font-weight: 900;
-        }
+        .sidebar.collapsed { right: -280px; }
+        .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-header h2 { font-size: 1.5rem; font-weight: 900; }
         .sidebar-nav a {
-            display: flex;
-            align-items: center;
-            padding: 16px 24px;
-            color: rgba(255,255,255,0.85);
-            text-decoration: none;
-            transition: var(--transition);
-            font-weight: 600;
+            display: flex; align-items: center; padding: 16px 24px; color: rgba(255,255,255,0.85);
+            text-decoration: none; transition: var(--transition); font-weight: 600;
         }
         .sidebar-nav a:hover, .sidebar-nav a.active {
-            background: rgba(59,130,246,0.25);
-            color: white;
-            padding-right: 34px;
+            background: rgba(59,130,246,0.25); color: white; padding-right: 34px;
         }
-        .sidebar-nav i {
-            margin-left: 14px;
-            font-size: 1.3rem;
-        }
+        .sidebar-nav i { margin-left: 14px; font-size: 1.3rem; }
 
-        /* Main Content */
         .main-content {
-            margin-right: 280px;
-            padding: 30px;
-            transition: var(--transition);
-            min-height: 100vh;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-right: 280px; padding: 30px; transition: var(--transition); min-height: 100vh;
+            max-width: 1400px; margin-left: auto; margin-right: auto;
         }
-        .main-content.expanded {
-            margin-right: 0;
-        }
+        .main-content.expanded { margin-right: 0; }
 
-        /* Toggle Button */
         .sidebar-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1100;
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 54px; height: 54px;
-            border-radius: 14px;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-            font-size: 1.5rem;
-            transition: var(--transition);
+            position: fixed; top: 20px; right: 20px; z-index: 1100; background: var(--primary);
+            color: white; border: none; width: 54px; height: 54px; border-radius: 14px; cursor: pointer;
+            box-shadow: var(--shadow); font-size: 1.5rem; transition: var(--transition);
         }
-        .sidebar-toggle:hover {
-            background: var(--primary-light);
-            transform: scale(1.08);
-        }
+        .sidebar-toggle:hover { background: var(--primary-light); transform: scale(1.08); }
 
-        /* Page Header */
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .page-header h1 {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-        .page-header p {
-            color: var(--text-muted);
-            font-size: 1.2rem;
-        }
+        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-header h1 { font-size: 2.2rem; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
+        .page-header p { color: var(--text-muted); font-size: 1.2rem; }
 
-        /* Cards */
         .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 30px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            margin-bottom: 35px;
+            background: var(--card-bg); border-radius: var(--radius); padding: 30px;
+            box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 35px;
         }
-        .card h3 {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .card h3 { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
 
-        /* زر التوزيع الجماعي */
-        .bulk-assign-container {
-            text-align: center;
-            margin: 30px 0;
-        }
+        .bulk-assign-container { text-align: center; margin: 30px 0; }
         .btn-bulk-assign {
-            background: linear-gradient(135deg, var(--success), #059669);
-            color: white;
-            border: none;
-            padding: 18px 40px;
-            border-radius: 14px;
-            font-size: 1.3rem;
-            font-weight: 900;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 14px;
+            background: linear-gradient(135deg, var(--success), #059669); color: white; border: none;
+            padding: 18px 40px; border-radius: 14px; font-size: 1.3rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3); transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 14px;
         }
-        .btn-bulk-assign:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
-        }
+        .btn-bulk-assign:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4); }
 
-        /* Recap Banner (للشاشة فقط) */
         .recap-banner {
-            background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
-            border-right: 7px solid var(--info);
-            border-radius: var(--radius);
-            padding: 28px;
-            margin-bottom: 40px;
+            background: linear-gradient(135deg, #e0f2fe, #f0f9ff); border-right: 7px solid var(--info);
+            border-radius: var(--radius); padding: 28px; margin-bottom: 40px;
         }
-        .recap-banner h3 {
-            color: var(--info);
-            margin-bottom: 24px;
-            font-size: 1.3rem;
-        }
-        .recap-grid {
-            display: grid;
-            gap: 20px;
-            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-        }
+        .recap-banner h3 { color: var(--info); margin-bottom: 24px; font-size: 1.3rem; }
+        .recap-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
         .recap-item {
-            background: white;
-            padding: 22px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            transition: var(--transition);
+            background: white; padding: 22px; border-radius: 14px; display: flex; align-items: center;
+            justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: var(--transition);
             border-right: 6px solid #cbd5e1;
         }
-        .recap-item:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-        }
-        .recap-item.accepted {
-            border-right: 7px solid var(--success) !important;
-            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-        }
-        .recap-actions button {
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 10px;
-            transition: var(--transition);
-        }
-        .recap-actions button:hover {
-            background: #fee2e2;
-            transform: scale(1.1);
-        }
-        .arrow-icon {
-            color: #64748b;
-            font-size: 1.8rem;
-            margin: 0 30px;
-        }
-        .status-badge {
-            font-size: 0.85rem;
-            padding: 6px 14px;
-            border-radius: 20px;
-            margin-top: 8px;
-            display: inline-block;
-            font-weight: 600;
-        }
-        .status-badge.pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        .status-badge.confirmed {
-            background: var(--success);
-            color: white;
-        }
+        .recap-item:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+        .recap-item.accepted { border-right: 7px solid var(--success) !important; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+        .recap-actions button { background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 10px; border-radius: 10px; transition: var(--transition); }
+        .recap-actions button:hover { background: #fee2e2; transform: scale(1.1); }
+        .arrow-icon { color: #64748b; font-size: 1.8rem; margin: 0 30px; }
+        .status-badge { font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; margin-top: 8px; display: inline-block; font-weight: 600; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.confirmed { background: var(--success); color: white; }
 
-        /* زر الطباعة */
-        .print-section {
-            text-align: center;
-            margin: 40px 0;
-        }
+        .print-section { text-align: center; margin: 40px 0; }
         .btn-print-report {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px 36px;
-            border-radius: 14px;
-            font-size: 1.2rem;
-            font-weight: 900;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            transition: var(--transition);
+            background: var(--primary); color: white; border: none; padding: 16px 36px; border-radius: 14px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; box-shadow: var(--shadow);
+            display: inline-flex; align-items: center; gap: 12px; transition: var(--transition);
         }
-        .btn-print-report:hover {
-            background: var(--primary-light);
-            transform: translateY(-3px);
-        }
+        .btn-print-report:hover { background: var(--primary-light); transform: translateY(-3px); }
 
-        /* Form تسجيل غياب */
         .form-abs-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr auto;
-            gap: 24px;
-            align-items: end;
-            background: #f8fafc;
-            padding: 30px;
-            border-radius: 16px;
+            display: grid; grid-template-columns: 1fr 1.5fr auto; gap: 24px; align-items: end;
+            background: #f8fafc; padding: 30px; border-radius: 16px;
         }
-        .input-group-custom label {
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-        .select2-container, input[type="text"] {
-            width: 100% !important;
-        }
+        .input-group-custom label { font-weight: 600; color: var(--text-muted); margin-bottom: 8px; font-size: 1rem; }
+        .select2-container, input[type="text"] { width: 100% !important; }
         .select2-selection, input[type="text"] {
-            height: 56px !important;
-            border: 2px solid var(--border) !important;
-            border-radius: 12px !important;
-            padding: 0 18px !important;
-            font-size: 1.05rem;
+            height: 56px !important; border: 2px solid var(--border) !important; border-radius: 12px !important;
+            padding: 0 18px !important; font-size: 1.05rem;
         }
-        .select2-selection__rendered {
-            line-height: 54px !important;
-        }
-        .select2-selection__arrow {
-            height: 54px !important;
-        }
+        .select2-selection__rendered { line-height: 54px !important; }
+        .select2-selection__arrow { height: 54px !important; }
         input:focus, .select2-container--focus .select2-selection {
-            border-color: var(--primary-light) !important;
-            box-shadow: 0 0 0 5px rgba(59,130,246,0.15);
+            border-color: var(--primary-light) !important; box-shadow: 0 0 0 5px rgba(59,130,246,0.15);
         }
         .btn-submit-abs {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0 36px;
-            height: 56px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: var(--transition);
+            background: var(--primary); color: white; border: none; padding: 0 36px; height: 56px;
+            border-radius: 12px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: var(--transition);
         }
-        .btn-submit-abs:hover {
-            background: var(--primary-light);
-            transform: translateY(-3px);
-        }
+        .btn-submit-abs:hover { background: var(--primary-light); transform: translateY(-3px); }
 
-        /* Sessions needing substitute */
         .absent-item-card {
-            background: white;
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-            border-right: 7px solid var(--warning);
-            transition: var(--transition);
+            background: white; border-radius: 16px; padding: 28px; margin-bottom: 24px;
+            box-shadow: var(--shadow); border-right: 7px solid var(--warning); transition: var(--transition);
         }
-        .absent-item-card:hover {
-            transform: translateY(-5px);
-        }
-        .session-info {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .badge-periode {
-            background: var(--primary);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        .badge-subject {
-            background: #f1f5f9;
-            color: var(--primary);
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        .distribution-options {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
+        .absent-item-card:hover { transform: translateY(-5px); }
+        .session-info { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+        .badge-periode { background: var(--primary); color: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; }
+        .badge-subject { background: #f1f5f9; color: var(--primary); padding: 8px 16px; border-radius: 30px; font-weight: 600; font-size: 0.95rem; }
+        .distribution-options { display: flex; gap: 16px; flex-wrap: wrap; }
         .btn-auto, .btn-manual {
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1.05rem;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
+            padding: 14px 28px; border-radius: 12px; font-weight: 700; font-size: 1.05rem;
+            cursor: pointer; transition: var(--transition); border: none;
         }
-        .btn-auto {
-            background: var(--success);
-            color: white;
-        }
-        .btn-auto:hover {
-            background: #059669;
-            transform: translateY(-3px);
-        }
-        .btn-manual {
-            background: white;
-            color: var(--primary-light);
-            border: 2.5px solid var(--primary-light);
-        }
-        .btn-manual:hover {
-            background: #eff6ff;
-            transform: translateY(-3px);
-        }
+        .btn-auto { background: var(--success); color: white; }
+        .btn-auto:hover { background: #059669; transform: translateY(-3px); }
+        .btn-manual { background: white; color: var(--primary-light); border: 2.5px solid var(--primary-light); }
+        .btn-manual:hover { background: #eff6ff; transform: translateY(-3px); }
 
-        /* Manual suggestions */
         .manual-suggestions {
-            margin-top: 20px;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease, padding 0.5s ease;
-            background: #f8fafc;
-            border-radius: 14px;
+            margin-top: 20px; max-height: 0; overflow: hidden; transition: max-height 0.5s ease, padding 0.5s ease;
+            background: #f8fafc; border-radius: 14px;
         }
-        .manual-suggestions.open {
-            max-height: 600px;
-            padding: 20px;
-        }
-        .manual-suggestions table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .manual-suggestions td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-        .manual-suggestions tr:last-child td {
-            border: none;
-        }
+        .manual-suggestions.open { max-height: 600px; padding: 20px; }
+        .manual-suggestions table { width: 100%; border-collapse: collapse; }
+        .manual-suggestions td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .manual-suggestions tr:last-child td { border: none; }
         .assign-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
+            background: var(--primary); color: white; border: none; padding: 10px 24px;
+            border-radius: 10px; font-weight: 600; cursor: pointer;
         }
-        .assign-btn:hover {
-            background: var(--primary-light);
-        }
+        .assign-btn:hover { background: var(--primary-light); }
 
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 80px 30px;
-            color: var(--text-muted);
-        }
-        .empty-state i {
-            font-size: 5rem;
-            margin-bottom: 24px;
-            opacity: 0.6;
-        }
-        .empty-state h3 {
-            font-size: 1.6rem;
-            margin-bottom: 12px;
-        }
+        .empty-state { text-align: center; padding: 80px 30px; color: var(--text-muted); }
+        .empty-state i { font-size: 5rem; margin-bottom: 24px; opacity: 0.6; }
+        .empty-state h3 { font-size: 1.6rem; margin-bottom: 12px; }
 
-        /* جدول الطباعة فقط - غير مرئي على الشاشة */
-        #printable-table-area {
-            display: none;
-        }
+        #printable-table-area { display: none; }
+        .print-only-title { display: none; }
 
         @media print {
-            body * {
-                visibility: hidden;
+            body * { visibility: hidden; }
+            #printable-table-area, #printable-table-area *, .print-only-title {
+                visibility: visible; display: block !important;
             }
-            #printable-table-area, #printable-table-area * {
-                visibility: visible;
-            }
-            #printable-table-area {
-                display: block;
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 40px 20px;
-            }
-            .no-print, .sidebar, .sidebar-toggle, .recap-banner, .print-section {
-                display: none !important;
-            }
+            #printable-table-area { position: absolute; left: 0; top: 0; width: 100%; padding: 40px 20px; }
+            .print-only-title { text-align: center; font-size: 18pt; margin: 50px 0; color: #1e293b; }
+            .no-print, .sidebar, .sidebar-toggle, .recap-banner, .print-section { display: none !important; }
 
-            /* تنسيق احترافي وثابت للجدول */
             .print-report-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 12pt;
-                direction: rtl;
-                margin-top: 40px;
+                width: 100%; border-collapse: collapse; font-size: 12pt; direction: rtl; margin-top: 40px;
             }
             .print-report-table th {
-                background: #1e40af;
-                color: white;
-                padding: 12px 10px;
-                text-align: center;
-                font-weight: 900;
-                font-size: 13pt;
-                border: 1.5px solid #000;
-                min-width: 120px;
-                height: 50px;
+                background: #1e40af; color: white; padding: 12px 10px; text-align: center;
+                font-weight: 900; font-size: 13pt; border: 1.5px solid #000; min-width: 120px; height: 50px;
             }
             .print-report-table td {
-                padding: 12px 10px;
-                border: 1.5px solid #000;
-                text-align: center;
-                vertical-align: middle;
-                min-height: 60px;
-                height: 60px;
-                min-width: 120px;
-                word-break: break-word;
+                padding: 12px 10px; border: 1.5px solid #000; text-align: center; vertical-align: middle;
+                min-height: 60px; min-width: 120px; word-break: break-word;
             }
-            .print-report-table tr:nth-child(even) {
-                background: #f8fafc;
-            }
-            .print-report-table .teacher-cell {
-                font-weight: bold;
-                background: #e0f2fe;
-            }
-            .print-report-table .subject-cell {
-                font-style: italic;
-                color: #64748b;
-                font-size: 11pt;
-            }
-            .print-report-table .status-confirmed {
-                background: #10b981;
-                color: white;
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-weight: bold;
-            }
-            .print-report-table .status-pending {
-                background: #fef3c7;
-                color: #92400e;
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-weight: bold;
-            }
+            .print-report-table tr:nth-child(even) { background: #f8fafc; }
+            .print-report-table .teacher-cell { font-weight: bold; background: #e0f2fe; }
+            .print-report-table .subject-cell { font-style: italic; color: #64748b; font-size: 11pt; }
+            .print-report-table .status-confirmed { background: #10b981; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; }
+            .print-report-table .status-pending { background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 20px; font-weight: bold; }
 
-            /* عنوان الكشف واسم المدرسة */
             body::before {
-                content: "مدرسة ابن دريد";
-                display: block;
-                text-align: center;
-                font-size: 28pt;
-                font-weight: 900;
-                color: #1e40af;
-                margin: 20px 0 10px 0;
+                content: "مدرسة ابن دريد"; display: block; text-align: center;
+                font-size: 28pt; font-weight: 900; color: #1e40af; margin: 20px 0 10px 0;
             }
-            body::after {
-                content: "كشف توزيع حصص الاحتياط اليومي — التاريخ: <%= today %>";
-                display: block;
-                text-align: center;
-                font-size: 18pt;
-                font-weight: bold;
-                color: #1e293b;
-                margin-top: 50px;
-                padding-top: 20px;
-                border-top: 4px double #1e40af;
-            }
+            body::after { content: none; }
         }
 
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .recap-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 992px) {
-            .form-abs-grid { grid-template-columns: 1fr; }
-            .page-header h1 { font-size: 1.8rem; }
-        }
+        @media (max-width: 1200px) { .recap-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 992px) { .form-abs-grid { grid-template-columns: 1fr; } .page-header h1 { font-size: 1.8rem; } }
         @media (max-width: 768px) {
             .sidebar { right: -280px; }
             .sidebar.active { right: 0; }
@@ -606,7 +262,6 @@
         <% } %>
 
         <% if (recapSubstitutions && recapSubstitutions.length > 0) { %>
-        <!-- عرض البطاقات على الشاشة فقط -->
         <section class="recap-banner">
             <h3><i class="fas fa-check-double"></i> حصص تم تغطيتها بنجاح اليوم</h3>
             <div class="recap-grid" id="recap-grid">
@@ -624,7 +279,7 @@
                     <div style="flex:1;">
                         <div class="badge-periode">الحصة <%= r.periode %></div>
                         <strong style="font-size:1.1rem;"><%= r.absent_name %></strong>
-                        <small style="color:var(--text-muted); display:block;"><%= r.matiere || '' %></small>
+                        <small style="color:var(--text-muted); display:block;"><%= r.absent_matiere || '' %></small>
                     </div>
 
                     <div class="arrow-icon">
@@ -645,7 +300,10 @@
             </div>
         </section>
 
-        <!-- جدول الطباعة المنظم - غير مرئي على الشاشة -->
+        <div class="print-only-title">
+            <h2>كشف توزيع حصص الاحتياط اليومي — التاريخ: <%= today %></h2>
+        </div>
+
         <div id="printable-table-area">
             <table class="print-report-table">
                 <thead>
@@ -662,7 +320,6 @@
                 <tbody>
                     <% 
                     let currentTeacher = '';
-                    let currentSubject = '';
                     let currentClassSection = '';
                     let counter = 1;
                     recapSubstitutions.forEach((r, index) => { 
@@ -673,15 +330,11 @@
                     %>
                         <tr>
                             <% if (isNewTeacher) { %>
-                                <td rowspan="<%= rowspan %>" class="teacher-cell">
-                                    <%= counter %>
-                                </td>
-                                <td rowspan="<%= rowspan %>" class="teacher-cell">
-                                    <strong><%= r.classe %> - <%= r.section %></strong>
-                                </td>
+                                <td rowspan="<%= rowspan %>" class="teacher-cell"><%= counter %></td>
+                                <td rowspan="<%= rowspan %>" class="teacher-cell"><strong><%= r.classe %> - <%= r.section %></strong></td>
                                 <td rowspan="<%= rowspan %>" class="teacher-cell">
                                     <strong><%= r.absent_name %></strong><br>
-                                    <span class="subject-cell">(<%= r.matiere || '-' %>)</span>
+                                    <span class="subject-cell">(<%= r.absent_matiere || '-' %>)</span>
                                 </td>
                             <% counter++; %>
                             <% } %>
@@ -698,7 +351,6 @@
                         </tr>
                     <% 
                         currentTeacher = r.absent_name;
-                        currentSubject = r.matiere;
                         currentClassSection = r.classe + '-' + r.section;
                     }) %>
                 </tbody>
@@ -734,7 +386,7 @@
                 <div class="input-group-custom">
                     <label>سبب الغياب (اختياري)</label>
                     <input type="text" name="reason" placeholder="مثال: مرض، إذن رسمي...">
-                    <input type="hidden" name="date" value="<%= today %>">
+                    <input type="hidden" name="date" value="<%= todayDB %>">
                 </div>
                 <button type="submit" class="btn-submit-abs">
                     <i class="fas fa-paper-plane"></i> تفعيل الغياب
@@ -854,8 +506,9 @@
                     .prop('disabled', true);
             });
 
+            // تحديث تلقائي لقسم الحصص المغطاة كل 15 ثانية
             setInterval(function() {
-                $.get('/admin/absence-profs/recap', function(data) {
+                $.get('/admin/substitute/recap', function(data) {
                     $('#recap-grid').html(data);
                 });
             }, 15000);
@@ -867,8 +520,12 @@
         }
     </script>
 
+    <!-- رسائل Flash -->
     <% if (typeof success !== 'undefined' && success) { %>
     <script>Swal.fire('تم بنجاح!', '<%= success %>', 'success');</script>
+    <% } %>
+    <% if (typeof info !== 'undefined' && info) { %>
+    <script>Swal.fire('ملاحظة', '<%= info %>', 'info');</script>
     <% } %>
     <% if (typeof error !== 'undefined' && error) { %>
     <script>Swal.fire('خطأ', '<%= error %>', 'error');</script>

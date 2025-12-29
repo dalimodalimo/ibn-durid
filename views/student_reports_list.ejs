@@ -8,25 +8,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<style>
-    /* تحسين مظهر البحث ليتناسب مع تصميمك */
-    .select2-container--default .select2-selection--single {
-        height: 50px;
-        border-radius: 12px;
-        border: 2px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-        padding: 0 10px;
-    }
-    .select2-results__option {
-        text-align: right; /* للغة العربية */
-        font-family: 'Cairo';
-    }
-    .select2-search__field {
-        direction: rtl;
-        font-family: 'Cairo';
-    }
-</style>
+    
+    <style>
+        /* تحسين مظهر البحث ليتناسب مع تصميمك */
+        .select2-container--default .select2-selection--single {
+            height: 50px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+        .select2-results__option {
+            text-align: right; /* للغة العربية */
+            font-family: 'Cairo';
+        }
+        .select2-search__field {
+            direction: rtl;
+            font-family: 'Cairo';
+        }
+    </style>
+    
     <style>
         :root {
             --primary: #4361ee;
@@ -69,6 +71,13 @@
 
         .header-title h1 { margin: 0; font-size: 1.8rem; font-weight: 800; }
         .header-title p { margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem; }
+
+        /* Boutons dans le header */
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
 
         /* Filters Bar */
         .filters-bar {
@@ -245,9 +254,14 @@
             <h1><i class="fas fa-file-invoice"></i> نظام التقييمات الأكاديمية</h1>
             <p>إدارة طلبات تقييم الطلاب ومتابعة استجابات المعلمين</p>
         </div>
-        <button class="btn" style="background: white; color: var(--primary); font-weight: bold; padding: 12px 25px; border-radius: 12px;" onclick="toggleModal(true)">
-            <i class="fas fa-plus-circle"></i> طلب تقييم جديد
-        </button>
+        <div class="header-buttons">
+            <button class="btn" style="background: white; color: var(--primary); font-weight: bold; padding: 12px 25px; border-radius: 12px;" onclick="toggleModal(true)">
+                <i class="fas fa-plus-circle"></i> طلب تقييم جديد
+            </button>
+            <a href="/admin/dashboard" class="btn" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 25px; border-radius: 12px; backdrop-filter: blur(10px);">
+                <i class="fas fa-tachometer-alt"></i> رجوع إلى لوحة التحكم
+            </a>
+        </div>
     </header>
 
     <div class="filters-bar">
@@ -337,55 +351,36 @@
         </p>
         
         <form action="/admin/students/request-evaluation" method="POST">
-    <div style="margin-bottom: 25px;">
-        <label style="display: block; margin-bottom: 10px; font-weight: 600;">ابحث عن الطالب (بالاسم، الفصل، أو القسم):</label>
-        <select name="student_id" id="studentSelect" required style="width: 100%;">
-            <option value="" disabled selected>اكتب اسم الطالب أو الفصل...</option>
-            <% all_students.forEach(s => { %>
-                <option value="<%= s.id %>">
-                    <%= s.nom %> | <%= s.classe %> - <%= s.section %>
-                </option>
-            <% }) %>
-        </select>
-    </div>
-    <div style="display: flex; gap: 12px;">
-        <button type="submit" class="btn" style="background: var(--primary); color: white; flex: 2; padding: 15px; font-weight: bold; border-radius: 12px;">
-            <i class="fas fa-paper-plane"></i> إرسال الطلبات للمعلمين
-        </button>
-        <button type="button" class="btn" style="background: #f1f5f9; flex: 1; border-radius: 12px;" onclick="toggleModal(false)">إلغاء</button>
-    </div>
-</form>
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 600;">ابحث عن الطالب (بالاسم، الفصل، أو القسم):</label>
+                <select name="student_id" id="studentSelect" required style="width: 100%;">
+                    <option value="" disabled selected>اكتب اسم الطالب أو الفصل...</option>
+                    <% all_students.forEach(s => { %>
+                        <option value="<%= s.id %>">
+                            <%= s.nom %> | <%= s.classe %> - <%= s.section %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn" style="background: var(--primary); color: white; flex: 2; padding: 15px; font-weight: bold; border-radius: 12px;">
+                    <i class="fas fa-paper-plane"></i> إرسال الطلبات للمعلمين
+                </button>
+                <button type="button" class="btn" style="background: #f1f5f9; flex: 1; border-radius: 12px;" onclick="toggleModal(false)">إلغاء</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<style>
-    /* تحسين شكل صندوق البحث Select2 ليتناسب مع تصميم الصفحة */
-    .select2-container--default .select2-selection--single {
-        height: 50px !important;
-        border: 2px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        display: flex;
-        align-items: center;
-        font-family: 'Cairo', sans-serif;
-    }
-    .select2-container [dir="rtl"] .select2-selection--single .select2-selection__rendered {
-        text-align: right;
-        padding-right: 15px;
-    }
-    .select2-selection__arrow { height: 50px !important; }
-    .select2-dropdown { border-radius: 12px; border: 2px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-</style>
 
 <script>
     $(document).ready(function() {
         // تفعيل البحث الذكي على قائمة الطلاب
         $('#studentSelect').select2({
             dir: "rtl",
-            dropdownParent: $('#modalOverlay'), // ضروري ليعمل البحث فوق المودال
+            dropdownParent: $('#modalOverlay'),
             placeholder: "ابحث بالاسم، الفصل، أو القسم...",
             allowClear: true,
             language: {
@@ -398,7 +393,6 @@
         const modal = document.getElementById('modalOverlay');
         modal.style.display = show ? 'flex' : 'none';
         
-        // إعادة ضبط البحث عند فتح المودال أو إغلاقه
         if (show) {
             $('#studentSelect').val(null).trigger('change');
         }
@@ -410,7 +404,6 @@
         document.querySelectorAll('.report-card').forEach(card => {
             const name = card.querySelector('h3').innerText.toLowerCase();
             const details = card.querySelector('.student-details span').innerText.toLowerCase();
-            // البحث في الاسم والصف معاً
             card.style.display = (name.includes(term) || details.includes(term)) ? 'block' : 'none';
         });
     });

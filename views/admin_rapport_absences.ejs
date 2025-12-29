@@ -8,31 +8,190 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --primary: #1a237e; --bg: #f0f2f5; --accent: #ef4444; }
+        :root { 
+            --primary: #1a237e; 
+            --bg: #f0f2f5; 
+            --accent: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+        }
         
         body { 
-            font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; padding: 10px;
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+            font-family: 'Cairo', sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 10px;
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
         }
 
-        /* --- واجهة الشاشة (Screen) --- */
-        .header-box { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px; }
+        /* Header principal */
+        .header-box { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            margin-bottom: 10px; 
+        }
         
         .controls-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
             gap: 10px; 
             align-items: center;
+            margin-top: 15px;
         }
 
         input, select { 
-            padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; 
-            font-family: 'Cairo'; font-size: 0.85rem; outline: none;
+            padding: 8px 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-family: 'Cairo'; 
+            font-size: 0.85rem; 
+            outline: none;
         }
 
+        /* Système d'onglets */
+        .tabs-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .tabs-header {
+            display: flex;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--gray);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: white;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+        .tab-button:hover:not(.active) {
+            background: #e2e8f0;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Statistiques dans l'onglet 1 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--light);
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 1.9rem;
+            font-weight: 900;
+            margin: 6px 0;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        /* Bannière scrollable des classes dans l'onglet 1 */
+        .classes-scroll-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 8px;
+            scrollbar-width: thin;
+        }
+        .classes-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        .classes-scroll-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .classes-scroll {
+            display: inline-flex;
+            gap: 14px;
+            padding: 4px 0;
+        }
+        .class-badge {
+            min-width: 110px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+        .class-badge:hover {
+            transform: translateY(-3px);
+        }
+        .class-marked {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        .class-pending {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fed7aa;
+        }
+        .class-empty {
+            background: #f1f5f9;
+            color: var(--gray);
+            border: 1px solid #cbd5e1;
+        }
+        .class-status {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+
+        /* Tableau dans l'onglet 2 */
         .scrollable-area { 
-            flex: 1; background: white; border-radius: 12px; overflow-y: auto; 
-            border: 1px solid #e0e0e0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            flex: 1; 
+            background: white; 
+            border-radius: 12px; 
+            overflow-y: auto; 
+            border: 1px solid #e0e0e0; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
         }
 
         table { width: 100%; border-collapse: collapse; }
@@ -43,10 +202,13 @@
         tbody td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; text-align: center; }
         .name-cell { text-align: right; font-weight: 700; }
 
-        .btn { padding: 8px 15px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; border: none; }
+        .btn { 
+            padding: 8px 15px; border-radius: 8px; cursor: pointer; text-decoration: none; 
+            display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; border: none; 
+        }
         .btn-primary { background: var(--primary); color: white; }
 
-        /* --- واجهة الطباعة (Print) --- */
+        /* Impression */
         .print-section { display: none; }
         
         @media print {
@@ -54,7 +216,6 @@
             .no-print { display: none !important; }
             .print-section { display: block !important; }
             
-            /* تكرار الترويسة في كل صفحة */
             .print-container-table { width: 100%; border: none; }
             .print-header-wrapper { display: table-header-group; }
             
@@ -88,6 +249,7 @@
 </head>
 <body>
 
+    <!-- Header principal -->
     <div class="header-box no-print">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 style="margin:0; color: var(--primary); font-size: 1.2rem;">مركز متابعة الغياب الذكي</h2>
@@ -97,6 +259,7 @@
             </div>
         </div>
 
+        <!-- Filtres -->
         <div class="controls-grid">
             <div style="display:flex; flex-direction:column; gap:2px;">
                 <label style="font-size:0.75rem; font-weight:bold;">التاريخ:</label>
@@ -129,35 +292,130 @@
         </div>
     </div>
 
-    <div class="scrollable-area no-print">
-        <table id="mainTable">
-            <thead>
-                <tr>
-                    <th style="text-align:right;">اسم الطالب</th>
-                    <th>الصف/القسم</th>
-                    <th>حالة اليوم</th>
-                    <th>إجمالي الغياب</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% rapports.forEach(student => { %>
-                <tr class="student-row" data-class="<%= student.classe %>" data-status="<%= student.is_absent_today ? 'غائب' : 'حاضر' %>">
-                    <td class="name-cell"><%= student.nom %></td>
-                    <td><%= student.classe %> / <%= student.section %></td>
-                    <td>
-                        <% if(student.is_absent_today) { %>
-                            <span style="color:var(--accent); font-weight:bold;"><i class="fas fa-user-times"></i> غائب</span>
-                        <% } else { %>
-                            <span style="color:green;"><i class="fas fa-user-check"></i> حاضر</span>
-                        <% } %>
-                    </td>
-                    <td><b style="color:var(--primary)"><%= student.total_absences_days %></b> يوم</td>
-                </tr>
-                <% }) %>
-            </tbody>
-        </table>
+    <!-- Système d'onglets -->
+    <div class="tabs-container no-print">
+        <div class="tabs-header">
+            <button class="tab-button active" onclick="openTab(event, 'overview')">نظرة عامة على اليوم</button>
+            <button class="tab-button" onclick="openTab(event, 'students')">تفاصيل الطلاب</button>
+        </div>
+
+        <!-- Onglet 1 : Statistiques + Bannière des classes -->
+        <div id="overview" class="tab-content active">
+            <!-- Statistiques -->
+            <div class="stats-header">
+                <h3><i class="fas fa-chart-pie"></i> إحصائيات الغياب لهذا اليوم</h3>
+                <div class="stats-grid">
+                    <% 
+                        const totalStudents = rapports.length;
+                        const absentToday = rapports.filter(r => r.is_absent_today === true).length;
+                        const presentToday = rapports.filter(r => r.is_absent_today === false).length;
+
+                        const uniqueSections = [...new Set(rapports.map(r => `${r.classe}-${r.section}`))];
+                        const totalClasses = uniqueSections.length;
+
+                        const markedClassesSet = new Set();
+                        rapports.forEach(r => {
+                            if (r.is_absent_today === true) {
+                                markedClassesSet.add(`${r.classe}-${r.section}`);
+                            }
+                        });
+                        const markedCount = markedClassesSet.size;
+                        const pendingCount = totalClasses - markedCount;
+                    %>
+                    <div class="stat-card">
+                        <div class="stat-icon total"><i class="fas fa-user-friends"></i></div>
+                        <div class="stat-value total"><%= totalStudents %></div>
+                        <div class="stat-label">إجمالي الطلاب</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon absent"><i class="fas fa-user-times"></i></div>
+                        <div class="stat-value absent"><%= absentToday %></div>
+                        <div class="stat-label">غائبون اليوم</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon present"><i class="fas fa-user-check"></i></div>
+                        <div class="stat-value present"><%= presentToday %></div>
+                        <div class="stat-label">حاضرون اليوم</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon classes-total"><i class="fas fa-chalkboard"></i></div>
+                        <div class="stat-value classes-total"><%= totalClasses %></div>
+                        <div class="stat-label">إجمالي الأقسام</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon marked"><i class="fas fa-check-double"></i></div>
+                        <div class="stat-value marked"><%= markedCount %></div>
+                        <div class="stat-label">تم رصد الحضور/الغياب</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending"><i class="fas fa-hourglass-half"></i></div>
+                        <div class="stat-value pending"><%= pendingCount %></div>
+                        <div class="stat-label">لم يُرصد بعد</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bannière scrollable des classes -->
+            <div style="background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h3 style="margin: 0 0 12px 0; font-size: 1rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-scroll"></i> حالة رصد الحضور والغياب للأقسام
+                </h3>
+                <div class="classes-scroll-container">
+                    <div class="classes-scroll">
+                        <% 
+                            uniqueSections.sort().forEach(sectionKey => { 
+                                const [cls, sec] = sectionKey.split('-');
+                                const hasAbsentToday = rapports.some(r => 
+                                    `${r.classe}-${r.section}` === sectionKey && r.is_absent_today === true
+                                );
+                                const hasStudents = rapports.some(r => `${r.classe}-${r.section}` === sectionKey);
+                                let badgeClass = hasStudents ? (hasAbsentToday ? 'class-marked' : 'class-pending') : 'class-empty';
+                                let statusText = hasStudents ? (hasAbsentToday ? 'تم الرصد' : 'لم يُرصد بعد') : 'لا طلاب';
+                        %>
+                            <div class="class-badge <%= badgeClass %>">
+                                <%= cls %> <%= sec %>
+                                <div class="class-status"><%= statusText %></div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet 2 : Tableau des élèves -->
+        <div id="students" class="tab-content">
+            <div class="scrollable-area">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;">اسم الطالب</th>
+                            <th>الصف/القسم</th>
+                            <th>حالة اليوم</th>
+                            <th>إجمالي الغياب</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% rapports.forEach(student => { %>
+                        <tr class="student-row" data-class="<%= student.classe %>" data-status="<%= student.is_absent_today ? 'غائب' : 'حاضر' %>">
+                            <td class="name-cell"><%= student.nom %></td>
+                            <td><%= student.classe %> / <%= student.section %></td>
+                            <td>
+                                <% if(student.is_absent_today) { %>
+                                    <span style="color:var(--accent); font-weight:bold;"><i class="fas fa-user-times"></i> غائب</span>
+                                <% } else { %>
+                                    <span style="color:var(--success); font-weight:bold;"><i class="fas fa-user-check"></i> حاضر</span>
+                                <% } %>
+                            </td>
+                            <td><b style="color:var(--primary)"><%= student.total_absences_days %></b> يوم</td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
+    <!-- Impression officielle -->
     <div class="print-section">
         <table class="print-container-table">
             <thead class="print-header-wrapper">
@@ -222,6 +480,19 @@
     </div>
 
     <script>
+        function openTab(evt, tabName) {
+            const tabs = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            const buttons = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
         function updateDate() {
             const date = document.getElementById('reportDate').value;
             window.location.href = `/admin/rapport-absences-eleves?date=${date}`;

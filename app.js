@@ -582,70 +582,57 @@ app.post('/teacher/absences/mark', async (req, res) => {
             return res.status(400).send("عذراً، لم يتم العثور على حصة مسجلة لك في هذا الوقت.");
         }
 
-        // استخراج القيم الأصلية (تكون غالباً أرقام مثل 8 و 2)
-        const rawClasse = sessionInfo.rows[0].classe; 
+        // استخراج القيم
+        const rawClasse = sessionInfo.rows[0].classe;
         const section = sessionInfo.rows[0].section;
 
-        // 3. تحويل رقم الصف إلى نص عربي ليطابق عمود s.classe في جدول الطلاب
+        // 3. تحويل رقم الصف إلى نص عربي ليطابق جدول الطلاب
         const classMap = {
             '5': 'خامس', '6': 'سادس', '7': 'سابع', '8': 'ثامن', '9': 'تاسع', '10': 'عاشر'
         };
         const dbClassName = classMap[rawClasse] || rawClasse;
 
-        // 4. القفل الذهبي: التحقق هل رصد أي معلم آخر غياب هذا الفصل اليوم؟
+        // 4. التحقق الجديد: هل تم رصد غياب هذا الفصل في هذا اليوم من قبل أي معلم؟
         const alreadyMarked = await pool.query(
-            `SELECT sa.id 
+            `SELECT 1
              FROM student_absences sa
              JOIN students s ON sa.eleve_id = s.id
-             WHERE s.classe = $1 
-             AND s.section = $2 
-             AND sa.date = $3
+             WHERE s.classe = $1
+               AND s.section = $2
+               AND sa.date = $3
              LIMIT 1`,
-            [dbClassName, section, date] // نستخدم dbClassName (ثامن) بدلاً من rawClasse (8)
+            [dbClassName, section, date]
         );
 
         if (alreadyMarked.rows.length > 0) {
-            // السماح بالتعديل فقط إذا كان نفس المعلم ونفس الحصة
-            const isSameSession = await pool.query(
-                `SELECT id FROM student_absences 
-                 WHERE date = $1 AND periode = $2 AND enseignant_id = $3 LIMIT 1`,
-                [date, periode, teacherIdInt]
+            return res.status(403).send(
+                `❌ عذراً، تم رصد غياب فصل ${dbClassName}-${section} مسبقاً اليوم.\nلا يُسمح برصد غياب الفصل أكثر من مرة واحدة في اليوم الدراسي.`
             );
-
-            if (isSameSession.rows.length === 0) {
-                return res.status(403).send(`❌ عذراً، تم رصد غياب فصل ${dbClassName}-${section} مسبقاً اليوم.`);
-            }
         }
 
-        // 5. مسح السجلات القديمة لهذه الحصة فقط تمهيداً للإضافة الجديدة
-        await pool.query(
-            "DELETE FROM student_absences WHERE date = $1 AND periode = $2 AND enseignant_id = $3", 
-            [date, periode, teacherIdInt]
-        );
-        
-        // 6. إدخال الغياب الجديد
+        // 5. إدخال الغياب الجديد مباشرة (لا حاجة للحذف المسبق لأننا نمنع التكرار تماماً)
         if (eleve_ids && eleve_ids.length > 0) {
             const ids = Array.isArray(eleve_ids) ? eleve_ids : [eleve_ids];
             for (let id of ids) {
                 await pool.query(
-                    "INSERT INTO student_absences (eleve_id, enseignant_id, date, periode) VALUES ($1, $2, $3, $4)", 
+                    "INSERT INTO student_absences (eleve_id, enseignant_id, date, periode) VALUES ($1, $2, $3, $4)",
                     [parseInt(id), teacherIdInt, date, periode]
                 );
             }
-        } 
+        }
 
-        // 7. منح النجمة للمعلم
+        // 6. منح النجمة للمعلم (مرة واحدة فقط لكل فصل في اليوم)
         const starUpdate = await pool.query(
             "UPDATE enseignants SET stars_count = COALESCE(stars_count, 0) + 1 WHERE id = $1 RETURNING stars_count",
             [teacherIdInt]
         );
-        
-        console.log(`✅ تم الحفظ. فصل: ${dbClassName}-${section}. رصيد النجوم: ${starUpdate.rows[0].stars_count}`);
+
+        console.log(`✅ تم رصد غياب فصل: ${dbClassName}-${section} بنجاح. رصيد النجوم: ${starUpdate.rows[0].stars_count}`);
 
         res.redirect(`/teacher/dashboard/${teacherIdInt}?success=attendance_saved&p=${periode}`);
-        
+
     } catch (e) {
-        console.error("خطأ أثناء الحفظ:", e);
+        console.error("خطأ أثناء حفظ الغياب:", e);
         res.status(500).send("فشل حفظ الغياب: " + e.message);
     }
 });
